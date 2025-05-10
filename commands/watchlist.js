@@ -64,7 +64,7 @@ export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
 
   enqueueCommand(interaction, async (interaction) => {
-    await interaction.deferReply({ flags: 64 }); // EPHEMERAL
+    await interaction.deferReply();
 
     const watchlist = await loadWatchlist();
 
