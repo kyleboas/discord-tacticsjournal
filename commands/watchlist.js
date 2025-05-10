@@ -102,10 +102,9 @@ export async function execute(interaction) {
       const match = list.find(p => p.name.toLowerCase() === nameInput.toLowerCase());
 
       if (!match) {
-      await interaction.reply({
-          content: `Player **${nameInput}** is not on the watchlist. Add them using the /watchlist add command.`,
-          ephemeral: true
-        });
+      await interaction.editReply({
+      content: `Player **${nameInput}** is not on the watchlist. Add them using the /watchlist add command.`,
+      });
         return;
       }
 
