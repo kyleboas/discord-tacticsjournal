@@ -156,4 +156,4 @@ export const data = new SlashCommandBuilder()
           { name: 'mine', value: 'mine' }
         )
     )
-);
+); 
