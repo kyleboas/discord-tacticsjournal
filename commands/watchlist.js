@@ -91,7 +91,6 @@ export async function execute(interaction) {
       await interaction.editReply(
         `**Shared Watchlist:**\n\`\`\`\nPOS  | Team         | Name               (added by)\n---- | ------------ | ------------------ -----------\n${formatted}\n\`\`\``
       );
-     }
     }
   });
 }
