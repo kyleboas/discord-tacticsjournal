@@ -4,7 +4,6 @@ import { getWatchlist, addToWatchlist, removeFromWatchlist, ensureSchema } from 
 
 await ensureSchema();
 
-
 const commandQueue = [];
 let isProcessing = false;
 
@@ -42,16 +41,16 @@ function enqueueCommand(interaction, operation) {
 }
 
 export async function execute(interaction) {
-      const memberRoleId = '1182838456720826460';
-      const hasRole = interaction.member.roles.cache.has(memberRoleId);
+  const memberRoleId = '1182838456720826460';
+  const hasRole = interaction.member.roles.cache.has(memberRoleId);
 
-      if (!hasRole) {
-        await interaction.reply({
-          content: 'You must have the **Members** role to use this command.',
-          ephemeral: true
-        });
-        return;
-      }
+  if (!hasRole) {
+    await interaction.reply({
+      content: 'You must have the **Members** role to use this command.',
+      ephemeral: true
+    });
+    return;
+  }
 
   const sub = interaction.options.getSubcommand();
 
@@ -72,7 +71,6 @@ export async function execute(interaction) {
         return;
       }
 
-      // These must come BEFORE the call
       const userId = interaction.user.id;
       const username = interaction.user.username;
 
@@ -101,7 +99,7 @@ export async function execute(interaction) {
         return;
       }
 
-      const positionOrder = ['GK', 'LB', 'CB', 'RB', 'DM', 'CM', 'CAM', 'LW', 'RW', 'SS', 'ST'];
+      const positionOrder = ['GK', 'LB', 'CB', 'RB', 'DM', 'CM', 'CAM', 'LW', 'RW', 'SS', 'ST', 'CF'];
       const grouped = {};
       for (const pos of positionOrder) grouped[pos] = [];
       for (const player of list) {
@@ -156,15 +154,15 @@ export const data = new SlashCommandBuilder()
       .addStringOption(opt => opt.setName('name').setDescription('Player name').setRequired(true))
   )
   .addSubcommand(sub =>
-  sub.setName('view')
-    .setDescription('View the watchlist')
-    .addStringOption(opt =>
-      opt.setName('scope')
-        .setDescription('Which watchlist to view')
-        .setRequired(true)
-        .addChoices(
-          { name: 'community', value: 'community' },
-          { name: 'mine', value: 'mine' }
-        )
-    )
-); 
+    sub.setName('view')
+      .setDescription('View the watchlist')
+      .addStringOption(opt =>
+        opt.setName('scope')
+          .setDescription('Which watchlist to view')
+          .setRequired(true)
+          .addChoices(
+            { name: 'Community', value: 'community' },
+            { name: 'Mine', value: 'mine' }
+          )
+      )
+  );
