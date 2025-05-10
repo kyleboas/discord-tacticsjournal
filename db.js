@@ -25,3 +25,14 @@ export async function removeFromWatchlist(name) {
   );
   return res.rowCount > 0;
 }
+
+export async function ensureSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS watchlist (
+      id SERIAL PRIMARY KEY,
+      position TEXT NOT NULL,
+      team TEXT NOT NULL,
+      name TEXT NOT NULL
+    )
+  `);
+}

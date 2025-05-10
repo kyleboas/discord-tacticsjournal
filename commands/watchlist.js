@@ -1,6 +1,9 @@
 // watchlist.js
 import { SlashCommandBuilder } from 'discord.js';
-import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../db.js';
+import { getWatchlist, addToWatchlist, removeFromWatchlist, ensureSchema } from '../db.js';
+
+await ensureSchema();
+
 
 const commandQueue = [];
 let isProcessing = false;
