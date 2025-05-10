@@ -61,7 +61,7 @@ export async function execute(interaction) {
         return;
       }
 
-      await addToWatchlist(position, team, name);
+      await addToWatchlist(position, team, name, userId, username)
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
     }
 
