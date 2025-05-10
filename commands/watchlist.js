@@ -84,18 +84,31 @@ export async function execute(interaction) {
       }
 
       const positionOrder = ['GK', 'LB', 'CB', 'RB', 'DM', 'CM', 'CAM', 'LW', 'RW', 'SS', 'ST'];
+      const grouped = {};
 
-      const sorted = list.sort((a, b) =>
-        positionOrder.indexOf(a.position) - positionOrder.indexOf(b.position)
-      );
+      for (const pos of positionOrder) {
+        grouped[pos] = [];
+      }
 
-      const formatted = sorted.map(p =>
-  `${p.position.padEnd(4)} | ${p.team.padEnd(12)} | ${p.name.padEnd(18)} (by ${p.username}, ${new Date(p.created_at).toLocaleDateString()})`
-).join('\n');
+      for (const player of list) {
+        if (grouped[player.position]) {
+          grouped[player.position].push(player);
+        }
+      }
 
-      await interaction.editReply(
-        `**Shared Watchlist:**\n\`\`\`\nPOS  | Team         | Name               (added by)\n---- | ------------ | ------------------ -----------\n${formatted}\n\`\`\``
-      );
+      let output = "**Shared Watchlist:**\n";
+
+      for (const pos of positionOrder) {
+        const players = grouped[pos];
+        if (players && players.length) {
+          output += `\n**${pos}**\n`;
+          for (const p of players) {
+            output += `${p.team.padEnd(10)} | ${p.name} (by ${p.username})\n`;
+          }
+        }
+      }
+
+      await interaction.editReply(output);
     }
   });
 }
