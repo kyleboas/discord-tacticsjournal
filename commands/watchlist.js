@@ -139,7 +139,9 @@ export async function execute(interaction) {
       let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist:**\n`;
       for (const pos of positionOrder) {
         let players = grouped[pos];
+
         if (players.length) {
+          // Sort by average score descending
           players.sort((a, b) => {
             const scoreA = parseFloat(scores[a.name.toLowerCase()] || 0);
             const scoreB = parseFloat(scores[b.name.toLowerCase()] || 0);
@@ -149,10 +151,11 @@ export async function execute(interaction) {
           output += `\n**${pos}**\n`;
           for (const p of players) {
             const avg = scores[p.name.toLowerCase()];
-            const score = avg ? `${parseFloat(avg).toFixed(1)}` : '--';
+            const score = avg ? parseFloat(avg).toFixed(1) : '--';
+
             output += scope === 'your'
-              ? `${score} ${p.name} (${p.team})\n`
-              : `${score} ${p.name} (${p.team}) - ${p.username}\n`;
+              ? `- ${score} ${p.name} (${p.team})\n`
+              : `- ${score} ${p.name} (${p.team}) - ${p.username}\n`;
           }
         }
       }
