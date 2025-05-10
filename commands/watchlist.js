@@ -86,7 +86,7 @@ export async function execute(interaction) {
     }
 
     else if (sub === 'view') {
-      const scope = interaction.options.getString('scope');
+      const scope = interaction.options.getString('watchlist');
       const userId = interaction.user.id;
 
       let list = await getWatchlist();
@@ -112,7 +112,11 @@ export async function execute(interaction) {
         if (players.length) {
           output += `\n**${pos}**\n`;
           for (const p of players) {
-            output += `${p.team}: ${p.name} (by ${p.username})\n`;
+            if (scope === 'mine') {
+              output += `${p.team}: ${p.name}\n`;
+            } else {
+              output += `${p.team}: ${p.name} (by ${p.username})\n`;
+            }
           }
         }
       }
