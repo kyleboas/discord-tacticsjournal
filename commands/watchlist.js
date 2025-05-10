@@ -61,7 +61,12 @@ export async function execute(interaction) {
         return;
       }
 
-      await addToWatchlist(position, team, name, userId, username)
+      // These must come BEFORE the call
+      const userId = interaction.user.id;
+      const username = interaction.user.username;
+
+      await addToWatchlist(position, team, name, userId, username);
+
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
     }
 
