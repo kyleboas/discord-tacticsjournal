@@ -134,7 +134,7 @@ export const data = new SlashCommandBuilder()
             { name: 'LW', value: 'LW' },
             { name: 'RW', value: 'RW' },
             { name: 'SS', value: 'SS' },
-            { name: 'ST', value: 'ST' }
+            { name: 'CF', value: 'CF' }
           ))
       .addStringOption(opt => opt.setName('team').setDescription('Team').setRequired(true))
       .addStringOption(opt => opt.setName('name').setDescription('Player name').setRequired(true))

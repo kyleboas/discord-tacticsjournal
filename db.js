@@ -39,4 +39,16 @@ export async function ensureSchema() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Ensure created_at default + backfill
+  await pool.query(`
+    ALTER TABLE watchlist
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
+  `);
+
+  await pool.query(`
+    UPDATE watchlist
+    SET created_at = CURRENT_TIMESTAMP
+    WHERE created_at IS NULL;
+  `);
 }
