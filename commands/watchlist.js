@@ -42,6 +42,17 @@ function enqueueCommand(interaction, operation) {
 }
 
 export async function execute(interaction) {
+      const memberRoleId = '1182838456720826460';
+      const hasRole = interaction.member.roles.cache.has(memberRoleId);
+
+      if (!hasRole) {
+        await interaction.reply({
+          content: 'You must have the **Members** role to use this command.',
+          ephemeral: true
+        });
+        return;
+      }
+
   const sub = interaction.options.getSubcommand();
 
   enqueueCommand(interaction, async (interaction) => {
