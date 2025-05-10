@@ -8,7 +8,13 @@ config(); // Loads .env (optional)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ 
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
 client.commands = new Collection();
 
 // Load commands from ./commands
@@ -36,4 +42,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN);
