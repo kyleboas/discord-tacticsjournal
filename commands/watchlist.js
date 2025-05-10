@@ -1,6 +1,13 @@
 // watchlist.js
 import { SlashCommandBuilder } from 'discord.js';
-import { getWatchlist, addToWatchlist, removeFromWatchlist, ensureSchema } from '../db.js';
+import {
+  getWatchlist,
+  addToWatchlist,
+  removeFromWatchlist,
+  setPlayerScore,
+  getAverageScores,
+  ensureSchema
+} from '../db.js';
 
 await ensureSchema();
 
@@ -85,11 +92,34 @@ export async function execute(interaction) {
       await interaction.editReply(removed ? `Removed: ${name}` : `Player not found in the watchlist.`);
     }
 
+    else if (sub === 'score') {
+      const nameInput = interaction.options.getString('name');
+      const score = interaction.options.getInteger('score');
+      const userId = interaction.user.id;
+      const username = interaction.user.username;
+
+      const list = await getWatchlist();
+      const match = list.find(p => p.name.toLowerCase() === nameInput.toLowerCase());
+
+      if (!match) {
+        await interaction.editReply({
+          content: `Player **${nameInput}** is not on the watchlist.`,
+          ephemeral: true
+        });
+        return;
+      }
+
+      await setPlayerScore(match.name, userId, username, score);
+      await interaction.editReply(`Scored **${match.name}**: ${score}/10`);
+    }
+
     else if (sub === 'view') {
-      const scope = interaction.options.getString('watchlist');
+      const scope = interaction.options.getString('scope');
       const userId = interaction.user.id;
 
       let list = await getWatchlist();
+      const scores = await getAverageScores();
+
       if (scope === 'your') {
         list = list.filter(player => player.user_id === userId);
       }
@@ -108,15 +138,21 @@ export async function execute(interaction) {
 
       let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist:**\n`;
       for (const pos of positionOrder) {
-        const players = grouped[pos];
+        let players = grouped[pos];
         if (players.length) {
+          players.sort((a, b) => {
+            const scoreA = parseFloat(scores[a.name.toLowerCase()] || 0);
+            const scoreB = parseFloat(scores[b.name.toLowerCase()] || 0);
+            return scoreB - scoreA;
+          });
+
           output += `\n**${pos}**\n`;
           for (const p of players) {
-            if (scope === 'your') {
-              output += `${p.team}: ${p.name}\n`;
-            } else {
-              output += `${p.team}: ${p.name} (by ${p.username})\n`;
-            }
+            const avg = scores[p.name.toLowerCase()];
+            const score = avg ? `${parseFloat(avg).toFixed(1)}` : '--';
+            output += scope === 'your'
+              ? `${score} ${p.name} (${p.team})\n`
+              : `${score} ${p.name} (${p.team}) - ${p.username}\n`;
           }
         }
       }
@@ -156,6 +192,22 @@ export const data = new SlashCommandBuilder()
     sub.setName('remove')
       .setDescription('Remove a player')
       .addStringOption(opt => opt.setName('name').setDescription('Player name').setRequired(true))
+  )
+  .addSubcommand(sub =>
+    sub.setName('score')
+      .setDescription('Rate a player (1-10)')
+      .addStringOption(opt =>
+        opt.setName('name')
+          .setDescription('Player name')
+          .setRequired(true)
+      )
+      .addIntegerOption(opt =>
+        opt.setName('score')
+          .setDescription('Score between 1 and 10')
+          .setRequired(true)
+          .setMinValue(1)
+          .setMaxValue(10)
+      )
   )
   .addSubcommand(sub =>
     sub.setName('view')
