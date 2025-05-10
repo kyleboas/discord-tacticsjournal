@@ -10,7 +10,7 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 for (const file of commandFiles) {
   const command = await import(`./commands/${file}`);
   commands.push(command.data.toJSON());
-}
+} 
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
 
