@@ -75,10 +75,23 @@ export async function execute(interaction) {
       const list = await getWatchlist();
       if (!list.length) {
         await interaction.editReply("The watchlist is empty.");
-      } else {
-        const formatted = list.map(p => `${p.position} | ${p.team} | ${p.name}`).join('\n');
-        await interaction.editReply(`**Shared Watchlist:**\n${formatted}`);
+        return;
       }
+
+      const positionOrder = ['GK', 'LB', 'CB', 'RB', 'DM', 'CM', 'CAM', 'LW', 'RW', 'SS', 'ST'];
+
+      const sorted = list.sort((a, b) =>
+        positionOrder.indexOf(a.position) - positionOrder.indexOf(b.position)
+      );
+
+      const formatted = sorted.map(p =>
+        `${p.position.padEnd(4)} | ${p.team.padEnd(12)} | ${p.name.padEnd(18)} (by ${p.username})`
+      ).join('\n');
+
+      await interaction.editReply(
+        `**Shared Watchlist:**\n\`\`\`\nPOS  | Team         | Name               (added by)\n---- | ------------ | ------------------ -----------\n${formatted}\n\`\`\``
+      );
+     }
     }
   });
 }

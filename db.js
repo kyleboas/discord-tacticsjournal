@@ -1,3 +1,4 @@
+// database.js
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -11,10 +12,10 @@ export async function getWatchlist() {
   return res.rows;
 }
 
-export async function addToWatchlist(position, team, name) {
+export async function addToWatchlist(position, team, name, userId, username) {
   await pool.query(
-    'INSERT INTO watchlist (position, team, name) VALUES ($1, $2, $3)',
-    [position, team, name]
+    'INSERT INTO watchlist (position, team, name, user_id, username) VALUES ($1, $2, $3, $4, $5)',
+    [position, team, name, userId, username]
   );
 }
 
@@ -32,7 +33,9 @@ export async function ensureSchema() {
       id SERIAL PRIMARY KEY,
       position TEXT NOT NULL,
       team TEXT NOT NULL,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      username TEXT NOT NULL
     )
   `);
 }
