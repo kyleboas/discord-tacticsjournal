@@ -1,7 +1,7 @@
+// watchlist.js
 import { SlashCommandBuilder } from 'discord.js';
-import fs from 'fs';
+import { getWatchlist, addToWatchlist, removeFromWatchlist } from './db.js';
 
-const WATCHLIST_FILE = 'watchlists.json';
 const commandQueue = [];
 let isProcessing = false;
 
@@ -19,7 +19,7 @@ async function processQueue() {
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: 'An error occurred while processing your command.',
-          flags: 64, // EPHEMERAL
+          flags: 64,
         });
       } else {
         await interaction.editReply('An error occurred while processing your command.');
@@ -38,35 +38,11 @@ function enqueueCommand(interaction, operation) {
   processQueue();
 }
 
-async function loadWatchlist() {
-  try {
-    if (!fs.existsSync(WATCHLIST_FILE)) {
-      console.warn('Watchlist file not found, returning empty watchlist.');
-      return { shared: [] };
-    }
-    const data = fs.readFileSync(WATCHLIST_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error loading watchlist:', error);
-    return { shared: [] };
-  }
-}
-
-async function saveWatchlist(data) {
-  try {
-    fs.writeFileSync(WATCHLIST_FILE, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Error saving watchlist:', error);
-  }
-}
-
 export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
 
   enqueueCommand(interaction, async (interaction) => {
     await interaction.deferReply();
-
-    const watchlist = await loadWatchlist();
 
     if (sub === 'add') {
       const position = interaction.options.getString('position');
@@ -74,42 +50,31 @@ export async function execute(interaction) {
       const name = interaction.options.getString('name');
       const lowerName = name.toLowerCase();
 
-      const isDuplicate = watchlist.shared.some(player =>
-        player.toLowerCase().includes(lowerName)
-      );
+      const list = await getWatchlist();
+      const isDuplicate = list.some(player => player.name.toLowerCase() === lowerName);
 
       if (isDuplicate) {
         await interaction.editReply(`Player **${name}** is already on the watchlist.`);
         return;
       }
 
-      const entry = `${position} | ${team} | ${name}`;
-      watchlist.shared.push(entry);
-      await saveWatchlist(watchlist);
-      await interaction.editReply(`Added to watchlist: ${entry}`);
+      await addToWatchlist(position, team, name);
+      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
     }
 
     else if (sub === 'remove') {
-      const name = interaction.options.getString('name').toLowerCase();
-      const playerToRemove = watchlist.shared.find(player =>
-        player.toLowerCase().includes(name)
-      );
-
-      if (playerToRemove) {
-        watchlist.shared = watchlist.shared.filter(player => player !== playerToRemove);
-        await saveWatchlist(watchlist);
-        await interaction.editReply(`Removed: ${playerToRemove}`);
-      } else {
-        await interaction.editReply('Player not found in the watchlist.');
-      }
+      const name = interaction.options.getString('name');
+      const removed = await removeFromWatchlist(name);
+      await interaction.editReply(removed ? `Removed: ${name}` : `Player not found in the watchlist.`);
     }
 
     else if (sub === 'view') {
-      const list = watchlist.shared;
+      const list = await getWatchlist();
       if (!list.length) {
         await interaction.editReply("The watchlist is empty.");
       } else {
-        await interaction.editReply(`**Shared Watchlist:**\n${list.join('\n')}`);
+        const formatted = list.map(p => `${p.position} | ${p.team} | ${p.name}`).join('\n');
+        await interaction.editReply(`**Shared Watchlist:**\n${formatted}`);
       }
     }
   });
