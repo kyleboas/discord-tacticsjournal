@@ -24,8 +24,14 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
+
+  // Register all loaded commands globally
+  const commandData = client.commands.map(cmd => cmd.data.toJSON());
+  await client.application.commands.set(commandData);
+
+  console.log('Slash commands synced');
 });
 
 client.on('interactionCreate', async interaction => {
