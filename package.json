@@ -7,7 +7,7 @@
     "@replit/object-storage": "^1.0.0",
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
-    "fs": "^0.0.1-security".
+    "fs": "^0.0.1-security",
     "pg": "^8.11.1"
   }
 }
