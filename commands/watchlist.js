@@ -90,7 +90,7 @@ export async function execute(interaction) {
       const userId = interaction.user.id;
 
       let list = await getWatchlist();
-      if (scope === 'mine') {
+      if (scope === 'your') {
         list = list.filter(player => player.user_id === userId);
       }
 
@@ -106,13 +106,13 @@ export async function execute(interaction) {
         if (grouped[player.position]) grouped[player.position].push(player);
       }
 
-      let output = `**${scope === 'mine' ? 'Your' : 'Community'} Watchlist:**\n`;
+      let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist:**\n`;
       for (const pos of positionOrder) {
         const players = grouped[pos];
         if (players.length) {
           output += `\n**${pos}**\n`;
           for (const p of players) {
-            if (scope === 'mine') {
+            if (scope === 'your') {
               output += `${p.team}: ${p.name}\n`;
             } else {
               output += `${p.team}: ${p.name} (by ${p.username})\n`;
@@ -166,7 +166,7 @@ export const data = new SlashCommandBuilder()
           .setRequired(true)
           .addChoices(
             { name: 'Community', value: 'community' },
-            { name: 'Mine', value: 'mine' }
+            { name: 'Your', value: 'your' }
           )
       )
   );
