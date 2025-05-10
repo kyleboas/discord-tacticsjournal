@@ -103,7 +103,7 @@ export async function execute(interaction) {
         if (players.length) {
           output += `\n**${pos}**\n`;
           for (const p of players) {
-            output += `${p.team.padEnd(10)} | ${p.name} (by ${p.username})\n`;
+            output += `${p.team}: ${p.name} (by ${p.username})\n`;
           }
         }
       }
