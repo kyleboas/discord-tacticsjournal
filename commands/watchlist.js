@@ -97,7 +97,7 @@ export async function execute(interaction) {
         if (grouped[player.position]) grouped[player.position].push(player);
       }
 
-      let output = `**${scope === 'mine' ? 'Your' : 'Shared'} Watchlist:**\n`;
+      let output = `**${scope === 'mine' ? 'Your' : 'Community'} Watchlist:**\n`;
       for (const pos of positionOrder) {
         const players = grouped[pos];
         if (players.length) {
@@ -152,7 +152,7 @@ export const data = new SlashCommandBuilder()
         .setDescription('Which watchlist to view')
         .setRequired(true)
         .addChoices(
-          { name: 'shared', value: 'shared' },
+          { name: 'community', value: 'community' },
           { name: 'mine', value: 'mine' }
         )
     )
