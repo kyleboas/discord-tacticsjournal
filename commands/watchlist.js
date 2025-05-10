@@ -77,30 +77,30 @@ export async function execute(interaction) {
     }
 
     else if (sub === 'view') {
-      const list = await getWatchlist();
+      const scope = interaction.options.getString('scope');
+      const userId = interaction.user.id;
+
+      let list = await getWatchlist();
+      if (scope === 'mine') {
+        list = list.filter(player => player.user_id === userId);
+      }
+
       if (!list.length) {
-        await interaction.editReply("The watchlist is empty.");
+        await interaction.editReply(`The ${scope} watchlist is empty.`);
         return;
       }
 
       const positionOrder = ['GK', 'LB', 'CB', 'RB', 'DM', 'CM', 'CAM', 'LW', 'RW', 'SS', 'ST'];
       const grouped = {};
-
-      for (const pos of positionOrder) {
-        grouped[pos] = [];
-      }
-
+      for (const pos of positionOrder) grouped[pos] = [];
       for (const player of list) {
-        if (grouped[player.position]) {
-          grouped[player.position].push(player);
-        }
+        if (grouped[player.position]) grouped[player.position].push(player);
       }
 
-      let output = "**Shared Watchlist:**\n";
-
+      let output = `**${scope === 'mine' ? 'Your' : 'Shared'} Watchlist:**\n`;
       for (const pos of positionOrder) {
         const players = grouped[pos];
-        if (players && players.length) {
+        if (players.length) {
           output += `\n**${pos}**\n`;
           for (const p of players) {
             output += `${p.team.padEnd(10)} | ${p.name} (by ${p.username})\n`;
@@ -145,6 +145,15 @@ export const data = new SlashCommandBuilder()
       .addStringOption(opt => opt.setName('name').setDescription('Player name').setRequired(true))
   )
   .addSubcommand(sub =>
-    sub.setName('view')
-      .setDescription('View the watchlist')
-  );
+  sub.setName('view')
+    .setDescription('View the watchlist')
+    .addStringOption(opt =>
+      opt.setName('scope')
+        .setDescription('Which watchlist to view')
+        .setRequired(true)
+        .addChoices(
+          { name: 'shared', value: 'shared' },
+          { name: 'mine', value: 'mine' }
+        )
+    )
+);
