@@ -35,7 +35,8 @@ export async function ensureSchema() {
       team TEXT NOT NULL,
       name TEXT NOT NULL,
       user_id TEXT NOT NULL,
-      username TEXT NOT NULL
+      username TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 }

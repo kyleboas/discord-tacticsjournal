@@ -90,8 +90,8 @@ export async function execute(interaction) {
       );
 
       const formatted = sorted.map(p =>
-        `${p.position.padEnd(4)} | ${p.team.padEnd(12)} | ${p.name.padEnd(18)} (by ${p.username})`
-      ).join('\n');
+  `${p.position.padEnd(4)} | ${p.team.padEnd(12)} | ${p.name.padEnd(18)} (by ${p.username}, ${new Date(p.created_at).toLocaleDateString()})`
+).join('\n');
 
       await interaction.editReply(
         `**Shared Watchlist:**\n\`\`\`\nPOS  | Team         | Name               (added by)\n---- | ------------ | ------------------ -----------\n${formatted}\n\`\`\``
