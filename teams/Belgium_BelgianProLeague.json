@@ -31,7 +31,7 @@
     },
     {
         "team_id": 6,
-        "team_name": "KAA Gent",
+        "team_name": "Gent",
         "team_abbreviation": "GNT",
         "team_stadium": "Ghelamco Arena"
     },
@@ -49,7 +49,7 @@
     },
     {
         "team_id": 9,
-        "team_name": "KVC Westerlo",
+        "team_name": "Westerlo",
         "team_abbreviation": "WES",
         "team_stadium": "Het Kuipje"
     },
@@ -61,7 +61,7 @@
     },
     {
         "team_id": 11,
-        "team_name": "Racing Genk",
+        "team_name": "Genk",
         "team_abbreviation": "GNK",
         "team_stadium": "Luminus Arena"
     },
