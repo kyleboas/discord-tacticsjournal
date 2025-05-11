@@ -111,12 +111,18 @@ export async function execute(interaction) {
       const username = interaction.user.username;
 
       const list = await getWatchlist();
-      const match = list.find(p => p.name.toLowerCase() === nameInput.toLowerCase());
+      const match = list.find(p =>  p.name.toLowerCase() === nameInput.toLowerCase());
 
       if (!match) {
-      await interaction.editReply({
-      content: `Player **${nameInput}** is not on the watchlist. Add them using the /watchlist add command.`,
-      });
+        const alt = list.find(p => p.name.toLowerCase().includes(nameInput.toLowerCase()));
+        if (!alt) {
+          await interaction.editReply({
+            content: `Player **${nameInput}** is not on the watchlist. Add them using the /watchlist add command.`,
+          });
+          return;
+        }
+        await setPlayerScore(alt.name, userId, username, score);
+        await interaction.editReply(`Scored **${alt.name}**: ${score}/10 (auto-corrected from "${nameInput}")`);
         return;
       }
 
