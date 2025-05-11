@@ -9,6 +9,7 @@ import {
   getWatchlist,
   addToWatchlist,
   removeFromWatchlist,
+  updateWatchlistPlayer,
   setPlayerScore,
   getAverageScores,
   ensureSchema
@@ -130,6 +131,47 @@ export async function execute(interaction) {
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
     }
    }
+   else if (sub === 'edit') {
+      const original = interaction.options.getString('original');
+      const newName = interaction.options.getString('name');
+      const newTeam = interaction.options.getString('team');
+      const newPosition = interaction.options.getString('position');
+      const userId = interaction.user.id;
+      const username = interaction.user.username;
+      const isAdmin = interaction.member.roles.cache.has('1120846837671268514');
+
+      const list = await getWatchlist();
+      const player = list.find(p => p.name.toLowerCase() === original.toLowerCase());
+
+      if (!player) {
+        await interaction.editReply(`Player **${original}** not found.`);
+        return;
+      }
+
+      if (player.user_id !== userId && !isAdmin) {
+        await interaction.editReply({ content: 'You can only edit players you added.', ephemeral: true });
+        return;
+      }
+
+      const updates = {};
+      if (newName) updates.name = newName;
+      if (newTeam) {
+        if (!isValidTeam(newTeam)) {
+          await interaction.editReply(`**${newTeam}** is not a recognized team.`);
+          return;
+        }
+        updates.team = newTeam;
+      }
+      if (newPosition) updates.position = newPosition;
+
+      const success = await updateWatchlistPlayer(original, player.user_id, updates);
+      if (success) {
+        await interaction.editReply(`Player **${original}** updated.`);
+      } else {
+        await interaction.editReply('No changes were made.');
+      }
+    }
+
     else if (sub === 'remove') {
       const name = interaction.options.getString('name');
       const removed = await removeFromWatchlist(name);
@@ -227,6 +269,68 @@ export const data = new SlashCommandBuilder()
           .setRequired(false)
       )
   )
+  
+  .addSubcommand(sub =>
+    sub.setName('edit')
+      .setDescription('Edit a player')
+      .addStringOption(opt =>
+        opt.setName('original')
+          .setDescription('Current player name to edit')
+          .setRequired(true)
+      )
+      .addStringOption(opt =>
+        opt.setName('name')
+          .setDescription('New name (optional)')
+          .setRequired(false)
+      )
+      .addStringOption(opt =>
+        opt.setName('team')
+          .setDescription('New team (optional)')
+          .setRequired(false)
+      )
+      .addStringOption(opt =>
+        opt.setName('position')
+          .setDescription('New position (optional)')
+          .setRequired(false)
+          .addChoices(
+            { name: 'GK', value: 'GK' }, { name: 'LB', value: 'LB' }, { name: 'CB', value: 'CB' },
+            { name: 'RB', value: 'RB' }, { name: 'DM', value: 'DM' }, { name: 'CM', value: 'CM' },
+            { name: 'CAM', value: 'CAM' }, { name: 'LW', value: 'LW' }, { name: 'RW', value: 'RW' },
+            { name: 'SS', value: 'SS' }, { name: 'CF', value: 'CF' }
+          )
+      )
+      
+     .addSubcommand(sub =>
+      sub.setName('edit')
+         .setDescription('Edit an existing player on the watchlist')
+         .addStringOption(opt =>
+           opt.setName('original')
+             .setDescription('Current name of the player')
+             .setRequired(true)
+         )
+         .addStringOption(opt =>
+           opt.setName('name')
+             .setDescription('New player name (optional)')
+             .setRequired(false)
+         )
+         .addStringOption(opt =>
+           opt.setName('team')
+             .setDescription('New team name (optional)')
+             .setRequired(false)
+         )
+         .addStringOption(opt =>
+           opt.setName('position')
+             .setDescription('New position (optional)')
+             .setRequired(false)
+             .addChoices(
+               { name: 'GK', value: 'GK' }, { name: 'LB', value: 'LB' }, { name: 'CB', value: 'CB' },
+               { name: 'RB', value: 'RB' }, { name: 'DM', value: 'DM' }, { name: 'CM', value: 'CM' },
+               { name: 'CAM', value: 'CAM' }, { name: 'LW', value: 'LW' }, { name: 'RW', value: 'RW' },
+               { name: 'SS', value: 'SS' }, { name: 'CF', value: 'CF' }
+             )
+         )
+     )
+      
   .addSubcommand(sub =>
     sub.setName('remove')
       .setDescription('Remove a player')

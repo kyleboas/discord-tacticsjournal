@@ -27,6 +27,26 @@ export async function removeFromWatchlist(name) {
   return res.rowCount > 0;
 }
 
+export async function updateWatchlistPlayer(originalName, userId, updates) {
+  const fields = [];
+  const values = [originalName, userId];
+  let index = 3;
+
+  for (const [key, val] of Object.entries(updates)) {
+    fields.push(`${key} = $${index++}`);
+    values.push(val);
+  }
+
+  if (fields.length === 0) return false;
+
+  const res = await pool.query(
+    `UPDATE watchlist SET ${fields.join(', ')} WHERE LOWER(name) = LOWER($1) AND user_id = $2 RETURNING *`,
+    values
+  );
+
+  return res.rowCount > 0;
+}
+
 export async function setPlayerScore(playerName, userId, username, score) {
   await pool.query(`
     INSERT INTO watchlistScores (player_name, user_id, username, score)
