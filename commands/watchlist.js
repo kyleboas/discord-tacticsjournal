@@ -19,6 +19,7 @@ await ensureSchema();
 
 const commandQueue = [];
 let isProcessing = false;
+const confirmAddMap = new Map();
 
 async function processQueue() {
   if (isProcessing || commandQueue.length === 0) return;
@@ -68,9 +69,17 @@ export async function execute(interaction) {
 
       if (!isValidTeam(team)) {
         if (suggestion) {
+          const data = encodeURIComponent(JSON.stringify({
+            suggestedTeam: suggestion,
+            position,
+            name,
+            userId: interaction.user.id,
+            username: interaction.user.username
+          }));
+
           const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-              .setCustomId(`confirm_team:${suggestion}:${position}:${name}`)
+              .setCustomId(`confirm_team:${data}`)
               .setLabel(`Yes, use "${suggestion}"`)
               .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()

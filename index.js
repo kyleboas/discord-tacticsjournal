@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { addToWatchlist, getWatchlist } from './db.js';
 import { isValidTeam } from './teams.js';
 
-config();
+config(); // Loads .env
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +21,7 @@ const client = new Client({
 });
 client.commands = new Collection();
 
+// Load all command files
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
   const command = await import(`./commands/${file}`);
@@ -29,10 +30,8 @@ for (const file of commandFiles) {
 
 client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
-
   const commandData = client.commands.map(cmd => cmd.data.toJSON());
   await client.application.commands.set(commandData);
-
   console.log('Slash commands synced');
 });
 
@@ -45,18 +44,21 @@ client.on('interactionCreate', async interaction => {
       await command.execute(interaction);
     } catch (error) {
       console.error(error);
-      await interaction.reply({ content: 'There was an error executing that command.', ephemeral: true });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: 'There was an error executing that command.', ephemeral: true });
+      } else {
+        await interaction.editReply({ content: 'There was an error executing that command.' });
+      }
     }
   }
 
-  // Handle button clicks
   if (interaction.isButton()) {
     const [action, encodedData] = interaction.customId.split(':');
+
     if (action === 'confirm_team') {
       const payload = JSON.parse(decodeURIComponent(encodedData));
       const { position, name, suggestedTeam, userId, username } = payload;
 
-      // Ensure only the user who invoked the command can click
       if (interaction.user.id !== userId) {
         await interaction.reply({
           content: `Only <@${userId}> can confirm this team name.`,
@@ -80,7 +82,14 @@ client.on('interactionCreate', async interaction => {
       await addToWatchlist(position, suggestedTeam, name, userId, username);
       await interaction.update({
         content: `Added to watchlist: ${position} | ${suggestedTeam} | ${name}`,
-        components: [] // remove buttons
+        components: []
+      });
+    }
+
+    if (action === 'cancel_team') {
+      await interaction.update({
+        content: 'Team selection cancelled.',
+        components: []
       });
     }
   }
