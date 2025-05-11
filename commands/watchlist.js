@@ -248,7 +248,7 @@ export async function execute(interaction) {
           }
         }
       }
-      await interaction.reply({ content: output, ephemeral: true });
+      await interaction.editReply({ content: output });
     }
   });
 }
