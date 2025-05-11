@@ -23,6 +23,15 @@ const commandQueue = [];
 let isProcessing = false;
 export const confirmAddMap = new Map();
 
+// Visibility config: true = ephemeral/private, false = public
+const subcommandPrivacy = {
+  add: false,
+  remove: true,
+  score: false,
+  view: true,
+  edit: true
+};
+
 async function processQueue() {
   if (isProcessing || commandQueue.length === 0) return;
   isProcessing = true;
@@ -59,8 +68,10 @@ export async function execute(interaction) {
   }
 
   const sub = interaction.options.getSubcommand();
-  enqueueCommand(interaction, async (interaction) => {
-    await interaction.deferReply();
+  const isEphemeral = subcommandPrivacy[sub] ?? true;
+
+   enqueueCommand(interaction, async (interaction) => {
+     await interaction.deferReply({ ephemeral: isEphemeral });
 
     if (sub === 'add') {
       const position = interaction.options.getString('position');
