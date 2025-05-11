@@ -8,7 +8,7 @@ import { addToWatchlist, getWatchlist } from './db.js';
 import { isValidTeam } from './teams.js';
 import { confirmAddMap } from './commands/watchlist.js';
 
-config(); // Loads .env
+config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +22,6 @@ const client = new Client({
 });
 client.commands = new Collection();
 
-// Load all command files
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
   const command = await import(`./commands/${file}`);
@@ -54,16 +53,16 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (interaction.isButton()) {
-    const [action, id] =      interaction.customId.split(':');
+    const [action, id] = interaction.customId.split(':');
 
-      if (action === 'confirm_team') {
-        const payload = confirmAddMap.get(id);
-        if (!payload) {
-          await interaction.reply({ content: 'This confirmation has expired or is invalid.', ephemeral: true });
-          return;
-        }
+    if (action === 'confirm_team') {
+      const payload = confirmAddMap.get(id);
+      if (!payload) {
+        await interaction.reply({ content: 'This confirmation has expired or is invalid.', ephemeral: true });
+        return;
+      }
 
-        const { position, name, suggestedTeam, userId, username } = payload;
+      const { position, name, suggestedTeam, userId, username } = payload;
 
       if (interaction.user.id !== userId) {
         await interaction.reply({
@@ -86,6 +85,8 @@ client.on('interactionCreate', async interaction => {
       }
 
       await addToWatchlist(position, suggestedTeam, name, userId, username);
+      confirmAddMap.delete(id);
+
       await interaction.update({
         content: `Added to watchlist: ${position} | ${suggestedTeam} | ${name}`,
         components: []
