@@ -1,0 +1,122 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "Bari",
+    "team_abbreviation": "BAR",
+    "team_stadium": "Stadio San Nicola"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Brescia",
+    "team_abbreviation": "BRE",
+    "team_stadium": "Stadio Mario Rigamonti"
+  },
+  {
+    "team_id": 3,
+    "team_name": "Carrarese",
+    "team_abbreviation": "CAR",
+    "team_stadium": "Stadio dei Marmi"
+  },
+  {
+    "team_id": 4,
+    "team_name": "Catanzaro",
+    "team_abbreviation": "CAT",
+    "team_stadium": "Stadio Nicola Ceravolo"
+  },
+  {
+    "team_id": 5,
+    "team_name": "Cesena",
+    "team_abbreviation": "CES",
+    "team_stadium": "Orogel Stadium-Dino Manuzzi"
+  },
+  {
+    "team_id": 6,
+    "team_name": "Cittadella",
+    "team_abbreviation": "CIT",
+    "team_stadium": "Stadio Pier Cesare Tombolato"
+  },
+  {
+    "team_id": 7,
+    "team_name": "Cosenza",
+    "team_abbreviation": "COS",
+    "team_stadium": "Stadio San Vito-Gigi Marulla"
+  },
+  {
+    "team_id": 8,
+    "team_name": "Cremonese",
+    "team_abbreviation": "CRE",
+    "team_stadium": "Stadio Giovanni Zini"
+  },
+  {
+    "team_id": 9,
+    "team_name": "Frosinone",
+    "team_abbreviation": "FRO",
+    "team_stadium": "Stadio Benito Stirpe"
+  },
+  {
+    "team_id": 10,
+    "team_name": "Juve Stabia",
+    "team_abbreviation": "JST",
+    "team_stadium": "Stadio Romeo Menti"
+  },
+  {
+    "team_id": 11,
+    "team_name": "Mantova",
+    "team_abbreviation": "MAN",
+    "team_stadium": "Stadio Danilo Martelli"
+  },
+  {
+    "team_id": 12,
+    "team_name": "Modena",
+    "team_abbreviation": "MOD",
+    "team_stadium": "Stadio Alberto Braglia"
+  },
+  {
+    "team_id": 13,
+    "team_name": "Palermo",
+    "team_abbreviation": "PAL",
+    "team_stadium": "Stadio Renzo Barbera"
+  },
+  {
+    "team_id": 14,
+    "team_name": "Pisa",
+    "team_abbreviation": "PIS",
+    "team_stadium": "Arena Garibaldi - Stadio Romeo Anconetani"
+  },
+  {
+    "team_id": 15,
+    "team_name": "Reggiana",
+    "team_abbreviation": "REG",
+    "team_stadium": "Mapei Stadium - Città del Tricolore"
+  },
+  {
+    "team_id": 16,
+    "team_name": "Salernitana",
+    "team_abbreviation": "SAL",
+    "team_stadium": "Stadio Arechi"
+  },
+  {
+    "team_id": 17,
+    "team_name": "Sampdoria",
+    "team_abbreviation": "SAM",
+    "team_stadium": "Stadio Luigi Ferraris"
+  },
+  {
+    "team_id": 18,
+    "team_name": "Sassuolo",
+    "team_abbreviation": "SAS",
+    "team_stadium": "Mapei Stadium - Città del Tricolore"
+  },
+  {
+    "team_id": 19,
+    "team_name": "Spezia",
+    "team_abbreviation": "SPE",
+    "team_stadium": "Stadio Alberto Picco"
+  },
+  {
+    "team_id": 20,
+    "team_name": "Südtirol",
+    "team_abbreviation": "SUD",
+    "team_stadium": "Stadio Druso"
+  }
+]
