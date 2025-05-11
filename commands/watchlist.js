@@ -222,7 +222,7 @@ export async function execute(interaction) {
       for (const pos of positionOrder) grouped[pos] = [];
       for (const player of list) grouped[player.position]?.push(player);
 
-      let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist:**\n`;
+      let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist**\n`;
       for (const pos of positionOrder) {
         const players = grouped[pos];
         if (players?.length) {
