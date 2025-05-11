@@ -8,6 +8,7 @@ import {
   getAverageScores,
   ensureSchema
 } from '../db.js';
+import { isValidTeam } from '../teams.js';
 
 await ensureSchema();
 
@@ -69,6 +70,11 @@ export async function execute(interaction) {
       const team = interaction.options.getString('team');
       const name = interaction.options.getString('name');
       const lowerName = name.toLowerCase();
+      
+      if (!isValidTeam(team)) {
+      await interaction.editReply(`**${team}** is not a recognized team name. Please use an official club name.`);
+        return;
+      }
 
       const list = await getWatchlist();
       const isDuplicate = list.some(player => player.name.toLowerCase() === lowerName);
