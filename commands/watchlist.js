@@ -274,14 +274,9 @@ export const data = new SlashCommandBuilder()
     sub.setName('edit')
       .setDescription('Edit a player')
       .addStringOption(opt =>
-        opt.setName('original')
+        opt.setName('name')
           .setDescription('Current player name to edit')
           .setRequired(true)
-      )
-      .addStringOption(opt =>
-        opt.setName('name')
-          .setDescription('New name (optional)')
-          .setRequired(false)
       )
       .addStringOption(opt =>
         opt.setName('team')
