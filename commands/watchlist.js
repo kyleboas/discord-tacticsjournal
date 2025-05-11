@@ -124,7 +124,12 @@ export async function execute(interaction) {
 
     else if (sub === 'score') {
       const nameInput = interaction.options.getString('name');
-      const score = interaction.options.getInteger('score');
+      const score = interaction.options.getNumber('score');
+      
+      if (!/^\d+(\.\d)?$/.test(score.toString())) {
+        await interaction.editReply({ content: 'Score must be a number with **up to 1 decimal place**.', ephemeral: true });
+        return;
+      }
       const userId = interaction.user.id;
       const username = interaction.user.username;
       const list = await getWatchlist();
