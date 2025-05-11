@@ -114,17 +114,22 @@ export async function execute(interaction) {
       const userId = interaction.user.id;
       const username = interaction.user.username;
       await addToWatchlist(position, team, name, userId, username);
-      if (typeof score === 'number') {
+
+    if (typeof score === 'number') {
       if (!/^\d+(\.\d)?$/.test(score.toString())) {
-        await interaction.editReply({ content: 'Score must be a number with up to 1 decimal place.', ephemeral: true });
+        await interaction.editReply({
+          content: 'Score must be a number with up to 1 decimal place.',
+          ephemeral: true
+        });
         return;
       }
 
       await setPlayerScore(name, userId, username, score);
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name} | ${score}/10`);
-      return;
+    } else {
+      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
     }
-
+   }
     else if (sub === 'remove') {
       const name = interaction.options.getString('name');
       const removed = await removeFromWatchlist(name);
