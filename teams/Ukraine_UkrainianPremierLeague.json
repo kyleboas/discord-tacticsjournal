@@ -1,0 +1,86 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "Dynamo Kyiv",
+    "team_abbreviation": "DKY",
+    "team_stadium": "NSC Olimpiyskiy"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Shakhtar Donetsk",
+    "team_abbreviation": "SHA",
+    "team_stadium": "Arena Lviv"
+  },
+  {
+    "team_id": 3,
+    "team_name": "FC Oleksandriya",
+    "team_abbreviation": "OLE",
+    "team_stadium": "Nika Stadium"
+  },
+  {
+    "team_id": 4,
+    "team_name": "Polissya Zhytomyr",
+    "team_abbreviation": "POL",
+    "team_stadium": "Central Stadium"
+  },
+  {
+    "team_id": 5,
+    "team_name": "Karpaty Lviv",
+    "team_abbreviation": "KAR",
+    "team_stadium": "Ukraina Stadium"
+  },
+  {
+    "team_id": 6,
+    "team_name": "Kryvbas Kryvyi Rih",
+    "team_abbreviation": "KRY",
+    "team_stadium": "Metalurh Stadium"
+  },
+  {
+    "team_id": 7,
+    "team_name": "Rukh Lviv",
+    "team_abbreviation": "RUK",
+    "team_stadium": "Arena Lviv"
+  },
+  {
+    "team_id": 8,
+    "team_name": "Zorya Luhansk",
+    "team_abbreviation": "ZOR",
+    "team_stadium": "Slavutych-Arena"
+  },
+  {
+    "team_id": 9,
+    "team_name": "Veres Rivne",
+    "team_abbreviation": "VER",
+    "team_stadium": "Avanhard Stadium"
+  },
+  {
+    "team_id": 10,
+    "team_name": "Vorskla Poltava",
+    "team_abbreviation": "VOR",
+    "team_stadium": "Vorskla Stadium"
+  },
+  {
+    "team_id": 11,
+    "team_name": "Chornomorets Odesa",
+    "team_abbreviation": "CHO",
+    "team_stadium": "Chornomorets Stadium"
+  },
+  {
+    "team_id": 12,
+    "team_name": "Obolon Kyiv",
+    "team_abbreviation": "OBK",
+    "team_stadium": "Obolon Arena"
+  },
+  {
+    "team_id": 13,
+    "team_name": "LNZ Cherkasy",
+    "team_abbreviation": "LNZ",
+    "team_stadium": "Cherkasy Arena"
+  },
+  {
+    "team_id": 14,
+    "team_name": "Inhulets Petrove",
+    "team_abbreviation": "INH",
+    "team_stadium": "Inhulets Stadium"
+  }
+]

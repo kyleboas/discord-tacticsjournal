@@ -1,0 +1,74 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "FC Basel",
+    "team_abbreviation": "BAS",
+    "team_stadium": "St. Jakob-Park"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Grasshopper Club Zürich",
+    "team_abbreviation": "GCZ",
+    "team_stadium": "Letzigrund"
+  },
+  {
+    "team_id": 3,
+    "team_name": "FC Lausanne-Sport",
+    "team_abbreviation": "LS",
+    "team_stadium": "Stade de la Tuilière"
+  },
+  {
+    "team_id": 4,
+    "team_name": "FC Lugano",
+    "team_abbreviation": "LUG",
+    "team_stadium": "Stadio Cornaredo"
+  },
+  {
+    "team_id": 5,
+    "team_name": "FC Luzern",
+    "team_abbreviation": "LUZ",
+    "team_stadium": "Swissporarena"
+  },
+  {
+    "team_id": 6,
+    "team_name": "Servette FC",
+    "team_abbreviation": "SER",
+    "team_stadium": "Stade de Genève"
+  },
+  {
+    "team_id": 7,
+    "team_name": "FC Sion",
+    "team_abbreviation": "SIO",
+    "team_stadium": "Stade de Tourbillon"
+  },
+  {
+    "team_id": 8,
+    "team_name": "FC St. Gallen",
+    "team_abbreviation": "STG",
+    "team_stadium": "Kybunpark"
+  },
+  {
+    "team_id": 9,
+    "team_name": "FC Winterthur",
+    "team_abbreviation": "WIN",
+    "team_stadium": "Stadion Schützenwiese"
+  },
+  {
+    "team_id": 10,
+    "team_name": "BSC Young Boys",
+    "team_abbreviation": "YB",
+    "team_stadium": "Stadion Wankdorf"
+  },
+  {
+    "team_id": 11,
+    "team_name": "Yverdon-Sport FC",
+    "team_abbreviation": "YVE",
+    "team_stadium": "Stade Municipal"
+  },
+  {
+    "team_id": 12,
+    "team_name": "FC Zürich",
+    "team_abbreviation": "FCZ",
+    "team_stadium": "Letzigrund"
+  }
+]

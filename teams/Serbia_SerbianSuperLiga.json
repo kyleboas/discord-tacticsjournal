@@ -1,0 +1,98 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "Red Star Belgrade",
+    "team_abbreviation": "RSB",
+    "team_stadium": "Rajko Mitić Stadium"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Partizan Belgrade",
+    "team_abbreviation": "PAR",
+    "team_stadium": "Partizan Stadium"
+  },
+  {
+    "team_id": 3,
+    "team_name": "TSC Bačka Topola",
+    "team_abbreviation": "TSC",
+    "team_stadium": "TSC Arena"
+  },
+  {
+    "team_id": 4,
+    "team_name": "Čukarički",
+    "team_abbreviation": "CUK",
+    "team_stadium": "Čukarički Stadium"
+  },
+  {
+    "team_id": 5,
+    "team_name": "Vojvodina",
+    "team_abbreviation": "VOJ",
+    "team_stadium": "Karađorđe Stadium"
+  },
+  {
+    "team_id": 6,
+    "team_name": "Radnički Niš",
+    "team_abbreviation": "RNI",
+    "team_stadium": "Čair Stadium"
+  },
+  {
+    "team_id": 7,
+    "team_name": "Spartak Subotica",
+    "team_abbreviation": "SPA",
+    "team_stadium": "Subotica City Stadium"
+  },
+  {
+    "team_id": 8,
+    "team_name": "Napredak Kruševac",
+    "team_abbreviation": "NAP",
+    "team_stadium": "Mladost Stadium"
+  },
+  {
+    "team_id": 9,
+    "team_name": "Mladost Lučani",
+    "team_abbreviation": "MLU",
+    "team_stadium": "Mladost Stadium"
+  },
+  {
+    "team_id": 10,
+    "team_name": "IMT",
+    "team_abbreviation": "IMT",
+    "team_stadium": "Stadion Shopping Center"
+  },
+  {
+    "team_id": 11,
+    "team_name": "Radnik Surdulica",
+    "team_abbreviation": "RAD",
+    "team_stadium": "Surdulica City Stadium"
+  },
+  {
+    "team_id": 12,
+    "team_name": "Javor Ivanjica",
+    "team_abbreviation": "JAV",
+    "team_stadium": "Stadium Ivanjica"
+  },
+  {
+    "team_id": 13,
+    "team_name": "Železničar Pančevo",
+    "team_abbreviation": "ZEL",
+    "team_stadium": "Stadion Dinamo"
+  },
+  {
+    "team_id": 14,
+    "team_name": "Novi Pazar",
+    "team_abbreviation": "NPZ",
+    "team_stadium": "Stadium Novi Pazar"
+  },
+  {
+    "team_id": 15,
+    "team_name": "Radnički 1923",
+    "team_abbreviation": "R19",
+    "team_stadium": "Čika Dača Stadium"
+  },
+  {
+    "team_id": 16,
+    "team_name": "Voždovac",
+    "team_abbreviation": "VOZ",
+    "team_stadium": "Voždovac Stadium"
+  }
+]
