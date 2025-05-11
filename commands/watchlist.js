@@ -16,6 +16,7 @@ import {
 } from '../db.js';
 import { isValidTeam, suggestTeamName } from '../teams.js';
 import crypto from 'crypto';
+import { MessageFlags } from 'discord-api-types/v10';
 
 await ensureSchema();
 
@@ -71,7 +72,7 @@ export async function execute(interaction) {
   const isEphemeral = subcommandPrivacy[sub] ?? true;
 
    enqueueCommand(interaction, async (interaction) => {
-     await interaction.deferReply({ ephemeral: isEphemeral });
+     await interaction.deferReply({ flags: isEphemeral ? MessageFlags.Ephemeral : undefined });
 
     if (sub === 'add') {
       const position = interaction.options.getString('position');
