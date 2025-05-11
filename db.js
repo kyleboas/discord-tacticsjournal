@@ -29,7 +29,7 @@ export async function removeFromWatchlist(name) {
 
 export async function setPlayerScore(playerName, userId, username, score) {
   await pool.query(`
-    INSERT INTO watchlist_score (player_name, user_id, username, score)
+    INSERT INTO watchlistscore (player_name, user_id, username, score)
     VALUES ($1, $2, $3, $4)
     ON CONFLICT (player_name, user_id)
     DO UPDATE SET score = $4, username = $3
@@ -39,7 +39,7 @@ export async function setPlayerScore(playerName, userId, username, score) {
 export async function getAverageScores() {
   const res = await pool.query(`
     SELECT player_name, AVG(score)::numeric(4,2) AS avg_score
-    FROM watchlist_score
+    FROM watchlistscore
     GROUP BY player_name
   `);
   
@@ -60,12 +60,12 @@ export async function ensureSchema() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS watchlist_score (
+    CREATE TABLE IF NOT EXISTS watchlistscores (
       id SERIAL PRIMARY KEY,
       player_name TEXT NOT NULL,
       user_id TEXT NOT NULL,
       username TEXT NOT NULL,
-      score INTEGER CHECK (score BETWEEN 1 AND 10),
+      score NUMERIC(3,1) CHECK (score >= 1.0 AND score <= 10.0),
       UNIQUE(player_name, user_id)
     );
   `);
