@@ -244,37 +244,6 @@ export const data = new SlashCommandBuilder()
         .setMaxValue(10)
     )
   )
-  
-  .addSubcommand(sub =>
-    sub.setName('edit')
-      .setDescription('Edit a player')
-      .addStringOption(opt =>
-        opt.setName('original')
-          .setDescription('Current player name to edit')
-          .setRequired(true)
-      )
-      .addStringOption(opt =>
-        opt.setName('name')
-          .setDescription('New name (optional)')
-          .setRequired(false)
-      )
-      .addStringOption(opt =>
-        opt.setName('team')
-          .setDescription('New team (optional)')
-          .setRequired(false)
-      )
-      .addStringOption(opt =>
-        opt.setName('position')
-          .setDescription('New position (optional)')
-          .setRequired(false)
-          .addChoices(
-            { name: 'GK', value: 'GK' }, { name: 'LB', value: 'LB' }, { name: 'CB', value: 'CB' },
-            { name: 'RB', value: 'RB' }, { name: 'DM', value: 'DM' }, { name: 'CM', value: 'CM' },
-            { name: 'CAM', value: 'CAM' }, { name: 'LW', value: 'LW' }, { name: 'RW', value: 'RW' },
-            { name: 'SS', value: 'SS' }, { name: 'CF', value: 'CF' }
-          )
-      )
-      
   .addSubcommand(sub =>
     sub.setName('view')
       .setDescription('View the watchlist')
