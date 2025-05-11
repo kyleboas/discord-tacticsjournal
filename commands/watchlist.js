@@ -71,8 +71,11 @@ export async function execute(interaction) {
       if (!isValidTeam(team)) {
         if (suggestion) {
           const confirmId = crypto.randomUUID(); // import crypto at top
+          const userId = interaction.user.id;
+          const username = interaction.user.username;
+
           confirmAddMap.set(confirmId, {
-            suggestedTeam,
+            suggestedTeam: suggestion,
             position,
             name,
             userId,
