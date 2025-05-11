@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { addToWatchlist, getWatchlist } from './db.js';
 import { isValidTeam } from './teams.js';
+import { confirmAddMap } from './commands/watchlist.js';
 
 config(); // Loads .env
 
@@ -53,11 +54,16 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (interaction.isButton()) {
-    const [action, encodedData] = interaction.customId.split(':');
+    const [action, id] =      interaction.customId.split(':');
 
-    if (action === 'confirm_team') {
-      const payload = JSON.parse(decodeURIComponent(encodedData));
-      const { position, name, suggestedTeam, userId, username } = payload;
+      if (action === 'confirm_team') {
+        const payload = confirmAddMap.get(id);
+        if (!payload) {
+          await interaction.reply({ content: 'This confirmation has expired or is invalid.', ephemeral: true });
+          return;
+        }
+
+        const { position, name, suggestedTeam, userId, username } = payload;
 
       if (interaction.user.id !== userId) {
         await interaction.reply({

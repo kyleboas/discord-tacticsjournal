@@ -14,6 +14,7 @@ import {
   ensureSchema
 } from '../db.js';
 import { isValidTeam, suggestTeamName } from '../teams.js';
+import crypto from 'crypto';
 
 await ensureSchema();
 
@@ -69,17 +70,18 @@ export async function execute(interaction) {
 
       if (!isValidTeam(team)) {
         if (suggestion) {
-          const data = encodeURIComponent(JSON.stringify({
-            suggestedTeam: suggestion,
+          const confirmId = crypto.randomUUID(); // import crypto at top
+          confirmAddMap.set(confirmId, {
+            suggestedTeam,
             position,
             name,
-            userId: interaction.user.id,
-            username: interaction.user.username
-          }));
+            userId,
+            username
+          });
 
           const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-              .setCustomId(`confirm_team:${data}`)
+              .setCustomId(`confirm_team:${confirmId}`)
               .setLabel(`Yes, use "${suggestion}"`)
               .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
