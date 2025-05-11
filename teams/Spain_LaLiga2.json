@@ -1,0 +1,134 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "Albacete Balompié",
+    "team_abbreviation": "ALB",
+    "team_stadium": "Estadio Carlos Belmonte"
+  },
+  {
+    "team_id": 2,
+    "team_name": "UD Almería",
+    "team_abbreviation": "ALM",
+    "team_stadium": "Power Horse Stadium"
+  },
+  {
+    "team_id": 3,
+    "team_name": "Burgos CF",
+    "team_abbreviation": "BUR",
+    "team_stadium": "Estadio El Plantío"
+  },
+  {
+    "team_id": 4,
+    "team_name": "Cádiz CF",
+    "team_abbreviation": "CAD",
+    "team_stadium": "Estadio Nuevo Mirandilla"
+  },
+  {
+    "team_id": 5,
+    "team_name": "FC Cartagena",
+    "team_abbreviation": "CAR",
+    "team_stadium": "Estadio Cartagonova"
+  },
+  {
+    "team_id": 6,
+    "team_name": "CD Castellón",
+    "team_abbreviation": "CAS",
+    "team_stadium": "Estadio Castalia"
+  },
+  {
+    "team_id": 7,
+    "team_name": "Córdoba CF",
+    "team_abbreviation": "COR",
+    "team_stadium": "Estadio Nuevo Arcángel"
+  },
+  {
+    "team_id": 8,
+    "team_name": "Deportivo de La Coruña",
+    "team_abbreviation": "DEP",
+    "team_stadium": "Estadio Riazor"
+  },
+  {
+    "team_id": 9,
+    "team_name": "SD Eibar",
+    "team_abbreviation": "EIB",
+    "team_stadium": "Estadio Municipal de Ipurua"
+  },
+  {
+    "team_id": 10,
+    "team_name": "Elche CF",
+    "team_abbreviation": "ELC",
+    "team_stadium": "Estadio Manuel Martínez Valero"
+  },
+  {
+    "team_id": 11,
+    "team_name": "CD Eldense",
+    "team_abbreviation": "ELD",
+    "team_stadium": "Estadio Nuevo Pepico Amat"
+  },
+  {
+    "team_id": 12,
+    "team_name": "Granada CF",
+    "team_abbreviation": "GRA",
+    "team_stadium": "Estadio Nuevo Los Cármenes"
+  },
+  {
+    "team_id": 13,
+    "team_name": "SD Huesca",
+    "team_abbreviation": "HUE",
+    "team_stadium": "Estadio El Alcoraz"
+  },
+  {
+    "team_id": 14,
+    "team_name": "Levante UD",
+    "team_abbreviation": "LEV",
+    "team_stadium": "Estadio Ciutat de València"
+  },
+  {
+    "team_id": 15,
+    "team_name": "Málaga CF",
+    "team_abbreviation": "MAL",
+    "team_stadium": "Estadio La Rosaleda"
+  },
+  {
+    "team_id": 16,
+    "team_name": "CD Mirandés",
+    "team_abbreviation": "MIR",
+    "team_stadium": "Estadio Municipal de Anduva"
+  },
+  {
+    "team_id": 17,
+    "team_name": "Racing de Ferrol",
+    "team_abbreviation": "FER",
+    "team_stadium": "Estadio Municipal de A Malata"
+  },
+  {
+    "team_id": 18,
+    "team_name": "Racing de Santander",
+    "team_abbreviation": "RAC",
+    "team_stadium": "Campos de Sport de El Sardinero"
+  },
+  {
+    "team_id": 19,
+    "team_name": "Real Oviedo",
+    "team_abbreviation": "OVI",
+    "team_stadium": "Estadio Carlos Tartiere"
+  },
+  {
+    "team_id": 20,
+    "team_name": "Real Zaragoza",
+    "team_abbreviation": "ZAR",
+    "team_stadium": "Estadio La Romareda"
+  },
+  {
+    "team_id": 21,
+    "team_name": "Sporting de Gijón",
+    "team_abbreviation": "SPO",
+    "team_stadium": "Estadio El Molinón"
+  },
+  {
+    "team_id": 22,
+    "team_name": "CD Tenerife",
+    "team_abbreviation": "TEN",
+    "team_stadium": "Estadio Heliodoro Rodríguez López"
+  }
+]
