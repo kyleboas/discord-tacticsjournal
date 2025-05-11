@@ -1,0 +1,146 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "Cambridge United",
+    "team_abbreviation": "CAM",
+    "team_stadium": "Abbey Stadium"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Bristol Rovers",
+    "team_abbreviation": "BRI",
+    "team_stadium": "Memorial Stadium"
+  },
+  {
+    "team_id": 3,
+    "team_name": "Blackpool",
+    "team_abbreviation": "BLA",
+    "team_stadium": "Bloomfield Road"
+  },
+  {
+    "team_id": 4,
+    "team_name": "Bolton Wanderers",
+    "team_abbreviation": "BOL",
+    "team_stadium": "University of Bolton Stadium"
+  },
+  {
+    "team_id": 5,
+    "team_name": "Burton Albion",
+    "team_abbreviation": "BUR",
+    "team_stadium": "Pirelli Stadium"
+  },
+  {
+    "team_id": 6,
+    "team_name": "Exeter City",
+    "team_abbreviation": "EXE",
+    "team_stadium": "St James Park"
+  },
+  {
+    "team_id": 7,
+    "team_name": "Northampton Town",
+    "team_abbreviation": "NOR",
+    "team_stadium": "Sixfields Stadium"
+  },
+  {
+    "team_id": 8,
+    "team_name": "Lincoln City",
+    "team_abbreviation": "LIN",
+    "team_stadium": "LNER Stadium"
+  },
+  {
+    "team_id": 9,
+    "team_name": "Barnsley",
+    "team_abbreviation": "BAR",
+    "team_stadium": "Oakwell"
+  },
+  {
+    "team_id": 10,
+    "team_name": "Birmingham City",
+    "team_abbreviation": "BIR",
+    "team_stadium": "St. Andrew's"
+  },
+  {
+    "team_id": 11,
+    "team_name": "Peterborough United",
+    "team_abbreviation": "PET",
+    "team_stadium": "London Road"
+  },
+  {
+    "team_id": 12,
+    "team_name": "Wigan Athletic",
+    "team_abbreviation": "WIG",
+    "team_stadium": "DW Stadium"
+  },
+  {
+    "team_id": 13,
+    "team_name": "Wycombe Wanderers",
+    "team_abbreviation": "WYC",
+    "team_stadium": "Adams Park"
+  },
+  {
+    "team_id": 14,
+    "team_name": "Huddersfield Town",
+    "team_abbreviation": "HUD",
+    "team_stadium": "John Smith's Stadium"
+  },
+  {
+    "team_id": 15,
+    "team_name": "Bolton Wanderers",
+    "team_abbreviation": "BOL",
+    "team_stadium": "University of Bolton Stadium"
+  },
+  {
+    "team_id": 16,
+    "team_name": "Charlton Athletic",
+    "team_abbreviation": "CHA",
+    "team_stadium": "The Valley"
+  },
+  {
+    "team_id": 17,
+    "team_name": "Stockport County",
+    "team_abbreviation": "STO",
+    "team_stadium": "Edgeley Park"
+  },
+  {
+    "team_id": 18,
+    "team_name": "Mansfield Town",
+    "team_abbreviation": "MAN",
+    "team_stadium": "One Call Stadium"
+  },
+  {
+    "team_id": 19,
+    "team_name": "Reading",
+    "team_abbreviation": "REA",
+    "team_stadium": "Madejski Stadium"
+  },
+  {
+    "team_id": 20,
+    "team_name": "Rotherham United",
+    "team_abbreviation": "ROT",
+    "team_stadium": "AESSEAL New York Stadium"
+  },
+  {
+    "team_id": 21,
+    "team_name": "Stevenage",
+    "team_abbreviation": "STE",
+    "team_stadium": "Lamex Stadium"
+  },
+  {
+    "team_id": 22,
+    "team_name": "Leyton Orient",
+    "team_abbreviation": "LEY",
+    "team_stadium": "The Breyer Group Stadium"
+  },
+  {
+    "team_id": 23,
+    "team_name": "Crawley Town",
+    "team_abbreviation": "CRA",
+    "team_stadium": "Broadfield Stadium"
+  },
+  {
+    "team_id": 24,
+    "team_name": "Shrewsbury Town",
+    "team_abbreviation": "SHR",
+    "team_stadium": "New Meadow"
+  }
+]
