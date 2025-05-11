@@ -236,7 +236,7 @@ export async function execute(interaction) {
           }
         }
       }
-      await interaction.editReply({ content: output, ephemeral: true });
+      await interaction.reply({ content: output, ephemeral: true });
     }
   });
 }
