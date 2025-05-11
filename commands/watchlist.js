@@ -132,8 +132,7 @@ export async function execute(interaction) {
     }
    }
    else if (sub === 'edit') {
-      const original = interaction.options.getString('original');
-      const newName = interaction.options.getString('name');
+      const original = interaction.options.getString('name');
       const newTeam = interaction.options.getString('team');
       const newPosition = interaction.options.getString('position');
       const userId = interaction.user.id;
