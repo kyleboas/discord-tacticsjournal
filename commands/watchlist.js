@@ -8,7 +8,7 @@ import {
   getAverageScores,
   ensureSchema
 } from '../db.js';
-import { isValidTeam } from '../teams.js';
+import { isValidTeam, suggestTeamName } from '../teams.js';
 
 await ensureSchema();
 
@@ -71,9 +71,15 @@ export async function execute(interaction) {
       const name = interaction.options.getString('name');
       const lowerName = name.toLowerCase();
       
+      let finalTeam = team;
       if (!isValidTeam(team)) {
-      await interaction.editReply(`**${team}** is not a recognized team name. Please use an official club name.`);
-        return;
+        const suggestion = suggestTeamName(team);
+        if (suggestion) {
+          finalTeam = suggestion;
+        } else {
+          await interaction.editReply(`**${team}** is not a recognized team name and no suggestions found.`);
+          return;
+        }
       }
 
       const list = await getWatchlist();
@@ -87,7 +93,7 @@ export async function execute(interaction) {
       const userId = interaction.user.id;
       const username = interaction.user.username;
 
-      await addToWatchlist(position, team, name, userId, username);
+      await addToWatchlist(position, finalTeam, name, userId, username);
 
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
     }
