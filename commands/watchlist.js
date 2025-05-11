@@ -270,7 +270,7 @@ export const data = new SlashCommandBuilder()
       )
   )
   
-  .addSubcommand(sub =>
+    .addSubcommand(sub =>
     sub.setName('edit')
       .setDescription('Edit a player')
       .addStringOption(opt =>
@@ -299,37 +299,7 @@ export const data = new SlashCommandBuilder()
             { name: 'SS', value: 'SS' }, { name: 'CF', value: 'CF' }
           )
       )
-      
-     .addSubcommand(sub =>
-      sub.setName('edit')
-         .setDescription('Edit an existing player on the watchlist')
-         .addStringOption(opt =>
-           opt.setName('original')
-             .setDescription('Current name of the player')
-             .setRequired(true)
-         )
-         .addStringOption(opt =>
-           opt.setName('name')
-             .setDescription('New player name (optional)')
-             .setRequired(false)
-         )
-         .addStringOption(opt =>
-           opt.setName('team')
-             .setDescription('New team name (optional)')
-             .setRequired(false)
-         )
-         .addStringOption(opt =>
-           opt.setName('position')
-             .setDescription('New position (optional)')
-             .setRequired(false)
-             .addChoices(
-               { name: 'GK', value: 'GK' }, { name: 'LB', value: 'LB' }, { name: 'CB', value: 'CB' },
-               { name: 'RB', value: 'RB' }, { name: 'DM', value: 'DM' }, { name: 'CM', value: 'CM' },
-               { name: 'CAM', value: 'CAM' }, { name: 'LW', value: 'LW' }, { name: 'RW', value: 'RW' },
-               { name: 'SS', value: 'SS' }, { name: 'CF', value: 'CF' }
-             )
-         )
-     )
+  )
       
   .addSubcommand(sub =>
     sub.setName('remove')
