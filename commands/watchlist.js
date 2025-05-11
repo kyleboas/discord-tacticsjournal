@@ -228,3 +228,5 @@ export const data = new SlashCommandBuilder()
           )
       )
   );
+
+export { confirmAddMap };
