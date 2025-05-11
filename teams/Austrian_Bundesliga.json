@@ -1,0 +1,74 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "Austria Klagenfurt",
+    "team_abbreviation": "AKL",
+    "team_stadium": "Wörthersee Stadion"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Austria Wien",
+    "team_abbreviation": "AWI",
+    "team_stadium": "Generali Arena"
+  },
+  {
+    "team_id": 3,
+    "team_name": "Blau-Weiß Linz",
+    "team_abbreviation": "BWL",
+    "team_stadium": "Hofmann Personal Stadion"
+  },
+  {
+    "team_id": 4,
+    "team_name": "Grazer AK",
+    "team_abbreviation": "GAK",
+    "team_stadium": "Merkur-Arena"
+  },
+  {
+    "team_id": 5,
+    "team_name": "LASK",
+    "team_abbreviation": "LAS",
+    "team_stadium": "Raiffeisen Arena"
+  },
+  {
+    "team_id": 6,
+    "team_name": "Rapid Wien",
+    "team_abbreviation": "RAP",
+    "team_stadium": "Allianz Stadion"
+  },
+  {
+    "team_id": 7,
+    "team_name": "RB Salzburg",
+    "team_abbreviation": "RBS",
+    "team_stadium": "Red Bull Arena"
+  },
+  {
+    "team_id": 8,
+    "team_name": "Rheindorf Altach",
+    "team_abbreviation": "ALT",
+    "team_stadium": "Stadion Schnabelholz"
+  },
+  {
+    "team_id": 9,
+    "team_name": "Sturm Graz",
+    "team_abbreviation": "STG",
+    "team_stadium": "Merkur-Arena"
+  },
+  {
+    "team_id": 10,
+    "team_name": "TSV Hartberg",
+    "team_abbreviation": "TSV",
+    "team_stadium": "Profertil Arena Hartberg"
+  },
+  {
+    "team_id": 11,
+    "team_name": "Wolfsberger AC",
+    "team_abbreviation": "WAC",
+    "team_stadium": "Lavanttal-Arena"
+  },
+  {
+    "team_id": 12,
+    "team_name": "WSG Tirol",
+    "team_abbreviation": "WSG",
+    "team_stadium": "Tivoli Stadion Tirol"
+  }
+]
