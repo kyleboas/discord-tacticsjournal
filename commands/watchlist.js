@@ -20,7 +20,7 @@ await ensureSchema();
 
 const commandQueue = [];
 let isProcessing = false;
-const confirmAddMap = new Map();
+export const confirmAddMap = new Map();
 
 async function processQueue() {
   if (isProcessing || commandQueue.length === 0) return;
@@ -252,5 +252,3 @@ export const data = new SlashCommandBuilder()
           )
       )
   );
-
-export { confirmAddMap };
