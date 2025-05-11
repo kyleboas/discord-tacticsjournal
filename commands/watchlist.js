@@ -66,6 +66,7 @@ export async function execute(interaction) {
       const team = interaction.options.getString('team');
       const name = interaction.options.getString('name');
       const lowerName = name.toLowerCase();
+      const score = interaction.options.getNumber('score');
       const suggestion = suggestTeamName(team);
 
       if (!isValidTeam(team)) {
@@ -113,7 +114,15 @@ export async function execute(interaction) {
       const userId = interaction.user.id;
       const username = interaction.user.username;
       await addToWatchlist(position, team, name, userId, username);
-      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
+      if (typeof score === 'number') {
+      if (!/^\d+(\.\d)?$/.test(score.toString())) {
+        await interaction.editReply({ content: 'Score must be a number with up to 1 decimal place.', ephemeral: true });
+        return;
+      }
+
+      await setPlayerScore(name, userId, username, score);
+      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name} | ${score}/10`);
+      return;
     }
 
     else if (sub === 'remove') {
@@ -205,6 +214,13 @@ export const data = new SlashCommandBuilder()
       )
       .addStringOption(opt => opt.setName('team').setDescription('Team').setRequired(true))
       .addStringOption(opt => opt.setName('name').setDescription('Player name').setRequired(true))
+      .addNumberOption(opt =>
+        opt.setName('score')
+          .setDescription('Initial score between 1.0 and 10.0 (optional)')
+          .setMinValue(1)
+          .setMaxValue(10)
+          .setRequired(false)
+      )
   )
   .addSubcommand(sub =>
     sub.setName('remove')
@@ -231,8 +247,8 @@ export const data = new SlashCommandBuilder()
           .setDescription('Which watchlist to view')
           .setRequired(true)
           .addChoices(
-            { name: 'Community', value: 'community' },
-            { name: 'Your', value: 'your' }
+            { name: 'Community Watchlist', value: 'community' },
+            { name: 'Your Watchlist', value: 'your' }
           )
       )
   );
