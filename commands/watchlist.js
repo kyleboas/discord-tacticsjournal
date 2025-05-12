@@ -3,7 +3,9 @@ import {
   SlashCommandBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder
 } from 'discord.js';
 import {
   getWatchlist,
@@ -17,7 +19,6 @@ import {
 import { isValidTeam, suggestTeamName } from '../teams.js';
 import crypto from 'crypto';
 import { MessageFlags } from 'discord-api-types/v10';
-import { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 
 await ensureSchema();
 
