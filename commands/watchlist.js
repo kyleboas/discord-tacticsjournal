@@ -141,13 +141,15 @@ export async function execute(interaction) {
           .setCustomId(`score:${name}`)
           .setPlaceholder('Select a score (1–10)')
           .addOptions(
-          ...Array.from({ length: 10 }, (_, i) => {
-            const val = `${i + 1}`;
-            return new StringSelectMenuOptionBuilder()
-              .setLabel(`${val}/10`)
-              .setValue(val);
-          })
-        );
+            Array.from({ length: 10 }, (_, i) => {
+              const val = `${i + 1}`;
+              return {
+                label: `${val}/10`,
+                value: val
+              };
+            })
+          )
+      );
 
       await channel.send({
         content: `Added to watchlist: ${position} | ${team} | ${name} ${score ? `| ${score}/10` : ''} by <@${userId}>.\n` +
