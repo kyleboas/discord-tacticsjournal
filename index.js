@@ -24,7 +24,14 @@ client.commands = new Collection();
 
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-  const command = await import(`./commands/${file}`);
+  const commandModule = await import(`./commands/${file}`);
+  const command = commandModule.default || commandModule;
+
+  if (!command?.data?.name) {
+    console.warn(`[WARN] Skipping ${file}: missing 'data.name'`);
+    continue;
+  }
+
   client.commands.set(command.data.name, command);
 }
 
