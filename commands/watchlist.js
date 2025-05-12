@@ -139,13 +139,16 @@ export async function execute(interaction) {
       const scoreDropdown = new       ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`score:${name}`)
-          .setPlaceholder('Select a score (1–10)')
-          .addOptions(
-            Array.from({ length: 10 }, (_, i) => ({
-              label: `${i + 1}/10`,
-              value: `${i + 1}`
-            }))
-          )
+          .setPlaceholder('Select a tier')
+          .addOptions([
+            { label: 'Generational 9.5', value: '9.5' },
+            { label: 'World-Class 9.0', value: '9.0' },
+            { label: 'Elite 8.5', value: '8.5' },
+            { label: 'Great 8.0', value: '8.0' },
+            { label: 'Good 7.5', value: '7.5' },
+            { label: 'Average 7.0', value: '7.0' },
+            { label: 'Squad player 6.5', value: '6.5' }
+          ])
       );
 
       await channel.send({
