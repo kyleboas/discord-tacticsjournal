@@ -73,8 +73,8 @@ export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
   const isEphemeral = subcommandPrivacy[sub] ?? true;
 
-   enqueueCommand(interaction, async (interaction) => {
-     await interaction.deferReply({ flags: isEphemeral ? MessageFlags.Ephemeral : undefined });
+  enqueueCommand(interaction, async (interaction) => {
+    await interaction.deferReply({ flags: isEphemeral ? MessageFlags.Ephemeral : undefined });
 
     if (sub === 'add') {
       const position = interaction.options.getString('position');
@@ -136,7 +136,7 @@ export async function execute(interaction) {
         ? `**${parseFloat(scores[name.toLowerCase()]).toFixed(1)}**/10`
         : '**--**/10';
 
-      const scoreDropdown = new       ActionRowBuilder().addComponents(
+      const scoreDropdown = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`score:${name}`)
           .setPlaceholder('Select a tier')
@@ -157,12 +157,9 @@ export async function execute(interaction) {
         components: [scoreDropdown]
       });
 
-      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name} | ${score}/10`);
-    } else {
-      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
-    }
-   }
-   else if (sub === 'edit') {
+      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name} | ${score ? `${score}/10` : ''}`);
+    } 
+    else if (sub === 'edit') {
       const original = interaction.options.getString('name');
       const newTeam = interaction.options.getString('team');
       const newPosition = interaction.options.getString('position');
@@ -184,7 +181,6 @@ export async function execute(interaction) {
       }
 
       const updates = {};
-      if (newName) updates.name = newName;
       if (newTeam) {
         if (!isValidTeam(newTeam)) {
           await interaction.editReply(`**${newTeam}** is not a recognized team.`);
@@ -201,28 +197,26 @@ export async function execute(interaction) {
         await interaction.editReply('No changes were made.');
       }
     }
-
     else if (sub === 'remove') {
-    const name = interaction.options.getString('name');
-    const userId = interaction.user.id;
-    const isAdmin = interaction.member.roles.cache.has('1120846837671268514');
-    const list = await getWatchlist();
-    const match = list.find(p => p.name.toLowerCase() === name.toLowerCase());
+      const name = interaction.options.getString('name');
+      const userId = interaction.user.id;
+      const isAdmin = interaction.member.roles.cache.has('1120846837671268514');
+      const list = await getWatchlist();
+      const match = list.find(p => p.name.toLowerCase() === name.toLowerCase());
 
-    if (!match) {
-      await interaction.editReply(`Player **${name}** not found.`);
-      return;
+      if (!match) {
+        await interaction.editReply(`Player **${name}** not found.`);
+        return;
+      }
+
+      if (match.user_id !== userId && !isAdmin) {
+        await interaction.editReply({ content: 'You can only remove players you added.', ephemeral: true });
+        return;
+      }
+
+      const removed = await removeFromWatchlist(name);
+      await interaction.editReply(removed ? `Removed: ${name}` : `Failed to remove ${name}.`);
     }
-
-    if (match.user_id !== userId && !isAdmin) {
-      await interaction.editReply({ content: 'You can only remove players you added.', ephemeral: true });
-      return;
-    }
-
-    const removed = await removeFromWatchlist(name);
-    await interaction.editReply(removed ? `Removed: ${name}` : `Failed to remove ${name}.`);
-  }
-
     else if (sub === 'score') {
       const nameInput = interaction.options.getString('name');
       const score = interaction.options.getNumber('score');
@@ -250,7 +244,6 @@ export async function execute(interaction) {
       await setPlayerScore(match.name, userId, username, score);
       await interaction.editReply(`Scored **${match.name}**: ${score}/10`);
     }
-
     else if (sub === 'view') {
       const scope = interaction.options.getString('scope');
       const userId = interaction.user.id;
@@ -314,8 +307,7 @@ export const data = new SlashCommandBuilder()
           .setRequired(false)
       )
   )
-  
-    .addSubcommand(sub =>
+  .addSubcommand(sub =>
     sub.setName('edit')
       .setDescription('Edit a player')
       .addStringOption(opt =>
@@ -340,7 +332,6 @@ export const data = new SlashCommandBuilder()
           )
       )
   )
-      
   .addSubcommand(sub =>
     sub.setName('remove')
       .setDescription('Remove a player')
