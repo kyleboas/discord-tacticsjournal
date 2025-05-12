@@ -150,11 +150,16 @@ export async function execute(interaction) {
             { label: 'Squad player 6.5', value: '6.5' }
           ])
       );
-
-      await channel.send({
+      
+      const sentMessage = await channel.send({
         content: `Added to watchlist by <@${userId}>\n${position} | ${team} | ${name} ${score ? `| ${score}/10` : ''}` +
-         `\nSelect a score:`,
+          `\nSelect a score:`,
         components: [scoreDropdown]
+      });
+
+      confirmAddMap.set(name.toLowerCase(), {
+        messageId: sentMessage.id,
+        channelId: channel.id,
       });
 
       await interaction.editReply(`Added to watchlist\n ${position} | ${team} | ${name} | ${score ? `${score}/10` : ''}`);
@@ -242,6 +247,23 @@ export async function execute(interaction) {
       }
 
       await setPlayerScore(match.name, userId, username, score);
+      
+      const ref =       confirmAddMap.get(match.name.toLowerCase());
+      if (ref) {
+        const avgScores = await getAverageScores();
+        const newAvg = avgScores[match.name.toLowerCase()];
+        if (newAvg) {
+          try {
+            const msgChannel = await interaction.client.channels.fetch(ref.channelId);
+            const msg = await msgChannel.messages.fetch(ref.messageId);
+            await msg.edit({
+              content: `**${match.name}** updated average: **${parseFloat(newAvg).toFixed(1)}**/10\n(Originally added by <@${match.user_id}>)`
+            });
+          } catch (err) {
+            console.error('Failed to edit message for score update:', err);
+          }
+        }
+      }
       await interaction.editReply(`Scored **${match.name}**: ${score}/10`);
     }
     else if (sub === 'view') {
