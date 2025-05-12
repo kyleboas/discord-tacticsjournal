@@ -136,18 +136,18 @@ export async function execute(interaction) {
         ? `**${parseFloat(scores[name.toLowerCase()]).toFixed(1)}**/10`
         : '**--**/10';
 
-      const scoreDropdown = new ActionRowBuilder().addComponents(
+      const scoreDropdown = new       ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`score:${name}`)
           .setPlaceholder('Select a score (1–10)')
-        .addOptions(
-        ...Array.from({ length: 10 }, (_, i) => {
-          const val = `${i + 1}`;
-          return new StringSelectMenuOptionBuilder()
-            .setLabel(`${val}/10`)
-            .setValue(val);
-        })
-       )
+          .addOptions(
+            ...Array.from({ length: 10 }, (_, i) => {
+              const val = `${i + 1}`;
+              return new StringSelectMenuOptionBuilder()
+                .setLabel(`${val}/10`)
+                .setValue(val);
+            })
+          )
       );
 
       await channel.send({
