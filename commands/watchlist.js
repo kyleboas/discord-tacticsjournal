@@ -152,7 +152,7 @@ export async function execute(interaction) {
       );
 
       await channel.send({
-        content: `Added to watchlist by <@${userId}>\n ${position} | ${team} | ${name} ${score ? `| ${score}/10` : ''}` +
+        content: `Added to watchlist by <@${userId}>\n${position} | ${team} | ${name} ${score ? `| ${score}/10\n` : ''}` +
          `Select a score:`,
         components: [scoreDropdown]
       });
