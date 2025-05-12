@@ -184,10 +184,25 @@ export async function execute(interaction) {
     }
 
     else if (sub === 'remove') {
-      const name = interaction.options.getString('name');
-      const removed = await removeFromWatchlist(name);
-      await interaction.editReply(removed ? `Removed: ${name}` : `Not found.`);
+    const name = interaction.options.getString('name');
+    const userId = interaction.user.id;
+    const isAdmin = interaction.member.roles.cache.has('1120846837671268514');
+    const list = await getWatchlist();
+    const match = list.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+    if (!match) {
+      await interaction.editReply(`Player **${name}** not found.`);
+      return;
     }
+
+    if (match.user_id !== userId && !isAdmin) {
+      await interaction.editReply({ content: 'You can only remove players you added.', ephemeral: true });
+      return;
+    }
+
+    const removed = await removeFromWatchlist(name);
+    await interaction.editReply(removed ? `Removed: ${name}` : `Failed to remove ${name}.`);
+  }
 
     else if (sub === 'score') {
       const nameInput = interaction.options.getString('name');
