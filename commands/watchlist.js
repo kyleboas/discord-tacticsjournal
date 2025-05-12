@@ -352,3 +352,5 @@ export const data = new SlashCommandBuilder()
           )
       )
   );
+  
+export default { data, execute };
