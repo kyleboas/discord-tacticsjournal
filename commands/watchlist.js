@@ -347,37 +347,55 @@ export async function execute(interaction) {
     }
     else if (sub === 'view') {
       const scope = interaction.options.getString('scope');
-      const userId = interaction.user.id;
-      let list = await getWatchlist();
-      const scores = await getAverageScores();
+        const group = interaction.options.getString('group');
+        const userId = interaction.user.id;
 
-      if (scope === 'your') list = list.filter(p => p.user_id === userId);
-      if (!list.length) {
-        await interaction.editReply(`The ${scope} watchlist is empty.`);
-        return;
-      }
+        let list = await getWatchlist();
+        const scores = await getAverageScores();
 
-      const positionOrder = ['GK','LB','CB','RB','DM','CM','CAM','LW','RW','SS','ST','CF'];
-      const grouped = {};
-      for (const pos of positionOrder) grouped[pos] = [];
-      for (const player of list) grouped[player.position]?.push(player);
+        if (scope === 'your') list = list.filter(p => p.user_id === userId);
 
-      let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist**\n`;
-      for (const pos of positionOrder) {
-        const players = grouped[pos];
-        if (players?.length) {
-          players.sort((a, b) => parseFloat(scores[b.name.toLowerCase()] || 0) - parseFloat(scores[a.name.toLowerCase()] || 0));
-          output += `\n**${pos}**\n`;
-          for (const p of players) {
-            const score = scores[p.name.toLowerCase()] ? parseFloat(scores[p.name.toLowerCase()]).toFixed(1) : '--';
-            output += scope === 'your'
-              ? `- ${score} ${p.name} (${p.team})\n`
-              : `- ${score} ${p.name} (${p.team}) - ${p.username}\n`;
+        if (!list.length) {
+          await interaction.editReply(`The ${scope} watchlist is empty.`);
+          return;
+        }
+
+        const groupings = {
+          Defenders: ['GK', 'LB', 'CB', 'RB'],
+          Midfielders: ['DM', 'CM', 'CAM'],
+          Forwards: ['LW', 'RW', 'SS', 'CF']
+        };
+
+        const positionOrder = ['GK','LB','CB','RB','DM','CM','CAM','LW','RW','SS','CF'];
+
+        if (group) {
+          const allowed = groupings[group];
+          list = list.filter(p => allowed.includes(p.position));
+        }
+
+        const grouped = {};
+        for (const pos of positionOrder) grouped[pos] = [];
+        for (const player of list) grouped[player.position]?.push(player);
+
+        let output = `**${scope === 'your' ? 'Your' : 'Community'} Watchlist${group ? `: ${group}` : ''}**\n`;
+        for (const pos of positionOrder) {
+          const players = grouped[pos];
+          if (players?.length) {
+            players.sort((a, b) =>
+              parseFloat(scores[b.name.toLowerCase()] || 0) - parseFloat(scores[a.name.toLowerCase()] || 0)
+            );
+            output += `\n**${pos}**\n`;
+            for (const p of players) {
+              const score = scores[p.name.toLowerCase()] ? parseFloat(scores[p.name.toLowerCase()]).toFixed(1) : '--';
+              output += scope === 'your'
+                ? `- ${score} ${p.name} (${p.team})\n`
+                : `- ${score} ${p.name} (${p.team}) - ${p.username}\n`;
+            }
           }
         }
+
+        await chunkAndReply(output, interaction);
       }
-      await interaction.editReply({ content: output });
-    }
   });
 }
 
@@ -460,15 +478,26 @@ export const data = new SlashCommandBuilder()
           )
       )
   .addSubcommand(sub =>
-    sub.setName('view')
-      .setDescription('View the watchlist')
-      .addStringOption(opt =>
-        opt.setName('scope')
-          .setDescription('Which watchlist to view')
-          .setRequired(true)
-          .addChoices(
-            { name: 'Community Watchlist', value: 'community' },
-            { name: 'Your Watchlist', value: 'your' }
+      sub.setName('view')
+          .setDescription('View the watchlist')
+          .addStringOption(opt =>
+            opt.setName('scope')
+              .setDescription('Which watchlist to view')
+              .setRequired(true)
+              .addChoices(
+                { name: 'Community Watchlist', value: 'community' },
+                { name: 'Your Watchlist', value: 'your' }
+              )
+          )
+          .addStringOption(opt =>
+            opt.setName('group')
+              .setDescription('Limit by player role group')
+              .setRequired(false)
+              .addChoices(
+                { name: 'Defenders', value: 'Defenders' },
+                { name: 'Midfielders', value: 'Midfielders' },
+                { name: 'Forwards', value: 'Forwards' }
+              )
           )
       )
   );
