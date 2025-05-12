@@ -157,7 +157,7 @@ export async function execute(interaction) {
         components: [scoreDropdown]
       });
 
-      await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name} | ${score ? `${score}/10` : ''}`);
+      await interaction.editReply(`Added to watchlist\n ${position} | ${team} | ${name} | ${score ? `${score}/10` : ''}`);
     } 
     else if (sub === 'edit') {
       const original = interaction.options.getString('name');
