@@ -17,6 +17,7 @@ import {
 import { isValidTeam, suggestTeamName } from '../teams.js';
 import crypto from 'crypto';
 import { MessageFlags } from 'discord-api-types/v10';
+import { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 
 await ensureSchema();
 
@@ -129,23 +130,31 @@ export async function execute(interaction) {
       await addToWatchlist(position, team, name, userId, username);
       
 
-    const channel = interaction.client.channels.cache.get('1109240048920039494');
-    if (channel?.isTextBased()) {
-      const msg = `**${name}** added to the watchlist (${position} | ${team}) by <@${userId}>.\n` +
-                  `Vote by using \`/watchlist score name:${name} score:<1-10>\``;
-      await channel.send(msg);
-    }
+      const scores = await getAverageScores();
+      const avgScore = scores[name.toLowerCase()] 
+        ? `**${parseFloat(scores[name.toLowerCase()]).toFixed(1)}**/10`
+        : '**--**/10';
 
-    if (typeof score === 'number') {
-      if (!/^\d+(\.\d)?$/.test(score.toString())) {
-        await interaction.editReply({
-          content: 'Score must be a number with up to 1 decimal place.',
-          ephemeral: true
-        });
-        return;
-      }
+      const scoreDropdown = new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`score:${name}`)
+          .setPlaceholder('Select a score (1–10)')
+          .addOptions(
+            Array.from({ length: 10 }, (_, i) => {
+              const val = `${i + 1}`;
+              return new StringSelectMenuOptionBuilder()
+                .setLabel(`${val}/10`)
+                .setValue(val);
+            })
+          )
+      );
 
-      await setPlayerScore(name, userId, username, score);
+      await channel.send({
+        content: `Added to watchlist: ${position} | ${team} | ${name} | ${score}/10 by <@${userId}>.\n` +
+                 `Select a score below:`,
+        components: [scoreDropdown]
+      });
+
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name} | ${score}/10`);
     } else {
       await interaction.editReply(`Added to watchlist: ${position} | ${team} | ${name}`);
