@@ -84,9 +84,9 @@ client.on('interactionCreate', async interaction => {
           const { position, team } = ref;
 
           await msg.edit({
-            content: `Added to watchlist by <@${userId}>\n**${avg}** | ${position} | ${name} (${team})`,
-            components: components
-          });
+          content: `Added to watchlist by <@${ref.userId}>\n**${avg}** | ${position} | ${name} (${team})`,
+          components
+        });
         } catch (err) {
           console.error('Failed to edit message for score update:', err);
         }
