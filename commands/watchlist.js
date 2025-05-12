@@ -152,14 +152,14 @@ export async function execute(interaction) {
       );
       
       const sentMessage = await channel.send({
-        content: `Added to watchlist by <@${userId}>\n${position} | ${team} | ${name} ${score ? `| ${score}/10` : ''}` +
-          `\nSelect a score:`,
+      content: `Added to watchlist by <@${userId}>\n**${score || '--'}** | ${position} | ${team} | ${name}`,
         components: [scoreDropdown]
       });
 
       confirmAddMap.set(name.toLowerCase(), {
         messageId: sentMessage.id,
         channelId: channel.id,
+        userId: userId
       });
 
       await interaction.editReply(`Added to watchlist\n ${position} | ${team} | ${name} | ${score ? `${score}/10` : ''}`);
@@ -248,7 +248,7 @@ export async function execute(interaction) {
 
       await setPlayerScore(match.name, userId, username, score);
       
-      const ref =       confirmAddMap.get(match.name.toLowerCase());
+      const ref = confirmAddMap.get(match.name.toLowerCase());
       if (ref) {
         const avgScores = await getAverageScores();
         const newAvg = avgScores[match.name.toLowerCase()];
@@ -256,9 +256,17 @@ export async function execute(interaction) {
           try {
             const msgChannel = await interaction.client.channels.fetch(ref.channelId);
             const msg = await msgChannel.messages.fetch(ref.messageId);
-            await msg.edit({
-              content: `**${match.name}** updated average: **${parseFloat(newAvg).toFixed(1)}**/10\n(Originally added by <@${match.user_id}>)`
-            });
+            
+            // Get player details to preserve them in the updated message
+            const list = await getWatchlist();
+            const playerInfo = list.find(p => p.name.toLowerCase() === match.name.toLowerCase());
+            
+            if (playerInfo) {
+              await msg.edit({
+                content: `Added to watchlist by <@${ref.userId}>\n**${parseFloat(newAvg).toFixed(1)}** | ${playerInfo.position} | ${playerInfo.team} | ${match.name}`,
+                components: msg.components
+              });
+            }
           } catch (err) {
             console.error('Failed to edit message for score update:', err);
           }

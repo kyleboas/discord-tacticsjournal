@@ -59,25 +59,44 @@ client.on('interactionCreate', async interaction => {
     }
   }
   
-  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('score:')) {
-    const [, name] = interaction.customId.split(':');
-    const selected = interaction.values[0];
-    const score = Number(selected);
+  if (interaction.isStringSelectMenu() &&     interaction.customId.startsWith('score:')) {
+      const [, name] = interaction.customId.split(':');
+      const selected = interaction.values[0];
+      const score = Number(selected);
 
-    const userId = interaction.user.id;
-    const username = interaction.user.username;
+      const userId = interaction.user.id;
+      const username = interaction.user.username;
 
-    await setPlayerScore(name, userId, username, score);
-    const scores = await getAverageScores();
-    const avg = scores[name.toLowerCase()] 
-      ? parseFloat(scores[name.toLowerCase()]).toFixed(1) 
-      : '--';
+      await setPlayerScore(name, userId, username, score);
+      const scores = await getAverageScores();
+      const avg = scores[name.toLowerCase()] 
+        ? parseFloat(scores[name.toLowerCase()]).toFixed(1) 
+        : '--';
 
-    await interaction.reply({
-      content: `You rated **${name}** ${score}/10. New avg: **${avg}**`,
-      ephemeral: true
-    });
-  }
+      // Update the original message if possible
+      const ref = confirmAddMap.get(name.toLowerCase());
+      if (ref) {
+        try {
+          const msgChannel = await interaction.client.channels.fetch(ref.channelId);
+          const msg = await msgChannel.messages.fetch(ref.messageId);
+          
+          // Keep the dropdown component
+          const components = msg.components;
+          
+          await msg.edit({
+            content: `Added to watchlist by <@${userId}>\n**${avg}** ${name}`,
+            components: components
+          });
+        } catch (err) {
+          console.error('Failed to edit message for score update:', err);
+        }
+      }
+
+      await interaction.reply({
+        content: `You rated **${name}** ${score}/10. New avg: **${avg}**`,
+        ephemeral: true
+      });
+    }
 
   if (interaction.isButton()) {
     const [action, id] = interaction.customId.split(':');
