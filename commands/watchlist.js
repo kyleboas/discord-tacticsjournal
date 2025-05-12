@@ -26,7 +26,7 @@ export const confirmAddMap = new Map();
 
 // Visibility config: true = ephemeral/private, false = public
 const subcommandPrivacy = {
-  add: false,
+  add: true,
   remove: true,
   score: false,
   view: true,
@@ -127,6 +127,14 @@ export async function execute(interaction) {
       const userId = interaction.user.id;
       const username = interaction.user.username;
       await addToWatchlist(position, team, name, userId, username);
+      
+
+    const channel = interaction.client.channels.cache.get('1371507335372996760');
+    if (channel?.isTextBased()) {
+      const msg = `**${name}** added to the watchlist (${position} | ${team}) by <@${userId}>.\n` +
+                  `Vote by using \`/watchlist score name:${name} score:<1-10>\``;
+      await channel.send(msg);
+    }
 
     if (typeof score === 'number') {
       if (!/^\d+(\.\d)?$/.test(score.toString())) {
