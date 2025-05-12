@@ -141,13 +141,10 @@ export async function execute(interaction) {
           .setCustomId(`score:${name}`)
           .setPlaceholder('Select a score (1–10)')
           .addOptions(
-            Array.from({ length: 10 }, (_, i) => {
-              const val = `${i + 1}`;
-              return {
-                label: `${val}/10`,
-                value: val
-              };
-            })
+            Array.from({ length: 10 }, (_, i) => ({
+              label: `${i + 1}/10`,
+              value: `${i + 1}`
+            }))
           )
       );
 
