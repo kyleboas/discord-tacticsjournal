@@ -30,7 +30,7 @@ export const confirmAddMap = new Map();
 const subcommandPrivacy = {
   add: true,
   remove: true,
-  score: false,
+  score: true,
   view: true,
   edit: true
 };
