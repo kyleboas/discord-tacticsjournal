@@ -58,6 +58,26 @@ client.on('interactionCreate', async interaction => {
       }
     }
   }
+  
+  if (interaction.isStringSelectMenu() &&   interaction.customId.startsWith('score:')) {
+    const [, name] = interaction.customId.split(':');
+    const selected = interaction.values[0];
+    const score = Number(selected);
+
+    const userId = interaction.user.id;
+    const username = interaction.user.username;
+
+    await setPlayerScore(name, userId, username, score);
+    const scores = await getAverageScores();
+    const avg = scores[name.toLowerCase()] 
+      ? parseFloat(scores[name.toLowerCase()]).toFixed(1) 
+      : '--';
+
+    await interaction.reply({
+      content: `You rated **${name}** ${score}/10. New avg: **${avg}**`,
+      ephemeral: true
+    });
+  }
 
   if (interaction.isButton()) {
     const [action, id] = interaction.customId.split(':');
