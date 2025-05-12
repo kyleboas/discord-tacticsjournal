@@ -147,7 +147,7 @@ export async function execute(interaction) {
               .setLabel(`${val}/10`)
               .setValue(val);
           })
-        )
+        );
 
       await channel.send({
         content: `Added to watchlist: ${position} | ${team} | ${name} ${score ? `| ${score}/10` : ''} by <@${userId}>.\n` +
