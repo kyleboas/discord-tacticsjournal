@@ -79,13 +79,13 @@ client.on('interactionCreate', async interaction => {
         try {
           const msgChannel = await interaction.client.channels.fetch(ref.channelId);
           const msg = await msgChannel.messages.fetch(ref.messageId);
-          
-          // Keep the dropdown component
+
           const components = msg.components;
-          
+          const { position, team } = ref;
+
           await msg.edit({
             content: `Added to watchlist by <@${userId}>\n**${avg}** | ${position} | ${team} | ${name}`,
-            components: components
+            components
           });
         } catch (err) {
           console.error('Failed to edit message for score update:', err);

@@ -157,9 +157,11 @@ export async function execute(interaction) {
       });
 
       confirmAddMap.set(name.toLowerCase(), {
-        messageId: sentMessage.id,
+      messageId: sentMessage.id,
         channelId: channel.id,
-        userId: userId
+        userId: userId,
+        position,
+        team
       });
 
       await interaction.editReply(`Added to watchlist\n ${position} | ${team} | ${name} | ${score ? `${score}/10` : ''}`);
