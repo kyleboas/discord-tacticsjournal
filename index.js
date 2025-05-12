@@ -83,7 +83,6 @@ client.on('interactionCreate', async interaction => {
           // Keep the dropdown component
           const components = msg.components;
           
-          Added to watchlist by <@${userId}>\n**${score || '--'}** | ${position} | ${team} | ${name}
           await msg.edit({
             content: `Added to watchlist by <@${userId}>\n**${avg}** | ${position} | ${team} | ${name}`,
             components: components
