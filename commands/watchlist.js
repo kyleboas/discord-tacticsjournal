@@ -492,7 +492,7 @@ export const data = new SlashCommandBuilder()
           .addStringOption(opt =>
             opt.setName('group')
               .setDescription('Limit by player role group')
-              .setRequired(false)
+              .setRequired(true)
               .addChoices(
                 { name: 'Defenders', value: 'Defenders' },
                 { name: 'Midfielders', value: 'Midfielders' },
