@@ -140,13 +140,12 @@ export async function execute(interaction) {
         new StringSelectMenuBuilder()
           .setCustomId(`score:${name}`)
           .setPlaceholder('Select a score (1–10)')
-          .addOptions(
+                  .addOptions(
           Array.from({ length: 10 }, (_, i) => {
             const val = `${i + 1}`;
-            return {
-              label: `${val}/10`,
-              value: val
-            };
+            return new StringSelectMenuOptionBuilder()
+              .setLabel(`${val}/10`)
+              .setValue(val);
           })
         )
       );
