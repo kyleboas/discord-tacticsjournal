@@ -263,6 +263,36 @@ export async function execute(interaction) {
         }
       }
     }
+    else if (sub === 'team') {
+      const teamFilter = interaction.options.getString('team').toLowerCase();
+        const scores = await getAverageScores();
+        const list = (await getWatchlist()).filter(p => p.team.toLowerCase() === teamFilter);
+
+        if (!list.length) {
+          await interaction.editReply(`No players found for team: **${teamFilter}**.`);
+          return;
+        }
+
+        const positionOrder = ['GK','LB','CB','RB','DM','CM','CAM','LW','RW','SS','ST','CF'];
+        const grouped = {};
+        for (const pos of positionOrder) grouped[pos] = [];
+        for (const player of list) grouped[player.position]?.push(player);
+
+        let output = `**Players from ${teamFilter}**\n`;
+        for (const pos of positionOrder) {
+          const players = grouped[pos];
+          if (players?.length) {
+            players.sort((a, b) => parseFloat(scores[b.name.toLowerCase()] || 0) - parseFloat(scores[a.name.toLowerCase()] || 0));
+            output += `\n**${pos}**\n`;
+            for (const p of players) {
+              const score = scores[p.name.toLowerCase()] ? parseFloat(scores[p.name.toLowerCase()]).toFixed(1) : '--';
+              output += `- ${score} ${p.name} (${p.team}) - ${p.username}\n`;
+            }
+          }
+        }
+
+        await interaction.editReply({ content: output });
+      }
     else if (sub === 'score') {
       const nameInput = interaction.options.getString('name');
       const score = interaction.options.getNumber('score');
@@ -420,6 +450,15 @@ export const data = new SlashCommandBuilder()
         .setMaxValue(10)
     )
   )
+  .addSubcommand(sub =>
+      sub.setName('team')
+          .setDescription('View watchlist players from a specific team')
+          .addStringOption(opt =>
+            opt.setName('team')
+              .setDescription('Team name')
+              .setRequired(true)
+          )
+      )
   .addSubcommand(sub =>
     sub.setName('view')
       .setDescription('View the watchlist')
