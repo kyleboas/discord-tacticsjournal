@@ -499,7 +499,6 @@ export const data = new SlashCommandBuilder()
                 { name: 'Forwards', value: 'Forwards' }
               )
           )
-      )
-  );
+      );
   
 export default { data, execute };
