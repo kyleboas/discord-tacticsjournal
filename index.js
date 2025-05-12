@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addToWatchlist, getWatchlist } from './db.js';
+import { addToWatchlist, getWatchlist, setPlayerScore, getAverageScores } from './db.js';
 import { isValidTeam } from './teams.js';
 import { confirmAddMap } from './commands/watchlist.js';
 
@@ -59,7 +59,7 @@ client.on('interactionCreate', async interaction => {
     }
   }
   
-  if (interaction.isStringSelectMenu() &&   interaction.customId.startsWith('score:')) {
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('score:')) {
     const [, name] = interaction.customId.split(':');
     const selected = interaction.values[0];
     const score = Number(selected);
