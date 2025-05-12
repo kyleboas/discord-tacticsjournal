@@ -199,7 +199,35 @@ export async function execute(interaction) {
 
       const success = await updateWatchlistPlayer(original, player.user_id, updates);
       if (success) {
-        await interaction.editReply(`Player **${original}** updated.`);
+  await interaction.editReply(`Player **${original}** updated.`);
+
+  const ref = confirmAddMap.get(original.toLowerCase());
+  if (ref) {
+    try {
+      const msgChannel = await interaction.client.channels.fetch(ref.channelId);
+      const msg = await msgChannel.messages.fetch(ref.messageId);
+      const updatedPlayer = await getWatchlist().then(l => l.find(p => p.name.toLowerCase() === original.toLowerCase()));
+
+      if (updatedPlayer) {
+        const scores = await getAverageScores();
+        const avg = scores[original.toLowerCase()] ? parseFloat(scores[original.toLowerCase()]).toFixed(1) : '--';
+
+            await msg.edit({
+                content: `Added to watchlist by <@${ref.userId}>\n**${avg}** | ${updatedPlayer.position} | ${updatedPlayer.team} | ${original}`,
+                components: msg.components
+              });
+
+              // Update cache
+              confirmAddMap.set(original.toLowerCase(), {
+                ...ref,
+                position: updatedPlayer.position,
+                team: updatedPlayer.team
+              });
+            }
+          } catch (err) {
+            console.error('Failed to update watchlist message after edit:', err);
+          }
+        }
       } else {
         await interaction.editReply('No changes were made.');
       }
@@ -223,6 +251,17 @@ export async function execute(interaction) {
 
       const removed = await removeFromWatchlist(name);
       await interaction.editReply(removed ? `Removed: ${name}` : `Failed to remove ${name}.`);
+      const ref = confirmAddMap.get(name.toLowerCase());
+      if (ref) {
+        try {
+          const msgChannel = await interaction.client.channels.fetch(ref.channelId);
+          const msg = await msgChannel.messages.fetch(ref.messageId);
+          await msg.delete();
+          confirmAddMap.delete(name.toLowerCase());
+        } catch (err) {
+          console.error('Failed to delete watchlist message:', err);
+        }
+      }
     }
     else if (sub === 'score') {
       const nameInput = interaction.options.getString('name');
