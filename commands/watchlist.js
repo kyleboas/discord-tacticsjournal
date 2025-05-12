@@ -139,7 +139,7 @@ export async function execute(interaction) {
       const scoreDropdown = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`score:${name}`)
-          .setPlaceholder('Select a tier')
+          .setPlaceholder('Select a score')
           .addOptions([
             { label: 'Generational 9.5', value: '9.5' },
             { label: 'World-Class 9.0', value: '9.0' },
