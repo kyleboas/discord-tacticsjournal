@@ -129,7 +129,7 @@ export async function execute(interaction) {
       await addToWatchlist(position, team, name, userId, username);
       
 
-    const channel = interaction.client.channels.cache.get('1371507335372996760');
+    const channel = interaction.client.channels.cache.get('1109240048920039494');
     if (channel?.isTextBased()) {
       const msg = `**${name}** added to the watchlist (${position} | ${team}) by <@${userId}>.\n` +
                   `Vote by using \`/watchlist score name:${name} score:<1-10>\``;
