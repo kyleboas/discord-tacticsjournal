@@ -141,13 +141,13 @@ export async function execute(interaction) {
           .setCustomId(`score:${name}`)
           .setPlaceholder('Select a score (1–10)')
         .addOptions(
-          ...Array.from({ length: 10 }, (_, i) => {
-            const val = `${i + 1}`;
-            return new StringSelectMenuOptionBuilder()
-              .setLabel(`${val}/10`)
-              .setValue(val);
-          })
-        )
+        ...Array.from({ length: 10 }, (_, i) => {
+          const val = `${i + 1}`;
+          return new StringSelectMenuOptionBuilder()
+            .setLabel(`${val}/10`)
+            .setValue(val);
+        })
+       )
       );
 
       await channel.send({
