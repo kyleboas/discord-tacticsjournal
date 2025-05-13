@@ -44,6 +44,7 @@ const TRIGGER_PATTERNS = {
     /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d[\W_]*e?[\W_]*d?\b/i,
     /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
     /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
+  ], 
   RACIAL_SLUR: [
     // n-word variants
     /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
