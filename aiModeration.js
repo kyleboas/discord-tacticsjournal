@@ -36,13 +36,52 @@ const TRIGGER_PATTERNS = {
     /\bkill[\W_]*your[\W_]*self(ves)?\b/i
   ],
   LGTBQ_SLUR: [
-    /\bf[\W_]*a[\W_]*g{1,2}[\W_]*o?[\W_]*t?\b/i
+    f[a@4](g{1,2}|qq)([e3il1o0]t{1,2}(ry|r[i1l]e)?)?\b,
+    \btr[a4]n{1,2}([i1l][e3]|y|[e3]r)s?\b
   ],
   ABLEIST_SLUR: [
     /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d[\W_]*e?[\W_]*d?\b/i,
     /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
     /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
   ]
+  RACIAL_SLUR: [
+  // n-word variants
+  /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
+
+  // kike
+  /\bk[il1y]k[e3](ry|rie)?s?\b/i,
+
+  // coon
+  /\bc[o0]{2}ns?\b/i,
+
+  // chink
+  /\bch[i1l]nks?\b/i,
+
+  // gook
+  /\bg[o0]{2}ks?\b/i,
+
+  // spic
+  /\bsp[i1l][ckq]+\b/i,
+
+  // wetback
+  /\bw[e3]t[\W_]*b[a@]ck\b/i,
+
+  // zipperhead
+  /\bz[i1l]pp[e3]r[\W_]*h[e3]a[d]+\b/i,
+
+  // jap (used derogatorily)
+  /\bj[a@]p[s]?\b/i,
+
+  // paki
+  /\bp[a@]k[i1l]s?\b/i,
+
+  // towelhead / raghead
+  /\bt[o0]w[e3]l[\W_]*h[e3]a[d]+\b/i,
+  /\br[a@]g[\W_]*h[e3]a[d]+\b/i,
+
+  // camel jockey
+  /\bc[a@]m[e3]l[\W_]*j[o0]ck[e3]y\b/i
+]
 };
 
 // Environment-aware configuration
@@ -105,7 +144,15 @@ async function handleViolation(message, violations, content) {
     await message.delete();
 
     const strikeCount = incrementStrikes(message.author.id);
-    const timeoutMs = getTimeoutDuration(strikeCount);
+    const timeoutMs = getTimeoutDuration(strikeCount, matchedCategories);
+    
+    if (timeoutMs === 'BAN_30D') {
+      await message.member.timeout(30 * 24 * 60 * 60 * 1000, `AI moderation: racial slur (strike ${strikeCount})`);
+    } else if (timeoutMs === 'BAN_PERM') {
+      await message.member.ban({ reason: `AI moderation: racial slur (strike ${strikeCount})` });
+    } else {
+      await message.member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
+    }
 
     // Timeout the user (if guild member)
     if (message.guild && message.member) {
@@ -199,11 +246,17 @@ function incrementStrikes(userId) {
   return updated.count;
 }
 
-function getTimeoutDuration(strikeCount) {
+function getTimeoutDuration(strikeCount, categories = []) {
+  if (categories.includes('RACIAL_SLUR')) {
+    if (strikeCount === 1) return 24 * 60 * 60 * 1000;       // 24h mute
+    if (strikeCount === 2) return 'BAN_30D';
+    if (strikeCount >= 3) return 'BAN_PERM';
+  }
+
   if (strikeCount === 1) return 30 * 1000;
   if (strikeCount === 2) return 60 * 1000;
   if (strikeCount === 3) return 5 * 60 * 1000;
-  return 10 * 60 * 1000; // escalated timeout
+  return 10 * 60 * 1000;
 }
 
 export function setupModeration(client) {
