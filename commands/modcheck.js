@@ -1,7 +1,7 @@
 // commands/modcheck.js
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import fetch from 'node-fetch';
-import { normalizeText } from '../aiModeration.js';
+import { normalizeText, ATTRIBUTE_THRESHOLDS } from '../aiModeration.js';
 
 const MODERATOR_ROLE_ID = '1100369095251206194';
 
@@ -48,15 +48,7 @@ export async function execute(interaction) {
   ];
   const evasionMatched = evasionPatterns.some(p => p.test(normalized));
 
-  const thresholds = {
-        TOXICITY: 0.75,
-        INSULT: 0.70,
-        PROFANITY: 0.85,
-        THREAT: 0.30,
-        OBSCENE: 0.85,
-        IDENTITY_ATTACK: 0.60,
-        SEVERE_TOXICITY: 0.30
-      };
+  const thresholds = ATTRIBUTE_THRESHOLDS;
 
   let reasons = [];
   let perspectiveResult = '';

@@ -9,7 +9,7 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 const userStrikes = new Collection();
 const STRIKE_RESET_MS = 60 * 60 * 1000; // 1 hour reset window
 
-const ATTRIBUTE_THRESHOLDS = {
+export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.75,
   INSULT: 0.70,
   PROFANITY: 0.85,
