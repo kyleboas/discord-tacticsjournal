@@ -1,10 +1,7 @@
-// perspectiveModeration.js
+// aiModeration.js
 import fetch from 'node-fetch';
 
-// Your Google Perspective API key (store in Railway as PERSPECTIVE_API_KEY)
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
-
-// Only scan messages from this channel
 const WATCH_CHANNEL = '1371677909902819360';
 const MOD_LOG_CHANNEL = '1099892476627669012';
 
@@ -16,6 +13,12 @@ export function setupModeration(client) {
     if (!ENABLE_AI_MOD) return;
     if (message.channel.id !== WATCH_CHANNEL) return;
     if (message.author.bot || message.system) return;
+    if (!message.content?.trim()) return;
+
+    if (!PERSPECTIVE_API_KEY) {
+      console.error('Missing PERSPECTIVE_API_KEY');
+      return;
+    }
 
     try {
       const result = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`, {
@@ -25,12 +28,21 @@ export function setupModeration(client) {
           comment: { text: message.content },
           languages: ['en'],
           requestedAttributes: {
-            TOXICITY: {}, INSULT: {}, THREAT: {}, PROFANITY: {}
+            TOXICITY: {},
+            INSULT: {},
+            THREAT: {},
+            PROFANITY: {}
           }
         })
       });
 
       const data = await result.json();
+
+      if (!data.attributeScores) {
+        console.error('Unexpected response:', data);
+        return;
+      }
+
       const attributes = data.attributeScores;
 
       const violations = Object.entries(attributes)
