@@ -19,6 +19,21 @@ export async function addToWatchlist(position, team, name, userId, username, cha
   );
 }
 
+export async function updateWatchlistMessageMeta(name, userId, fields) {
+  const keys = Object.keys(fields);
+  if (!keys.length) return false;
+
+  const setClause = keys.map((key, i) => `${key} = $${i + 3}`).join(', ');
+  const values = [name, userId, ...Object.values(fields)];
+
+  const res = await pool.query(
+    `UPDATE watchlist SET ${setClause} WHERE LOWER(name) = LOWER($1) AND user_id = $2`,
+    values
+  );
+
+  return res.rowCount > 0;
+}
+
 export async function removeFromWatchlist(name) {
   const res = await pool.query(
     'DELETE FROM watchlist WHERE LOWER(name) = LOWER($1) RETURNING *',
