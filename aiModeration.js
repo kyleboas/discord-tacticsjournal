@@ -87,6 +87,23 @@ async function handleViolation(message, violations, content) {
   }
 }
 
+function normalizeText(text) {
+  // Replace common evasion tactics with normal characters
+  return text
+    .replace(/\s+/g, ' ')               // Normalize spaces
+    .replace(/[0@\*\(\)\[\]{}]/g, 'o')  // Replace 0, @, *, etc. with 'o'
+    .replace(/[$5]/g, 's')              // $ and 5 to 's'
+    .replace(/[1!|]/g, 'i')             // 1, !, | to 'i'
+    .replace(/[4@]/g, 'a')              // 4, @ to 'a'
+    .replace(/3/g, 'e')                 // 3 to 'e'
+    .replace(/7/g, 't')                 // 7 to 't'
+    .replace(/0/g, 'o')                 // 0 to 'o'
+    .replace(/\+/g, 't')                // + to 't'
+    .replace(/\./g, '')                 // Remove dots (s.h.i.t)
+    .toLowerCase();                     // Make lowercase
+}
+
+
 export function setupModeration(client) {
   client.on('messageCreate', async (message) => {
     if (!ENABLE_AI_MOD) return;
@@ -100,6 +117,28 @@ export function setupModeration(client) {
     
     // Sample rate - only process some messages to reduce API costs
     if (Math.random() > MOD_SAMPLE_RATE) return;
+    
+    const evasionPatterns = [
+      /f+\s*u+\s*c+\s*k+/i,
+      /s+\s*h+\s*[i1]+\s*t+/i,
+      /b+\s*[i1]+\s*t+\s*c+\s*h+/i,
+      /n+[i1!|]+g+.?g+[ae4]+/i,
+      /r+\s*[ae4]+\s*p+\s*[e3]+/i,
+      /k+\s*[i1!|]+\s*l+\s*l+/i
+    ];
+    
+    if (content) {
+  // Check for letter spacing and character     substitution evasion techniques
+      const normalizedText = normalizeText(content);
+      
+      // Check if normalized text matches any evasion patterns
+      const matchesPattern = evasionPatterns.some(pattern => pattern.test(normalizedText));
+      
+      if (matchesPattern) {
+        await handleViolation(message, "EVASION_ATTEMPT", content);
+        return;
+      }
+    }
     
     if (!PERSPECTIVE_API_KEY) {
       console.error('Missing PERSPECTIVE_API_KEY');
@@ -133,16 +172,19 @@ export function setupModeration(client) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          comment: { text: content },
-          languages: ['en'],
-          requestedAttributes: {
-            TOXICITY: {},
-            INSULT: {},
-            THREAT: {},
-            PROFANITY: {},
-            IDENTITY_ATTACK: {}
-          }
-        }),
+        comment: { text: content },
+        languages: ['en'],
+        requestedAttributes: {
+          TOXICITY: {},
+          INSULT: {},
+          THREAT: {},
+          PROFANITY: {},
+          IDENTITY_ATTACK: {},
+          SEVERE_TOXICITY: {},
+          OBSCENE: {},
+          SEXUAL_EXPLICIT: {}
+        }
+      }),
         // Add timeout to prevent hanging requests
         timeout: 5000
       });
