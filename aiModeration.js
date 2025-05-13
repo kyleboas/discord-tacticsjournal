@@ -136,7 +136,7 @@ function setCachedResult(content, result) {
   });
 }
 
-async function handleViolation(message, violations, content) {
+async function handleViolation(message, violations, content, manualCategoryMatches = []) {
   try {
     await message.delete();
 
@@ -348,7 +348,7 @@ export function setupModeration(client) {
       const violations = rawViolations.join(', ');
 
       if (violations.length > 0) {
-        await handleViolation(message, violations, content);
+        await handleViolation(message, violations, content, manualCategoryMatches);
       }
 
       return;
@@ -417,7 +417,7 @@ export function setupModeration(client) {
       const violations = rawViolations.join(', ');
 
       if (violations.length > 0) {
-        await handleViolation(message, violations, content);
+        await handleViolation(message, violations, content, manualCategoryMatches);
       }
 
     } catch (err) {
