@@ -36,7 +36,7 @@ const TRIGGER_PATTERNS = {
     /\bkill[\W_]*your[\W_]*self(ves)?\b/i
   ],
   LGTBQ_SLUR: [
-    f[a@4](g{1,2}|qq)([e3il1o0]t{1,2}(ry|r[i1l]e)?)?\b,
+    /\bf[a@4](g{1,2}|qq)([e3il1o0]t{1,2}(ry|r[i1l]e)?)?\b/i,
     \btr[a4]n{1,2}([i1l][e3]|y|[e3]r)s?\b
   ],
   ABLEIST_SLUR: [
