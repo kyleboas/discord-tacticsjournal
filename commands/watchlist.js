@@ -96,7 +96,37 @@ export async function execute(interaction) {
   enqueueCommand(interaction, async (interaction) => {
     await interaction.deferReply({ flags: isEphemeral ? MessageFlags.Ephemeral : undefined });
 
-    if (sub === 'add') {
+    if (sub === 'sync') {
+      const list = await getWatchlist();
+      const watchlistChannel = await interaction.client.channels.fetch('1371507335372996760');
+
+      let updatedCount = 0;
+
+      for (const player of list) {
+        if (player.channel_id && player.message_id) continue;
+
+        const messages = await watchlistChannel.messages.fetch({ limit: 100 });
+        const match = messages.find(msg =>
+          msg.content.includes(player.name) &&
+          msg.content.includes(player.team) &&
+          msg.content.includes(player.position)
+        );
+
+        if (match) {
+          const updated = await updateWatchlistMessageMeta(player.name, player.user_id, {
+            channel_id: watchlistChannel.id,
+            message_id: match.id
+          });
+          if (updated) updatedCount++;
+        }
+      }
+
+      await interaction.editReply({
+            content: 'Synced ${updatedCount} message(s) to database',
+              flags: MessageFlags.Ephemeral
+            });
+    }
+    else if (sub === 'add') {
       const position = interaction.options.getString('position');
       const team = interaction.options.getString('team');
       const name = interaction.options.getString('name');
@@ -255,36 +285,6 @@ await addToWatchlist(position, team, name, userId, username, channel.id, sentMes
       } else {
         await interaction.editReply('No changes were made.');
       }
-    }
-    else if (sub === 'sync') {
-      const list = await getWatchlist();
-      const watchlistChannel = await interaction.client.channels.fetch('1371507335372996760');
-
-      let updatedCount = 0;
-
-      for (const player of list) {
-        if (player.channel_id && player.message_id) continue;
-
-        const messages = await watchlistChannel.messages.fetch({ limit: 100 });
-        const match = messages.find(msg =>
-          msg.content.includes(player.name) &&
-          msg.content.includes(player.team) &&
-          msg.content.includes(player.position)
-        );
-
-        if (match) {
-          const updated = await updateWatchlistMessageMeta(player.name, player.user_id, {
-            channel_id: watchlistChannel.id,
-            message_id: match.id
-          });
-          if (updated) updatedCount++;
-        }
-      }
-
-      await interaction.editReply({
-            content: 'Synced ${updatedCount} message(s) to database',
-              flags: MessageFlags.Ephemeral
-            });
     }
     else if (sub === 'remove') {
       const name = interaction.options.getString('name');
