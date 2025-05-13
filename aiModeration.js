@@ -269,7 +269,7 @@ export function setupModeration(client) {
 
       const rawViolations = Object.entries(cachedResult)
         .filter(([_, v]) => v.summaryScore.value >= TOXICITY_THRESHOLD)
-        .map(([attr]) => attr);
+        .map(([attr]) => attr); 
 
       if (evasionTriggered && rawViolations.length > 0) {
         rawViolations.push('EVASION_ATTEMPT');
