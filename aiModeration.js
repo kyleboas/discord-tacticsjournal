@@ -6,6 +6,9 @@ const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
 const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '1098742662040920074', '1325150809104842752', '1273974012774711397', '1371507335372996760'];
 const MOD_LOG_CHANNEL = '1099892476627669012';
 
+const userStrikes = new Collection();
+const STRIKE_RESET_MS = 60 * 60 * 1000; // 1 hour reset window
+
 // Environment-aware configuration
 const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
 const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
@@ -64,23 +67,38 @@ function setCachedResult(content, result) {
 async function handleViolation(message, violations, content) {
   try {
     await message.delete();
-    
-    try {
-      await message.author.send(
-        `Your message was flagged and removed for violating community guidelines.\nReason: **${violations}**`
-      );
-    } catch (dmError) {
-      console.log(`Could not DM user ${message.author.id} about moderation action`);
+
+    const strikeCount = incrementStrikes(message.author.id);
+    const timeoutMs = getTimeoutDuration(strikeCount);
+
+    // Timeout the user (if guild member)
+    if (message.guild && message.member) {
+      try {
+        await message.member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
+      } catch (err) {
+        console.error('Failed to timeout user:', err);
+      }
     }
-    
-    // Log the violation
+
+    // Send log message
     try {
       const logChannel = await message.client.channels.fetch(MOD_LOG_CHANNEL);
       await logChannel.send(
-        `**Flagged Message Deleted**\nAuthor: <@${message.author.id}>\nReason: ${violations}\nContent:\n${content}`
+        `**Flagged Message Deleted**\nAuthor: <@${message.author.id}>\nReason: ${violations}\nStrikes: ${strikeCount}\nContent:\n${content}`
       );
-    } catch (logError) {
-      console.error('Could not log moderation action:', logError);
+    } catch (logErr) {
+      console.error('Could not log moderation action:', logErr);
+    }
+
+    // Temporary public reply (auto-deletes)
+    try {
+      const reply = await message.channel.send({
+        content: `<@${message.author.id}> your message was removed for violating community guidelines.\nStrike ${strikeCount} -- Timeout: ${timeoutMs / 1000}s`,
+        allowedMentions: { users: [message.author.id] }
+      });
+      setTimeout(() => reply.delete().catch(() => {}), 5000);
+    } catch (err) {
+      console.error('Failed to notify user in channel:', err);
     }
   } catch (err) {
     console.error('Failed to handle moderation violation:', err);
@@ -103,6 +121,24 @@ function normalizeText(text) {
     .toLowerCase();                     // Make lowercase
 }
 
+function incrementStrikes(userId) {
+  const now = Date.now();
+  const current = userStrikes.get(userId) || { count: 0, last: now };
+  const recent = now - current.last < STRIKE_RESET_MS;
+  const updated = {
+    count: recent ? current.count + 1 : 1,
+    last: now
+  };
+  userStrikes.set(userId, updated);
+  return updated.count;
+}
+
+function getTimeoutDuration(strikeCount) {
+  if (strikeCount === 1) return 30 * 1000;
+  if (strikeCount === 2) return 60 * 1000;
+  if (strikeCount === 3) return 5 * 60 * 1000;
+  return 10 * 60 * 1000; // escalated timeout
+}
 
 export function setupModeration(client) {
   client.on('messageCreate', async (message) => {
