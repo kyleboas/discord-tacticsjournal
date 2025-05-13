@@ -93,9 +93,23 @@ async function handleViolation(message, violations, content) {
     // Send log message
     try {
       const logChannel = await message.client.channels.fetch(MOD_LOG_CHANNEL);
-      await logChannel.send(
-        `**Flagged Message Deleted**\nAuthor: <@${message.author.id}>\nReason: ${violations}\nStrikes: ${strikeCount}\nContent:\n${content}`
-      );
+      await logChannel.send({
+        content: [
+          `**Message:**\n\`${content}\``,
+          `\n**Normalized:**\n\`${normalizeText(content)}\``,
+          `\n**User:**\n<@${message.author.id}>`,
+          `\n**Evasion Match:** ${violations.includes('EVASION_ATTEMPT') ? 'Yes' : 'No'}`,
+          `\n**Perspective Scores:**`,
+          ...Object.entries(moderationCache.get(Buffer.from(content).toString('base64'))?.result || {})
+            .map(([key, val]) => {
+              const percent = Math.round(val * 100);
+              const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' ⚠️' : '';
+              return `${key}: ${percent}%${warn}`;
+            }),
+          `\n\n**Would Trigger Moderation:** YES`,
+          `Reasons: ${violations}`
+        ].join('\n')
+      });
     } catch (logErr) {
       console.error('Could not log moderation action:', logErr);
     }
