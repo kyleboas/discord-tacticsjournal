@@ -316,9 +316,14 @@ export function setupModeration(client) {
 
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
-      const rawViolations = Object.entries(attributes)
-        .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
-        .map(([key]) => key); 
+      const detected = 
+      Object.entries(attributes)
+      .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
+      .map(([key]) => key);
+
+    const rawViolations = detected.includes('THREAT') && !detected.includes('TOXICITY')
+      ? detected.filter(v => v !== 'THREAT')
+      : detected; 
 
       if (evasionTriggered && rawViolations.length > 0) {
         rawViolations.push('EVASION_ATTEMPT');
