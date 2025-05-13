@@ -27,7 +27,8 @@ const ATTRIBUTE_EXPLANATIONS = {
   SEVERE_TOXICITY: 'Extremely harmful or abusive language.',
   SELF_HARM: 'Encourages or references self-harm or suicide.',
   LGTBQ_SLUR: 'Contains anti-LGBTQ+ slurs or hate speech.',
-  ABLEIST_SLUR: 'Uses language offensive toward disabled individuals.'
+  ABLEIST_SLUR: 'Uses language offensive toward disabled individuals.',
+  RACIAL_SLUR: 'Use of a racial slur.'
 };
 
 const TRIGGER_PATTERNS = {
@@ -142,21 +143,47 @@ async function handleViolation(message, violations, content, manualCategoryMatch
 
     const strikeCount = incrementStrikes(message.author.id);
     const timeoutMs = getTimeoutDuration(strikeCount, manualCategoryMatches);
-    
-    if (timeoutMs === 'BAN_30D') {
-      await message.member.timeout(30 * 24 * 60 * 60 * 1000, `AI moderation: racial slur (strike ${strikeCount})`);
-    } else if (timeoutMs === 'BAN_PERM') {
-      await message.member.ban({ reason: `AI moderation: racial slur (strike ${strikeCount})` });
-    } else {
-      await message.member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
+
+    const visibleViolations = violations
+      .split(', ')
+      .filter(reason => reason !== 'EVASION_ATTEMPT');
+
+    const explanations = visibleViolations
+      .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
+      .filter(Boolean)
+      .join('\n');
+
+    const dmMessage = [
+      `**Your message was removed:**\n\`${content}\``,
+      `\nYou received strike ${strikeCount}.`,
+      `\nReason: **${visibleViolations.join(', ') || 'unspecified violation'}**`,
+      explanations ? `\n\n**Explanation:**\n${explanations}` : '',
+      `\nTimeout: ${typeof timeoutMs === 'number' ? `${timeoutMs / 1000}s` : timeoutMs}`
+    ].join('');
+
+    // Try to DM before moderation action (important for bans)
+    try {
+      await message.author.send(dmMessage);
+    } catch (dmError) {
+      console.warn(`Failed to DM user ${message.author.id} about moderation.`);
     }
 
-    // Timeout the user (if guild member)
-    if (message.guild && message.member) {
-      try {
-        await message.member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
-      } catch (err) {
-        console.error('Failed to timeout user:', err);
+    // Moderation action
+    const member = message.member;
+    const guildMe = message.guild?.members.me;
+
+    if (message.guild && member && guildMe) {
+      const hasModPerms = guildMe.permissions.has('ModerateMembers');
+      const hasBanPerms = guildMe.permissions.has('BanMembers');
+
+      if (timeoutMs === 'BAN_30D' && hasModPerms) {
+        await member.timeout(30 * 24 * 60 * 60 * 1000, `AI moderation: racial slur (strike ${strikeCount})`);
+      } else if (timeoutMs === 'BAN_PERM' && hasBanPerms) {
+        await member.ban({ reason: `AI moderation: racial slur (strike ${strikeCount})` });
+      } else if (typeof timeoutMs === 'number' && hasModPerms) {
+        await member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
+      } else {
+        console.warn('Insufficient permissions to apply moderation action.');
       }
     }
 
@@ -184,34 +211,6 @@ async function handleViolation(message, violations, content, manualCategoryMatch
       console.error('Could not log moderation action:', logErr);
     }
 
-    // Temporary public reply (auto-deletes)
-    // DM user strike info
-    try {
-      const visibleViolations = violations
-      .split(', ')
-      .filter(reason => reason !== 'EVASION_ATTEMPT');
-      
-      const explanationSet = new Set(
-      visibleViolations
-        .split(', ')
-        .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
-        .filter(Boolean)
-    );
-
-    const explanations = visibleViolations
-      .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
-      .filter(Boolean)
-      .join('\n');
-
-    await message.author.send(
-      `**Your message was removed:**\n\`${content}\`\n\n` +
-      `You received strike ${strikeCount}.\nReason: **${visibleViolations.join(', ')}**` +
-      `${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}` +
-      `\nTimeout: ${typeof timeoutMs === 'number' ? `${timeoutMs / 1000}s` : timeoutMs}`
-    );
-    } catch (dmError) {
-      console.warn(`Failed to DM user ${message.author.id} about timeout.`);
-    }
   } catch (err) {
     console.error('Failed to handle moderation violation:', err);
   }
