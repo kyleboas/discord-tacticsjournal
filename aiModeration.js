@@ -28,7 +28,7 @@ const ATTRIBUTE_EXPLANATIONS = {
   SELF_HARM: 'Encourages or references self-harm or suicide.',
   LGTBQ_SLUR: 'Contains anti-LGBTQ+ slurs or hate speech.',
   ABLEIST_SLUR: 'Uses language offensive toward disabled individuals.',
-  RACIAL_SLUR: 'Use of a racial slur.'
+  RACIAL_SLUR: 'Uses racially offensive or dehumanizing language targeting individuals or groups based on race or ethnicity.'
 };
 
 const TRIGGER_PATTERNS = {
