@@ -1,5 +1,4 @@
-// index.js
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Options } from 'discord.js';
 import { config } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -16,12 +15,26 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Optimized client with reduced cache settings
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent
-  ]
+  ],
+  makeCache: Options.cacheWithLimits({
+    MessageManager: {
+      maxSize: 100, // Only cache 100 messages
+      sweepInterval: 300 // Clear cache every 5 minutes
+    },
+    GuildMemberManager: {
+      maxSize: 200,
+      sweepInterval: 600
+    },
+    ChannelManager: {
+      maxSize: 50
+    }
+  })
 });
 client.commands = new Collection();
 
@@ -46,16 +59,44 @@ client.once('ready', async () => {
   await client.application.commands.set(commandData);
   console.log('Slash commands synced');
 });
+// Cache for lazy loading commands
+const commandCache = new Collection();
 
+// Lazy load commands only when needed
 client.on('interactionCreate', async interaction => {
   if (interaction.isChatInputCommand()) {
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+    const commandName = interaction.commandName;
+    let command;
+    
+    // Check cache first
+    if (commandCache.has(commandName)) {
+      command = commandCache.get(commandName);
+    } else {
+      try {
+        // Only import if not in cache
+        const commandModule = await import(`./commands/${commandName}.js`);
+        command = commandModule.default || commandModule;
+        
+        if (!command?.data?.name) {
+          console.warn(`[WARN] Command module ${commandName} is missing 'data.name'`);
+          return;
+        }
+        
+        // Cache for future use
+        commandCache.set(commandName, command);
+      } catch (error) {
+        console.error(`Failed to import command ${commandName}:`, error);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: 'Command not found.', flags: MessageFlags.Ephemeral });
+        }
+        return;
+      }
+    }
 
     try {
       await command.execute(interaction);
     } catch (error) {
-      console.error(error);
+      console.error(`Error executing command ${commandName}:`, error);
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: 'There was an error executing that command.', flags: MessageFlags.Ephemeral });
       } else {
@@ -64,7 +105,7 @@ client.on('interactionCreate', async interaction => {
     }
   }
   
-  if (interaction.isStringSelectMenu() &&   interaction.customId.startsWith('score:')) {
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('score:')) {
     const [, name] = interaction.customId.split(':');
     const selected = interaction.values[0];
     const score = Number(selected);
@@ -168,6 +209,45 @@ client.on('interactionCreate', async interaction => {
       });
     }
   }
+});
+
+client.once('ready', async () => {
+  console.log(`Bot is online as ${client.user.tag}`);
+  
+  // Load all commands for startup registration
+  const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+  for (const file of commandFiles) {
+    const commandModule = await import(`./commands/${file}`);
+    const command = commandModule.default || commandModule;
+
+    if (!command?.data?.name) {
+      console.warn(`[WARN] Skipping ${file}: missing 'data.name'`);
+      continue;
+    }
+
+    client.commands.set(command.data.name, command);
+    commandCache.set(command.data.name, command);
+  }
+  
+  const commandData = client.commands.map(cmd => cmd.data.toJSON());
+  await client.application.commands.set(commandData);
+  console.log('Slash commands synced');
+});
+
+// Graceful shutdown handler
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  // Give time to finish pending operations
+  setTimeout(() => {
+    console.log('Shutting down');
+    client.destroy();
+    process.exit(0);
+  }, 1500);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  // Keep running despite errors
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
