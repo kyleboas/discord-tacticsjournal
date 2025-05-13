@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { addToWatchlist, getWatchlist, setPlayerScore, getAverageScores } from './db.js';
 import { isValidTeam } from './teams.js';
 import { confirmAddMap } from './commands/watchlist.js';
+import { MessageFlags } from 'discord-api-types/v10';
 
 config();
 
