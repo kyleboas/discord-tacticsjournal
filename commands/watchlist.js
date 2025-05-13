@@ -45,7 +45,10 @@ async function processQueue() {
     console.error('Error processing command:', error);
     try {
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({
+      content: 'An error occurred.',
+        flags: MessageFlags.Ephemeral
+      });
       } else {
         await interaction.editReply('An error occurred.');
       }
@@ -62,11 +65,28 @@ function enqueueCommand(interaction, operation) {
   processQueue();
 }
 
+async function chunkAndReply(content, interaction) {
+  const chunks = content.match(/[\s\S]{1,1900}(?=\n|$)/g);
+  for (let i = 0; i < chunks.length; i++) {
+    if (i === 0) {
+      await interaction.editReply({ content: chunks[i] });
+    } else {
+      await interaction.followUp({
+      content: chunks[i],
+        flags: MessageFlags.Ephemeral
+      });
+    }
+  }
+}
+
 export async function execute(interaction) {
   const memberRoleId = '1182838456720826460';
   const hasRole = interaction.member.roles.cache.has(memberRoleId);
   if (!hasRole) {
-    await interaction.reply({ content: 'You must have the **Members** role.', ephemeral: true });
+    await interaction.reply({
+      content: 'You must have the **Members** role.',
+        flags: MessageFlags.Ephemeral
+      });
     return;
   }
 
@@ -183,7 +203,10 @@ export async function execute(interaction) {
       }
 
       if (player.user_id !== userId && !isAdmin) {
-        await interaction.editReply({ content: 'You can only edit players you added.', ephemeral: true });
+        await interaction.editReply({
+      content: 'You can only edit players you added.',
+        flags: MessageFlags.Ephemeral
+      });
         return;
       }
 
@@ -245,7 +268,10 @@ export async function execute(interaction) {
       }
 
       if (match.user_id !== userId && !isAdmin) {
-        await interaction.editReply({ content: 'You can only remove players you added.', ephemeral: true });
+        await interaction.editReply({
+            content: 'You can only remove players you added.',
+              flags: MessageFlags.Ephemeral
+            });
         return;
       }
 
@@ -298,7 +324,10 @@ export async function execute(interaction) {
       const score = interaction.options.getNumber('score');
       
       if (!/^\d+(\.\d)?$/.test(score.toString())) {
-        await interaction.editReply({ content: 'Score must be a number with **up to 1 decimal place**.', ephemeral: true });
+        await interaction.editReply({
+            content: 'Score must be a number with **up to 1 decimal place**.',
+              flags: MessageFlags.Ephemeral
+            });
         return;
       }
       const userId = interaction.user.id;
@@ -309,7 +338,10 @@ export async function execute(interaction) {
       if (!match) {
         const alt = list.find(p => p.name.toLowerCase().includes(nameInput.toLowerCase()));
         if (!alt) {
-          await interaction.editReply({ content: `Player **${nameInput}** not found.`, ephemeral: true });
+          await interaction.editReply({
+            content: 'Player **${nameInput}** not found.',
+              flags: MessageFlags.Ephemeral
+            });
           return;
         }
         await setPlayerScore(alt.name, userId, username, score);
