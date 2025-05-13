@@ -148,7 +148,7 @@ export async function execute(interaction) {
 
       const userId = interaction.user.id;
       const username = interaction.user.username;
-      await addToWatchlist(position, team, name, userId, username);
+      await addToWatchlist(position, team, name, userId, username, channel.id, sentMessage.id);
       const channel = await interaction.client.channels.fetch('1371507335372996760');
 
       const scores = await getAverageScores();

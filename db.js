@@ -12,10 +12,10 @@ export async function getWatchlist() {
   return res.rows;
 }
 
-export async function addToWatchlist(position, team, name, userId, username) {
+export async function addToWatchlist(position, team, name, userId, username, channelId, messageId) {
   await pool.query(
-    'INSERT INTO watchlist (position, team, name, user_id, username) VALUES ($1, $2, $3, $4, $5)',
-    [position, team, name, userId, username]
+    'INSERT INTO watchlist (position, team, name, user_id, username, channel_id, message_id) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+    [position, team, name, userId, username, channelId, messageId]
   );
 }
 
@@ -76,6 +76,7 @@ export async function ensureSchema() {
       user_id TEXT NOT NULL,
       username TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      
     );
   `);
 
@@ -88,5 +89,11 @@ export async function ensureSchema() {
       score NUMERIC(3,1) CHECK (score >= 1.0 AND score <= 10.0),
       UNIQUE(player_name, user_id)
     );
+  `);
+  
+  await pool.query(`
+    ALTER TABLE watchlist
+    ADD COLUMN IF NOT EXISTS message_id TEXT,
+    ADD COLUMN IF NOT EXISTS channel_id TEXT;
   `);
 }

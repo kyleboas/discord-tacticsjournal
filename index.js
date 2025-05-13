@@ -81,7 +81,18 @@ client.on('interactionCreate', async interaction => {
           const msg = await msgChannel.messages.fetch(ref.messageId);
 
           const components = msg.components;
-          const { position, team } = ref;
+          const list = await getWatchlist();
+          const match = list.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+          if (match?.channel_id && match?.message_id) {
+            const msgChannel = await interaction.client.channels.fetch(match.channel_id);
+            const msg = await msgChannel.messages.fetch(match.message_id);
+
+            await msg.edit({
+              content: `Added to watchlist by <@${match.user_id}>\n**${avg}** | ${match.position} | ${match.team} | ${match.name}`,
+              components: msg.components
+            });
+          }
 
           await msg.edit({
           content: `Added to watchlist by <@${ref.userId}>\n**${avg}** | ${position} | ${name} (${team})`,
