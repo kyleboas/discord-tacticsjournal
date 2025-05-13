@@ -52,7 +52,7 @@ client.on('interactionCreate', async interaction => {
     } catch (error) {
       console.error(error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'There was an error executing that command.', ephemeral: true });
+        await interaction.reply({ content: 'There was an error executing that command.', flags: MessageFlags.Ephemeral });
       } else {
         await interaction.editReply({ content: 'There was an error executing that command.' });
       }
@@ -105,7 +105,7 @@ client.on('interactionCreate', async interaction => {
 
       await interaction.reply({
         content: `You rated **${name}** ${score}/10. New avg: **${avg}**`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -115,7 +115,7 @@ client.on('interactionCreate', async interaction => {
     if (action === 'confirm_team') {
       const payload = confirmAddMap.get(id);
       if (!payload) {
-        await interaction.reply({ content: 'This confirmation has expired or is invalid.', ephemeral: true });
+        await interaction.reply({ content: 'This confirmation has expired or is invalid.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -124,20 +124,20 @@ client.on('interactionCreate', async interaction => {
       if (interaction.user.id !== userId) {
         await interaction.reply({
           content: `Only <@${userId}> can confirm this team name.`,
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
         return;
       }
 
       if (!isValidTeam(suggestedTeam)) {
-        await interaction.reply({ content: 'That team is no longer valid.', ephemeral: true });
+        await interaction.reply({ content: 'That team is no longer valid.', flags: MessageFlags.Ephemeral });
         return;
       }
 
       const list = await getWatchlist();
       const isDuplicate = list.some(player => player.name.toLowerCase() === name.toLowerCase());
       if (isDuplicate) {
-        await interaction.reply({ content: `Player **${name}** is already on the watchlist.`, ephemeral: true });
+        await interaction.reply({ content: `Player **${name}** is already on the watchlist.`, flags: MessageFlags.Ephemeral });
         return;
       }
 
