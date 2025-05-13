@@ -148,7 +148,6 @@ export async function execute(interaction) {
 
       const userId = interaction.user.id;
       const username = interaction.user.username;
-      await addToWatchlist(position, team, name, userId, username, channel.id, sentMessage.id);
       const channel = await interaction.client.channels.fetch('1371507335372996760');
 
       const scores = await getAverageScores();
@@ -170,11 +169,13 @@ export async function execute(interaction) {
             { label: 'Squad player 6.5', value: '6.5' }
           ])
       );
-      
+
       const sentMessage = await channel.send({
-      content: `Added to watchlist by <@${userId}>\n**${score || '--'}** | ${position} | ${name} (${team})`,
+        content: `Added to watchlist by <@${userId}>\n**${score || '--'}** | ${position} | ${name} (${team})`,
         components: [scoreDropdown]
       });
+
+await addToWatchlist(position, team, name, userId, username, channel.id, sentMessage.id); // move here after channel & message exist
 
       confirmAddMap.set(name.toLowerCase(), {
       messageId: sentMessage.id,
