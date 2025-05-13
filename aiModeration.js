@@ -191,14 +191,11 @@ export function setupModeration(client) {
       /\b[s$5]+[\s._-]*[e3]+[\s._-]*[x]+/i
     ];
     
+    let evasionTriggered = false;
+
     if (content) {
-  // Check for letter spacing and character     substitution evasion techniques
       const normalizedText = normalizeText(content);
-      
-      // Check if normalized text matches any evasion patterns
-      const matchesPattern = evasionPatterns.some(pattern => pattern.test(normalizedText));
-      
-      const evasionTriggered = matchesPattern;
+      evasionTriggered = evasionPatterns.some(pattern => pattern.test(normalizedText));
     }
     
     if (!PERSPECTIVE_API_KEY) {
