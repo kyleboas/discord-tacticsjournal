@@ -198,10 +198,7 @@ export function setupModeration(client) {
       // Check if normalized text matches any evasion patterns
       const matchesPattern = evasionPatterns.some(pattern => pattern.test(normalizedText));
       
-      if (matchesPattern) {
-        await handleViolation(message, "EVASION_ATTEMPT", content);
-        return;
-      }
+      const evasionTriggered = matchesPattern;
     }
     
     if (!PERSPECTIVE_API_KEY) {
@@ -212,10 +209,19 @@ export function setupModeration(client) {
     // Check cache first
     const cachedResult = getCachedResult(content);
     if (cachedResult) {
-      const violations = Object.entries(cachedResult)
-        .filter(([_, score]) => score >= TOXICITY_THRESHOLD)
-        .map(([attr]) => attr)
-        .join(', ');
+      const rawViolations =       Object.entries(attributes)
+        .filter(([_, v]) => v.summaryScore.value >= TOXICITY_THRESHOLD)
+        .map(([attr]) => attr);
+
+      if (evasionTriggered && rawViolations.length > 0) {
+        rawViolations.push('EVASION_ATTEMPT');
+      }
+
+      const violations = rawViolations.join(', ');
+
+      if (violations.length > 0) {
+        await handleViolation(message, violations, content);
+      }
 
       if (violations.length > 0) {
         await handleViolation(message, violations, content);
@@ -265,10 +271,19 @@ export function setupModeration(client) {
       );
       setCachedResult(content, scores);
 
-      const violations = Object.entries(attributes)
+      const rawViolations = Object.entries(attributes)
         .filter(([_, v]) => v.summaryScore.value >= TOXICITY_THRESHOLD)
-        .map(([attr]) => attr)
-        .join(', ');
+        .map(([attr]) => attr);
+
+      if (evasionTriggered && rawViolations.length > 0) {
+        rawViolations.push('EVASION_ATTEMPT');
+      }
+
+      const violations = rawViolations.join(', ');
+
+      if (violations.length > 0) {
+        await handleViolation(message, violations, content);
+      }
 
       if (violations.length > 0) {
         await handleViolation(message, violations, content);
