@@ -14,7 +14,6 @@ export const ATTRIBUTE_THRESHOLDS = {
   INSULT: 0.70,
   PROFANITY: 0.85,
   THREAT: 0.05,
-  OBSCENE: 0.99,
   IDENTITY_ATTACK: 0.30,
   SEVERE_TOXICITY: 0.15
 };
@@ -274,7 +273,6 @@ export function setupModeration(client) {
           PROFANITY: {},
           THREAT: {},
           IDENTITY_ATTACK: {},
-          OBSCENE: {},
           SEVERE_TOXICITY: {}
         }
       }),
