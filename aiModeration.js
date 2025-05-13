@@ -117,8 +117,13 @@ async function handleViolation(message, violations, content) {
     // Temporary public reply (auto-deletes)
     // DM user strike info
     try {
+      const visibleViolations = violations
+        .split(', ')
+        .filter(reason => reason !== 'EVASION_ATTEMPT')
+        .join(', ') || 'unspecified violation';
+
       await message.author.send(
-        `You received strike ${strikeCount} for a removed message.\nReason: **${violations}**\nTimeout: ${timeoutMs / 1000}s`
+        `You received strike ${strikeCount} for a removed message.\nReason: **${visibleViolations}**\nTimeout: ${timeoutMs / 1000}s`
       );
     } catch (dmError) {
       console.warn(`Failed to DM user ${message.author.id} about timeout.`);
