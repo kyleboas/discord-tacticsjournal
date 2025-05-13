@@ -155,12 +155,40 @@ export function setupModeration(client) {
     if (Math.random() > MOD_SAMPLE_RATE) return;
     
     const evasionPatterns = [
-      /f+\s*u+\s*c+\s*k+/i,
-      /s+\s*h+\s*[i1]+\s*t+/i,
-      /b+\s*[i1]+\s*t+\s*c+\s*h+/i,
-      /n+[i1!|]+g+.?g+[ae4]+/i,
-      /r+\s*[ae4]+\s*p+\s*[e3]+/i,
-      /k+\s*[i1!|]+\s*l+\s*l+/i
+      // fuck variations
+      /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k*\b/i,
+      /\bf[a@]k\b/i,
+      /\bf[\s]*u[\s]*k\b/i,
+
+      // shit variations
+      /\bs+[\s._-]*[h]+[\s._-]*[i1!|]+[\s._-]*[t7]+\b/i,
+      /\bs[\s]*h[\s]*e[e3]*[\s]*t/i,
+
+      // bitch variations
+      /\bb+[\s._-]*[i1!|]+[\s._-]*[t7]+[\s._-]*[c(kq)]+[\s._-]*h+\b/i,
+      /\bb[e3]+[\s]*[t7]+[\s]*c[h]+/i,
+
+      // ass / a55 variations
+      /\b[a@]+[\s._-]*[s$5]+[\s._-]*[s$5]+\b/i,
+
+      // n-word slur variations
+      /\bn+[\s._-]*[i1!|]+[\s._-]*g+[\s._-]*g+[\s._-]*[ae4@]+\b/i,
+
+      // rape
+      /\br+[\s._-]*[ae4]+[\s._-]*p+[\s._-]*[e3]+\b/i,
+
+      // kill
+      /\bk+[\s._-]*[i1!|]+[\s._-]*l+[\s._-]*l+\b/i,
+
+      // gay insult use
+      /\bg+[\s._-]*[a@]+[\s._-]*[y]+[\s._-]*[b]+[\s._-]*[o0]+[\s._-]*[i1!|]+\b/i,
+
+      // retard
+      /\br+[\s._-]*[e3]+[\s._-]*[t7]+[\s._-]*[a@]+[\s._-]*[r]+[\s._-]*[d]+\b/i,
+
+      // porn/sex/explicit slang
+      /\bp+[\s._-]*[o0]+[\s._-]*[r]+[\s._-]*[n]+\b/i,
+      /\b[s$5]+[\s._-]*[e3]+[\s._-]*[x]+/i
     ];
     
     if (content) {
