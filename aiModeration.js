@@ -189,8 +189,7 @@ async function handleViolation(message, violations, content, manualCategoryMatch
     try {
       const visibleViolations = violations
       .split(', ')
-      .filter(reason => reason !== 'EVASION_ATTEMPT')
-      .join(', ') || 'unspecified violation';
+      .filter(reason => reason !== 'EVASION_ATTEMPT');
       
       const explanationSet = new Set(
       visibleViolations
@@ -199,13 +198,16 @@ async function handleViolation(message, violations, content, manualCategoryMatch
         .filter(Boolean)
     );
 
-    const explanations = [...explanationSet].join('\n');
-  
-      await message.author.send(
+    const explanations = visibleViolations
+      .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
+      .filter(Boolean)
+      .join('\n');
+
+    await message.author.send(
       `**Your message was removed:**\n\`${content}\`\n\n` +
-      `You received strike ${strikeCount}.\nReason: **${visibleViolations}**` +
+      `You received strike ${strikeCount}.\nReason: **${visibleViolations.join(', ')}**` +
       `${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}` +
-      `\nTimeout: ${timeoutMs / 1000}s`
+      `\nTimeout: ${typeof timeoutMs === 'number' ? `${timeoutMs / 1000}s` : timeoutMs}`
     );
     } catch (dmError) {
       console.warn(`Failed to DM user ${message.author.id} about timeout.`);
@@ -348,7 +350,7 @@ export function setupModeration(client) {
       const violations = rawViolations.join(', ');
 
       if (violations.length > 0) {
-        await handleViolation(message, violations, content, manualCategoryMatches);
+        await handleViolation(message, rawViolations.join(', '), content, manualCategoryMatches);
       }
 
       return;
@@ -417,7 +419,7 @@ export function setupModeration(client) {
       const violations = rawViolations.join(', ');
 
       if (violations.length > 0) {
-        await handleViolation(message, violations, content, manualCategoryMatches);
+        await handleViolation(message, rawViolations.join(', '), content, manualCategoryMatches);
       }
 
     } catch (err) {
