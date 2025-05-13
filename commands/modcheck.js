@@ -52,7 +52,7 @@ export async function execute(interaction) {
     TOXICITY: 0.75,
     INSULT: 0.70,
     PROFANITY: 0.70,
-    OBSCENE: 0.70,
+    OBSCENE: 0.90,
     IDENTITY_ATTACK: 0.60,
     SEVERE_TOXICITY: 0.65,
     THREAT: 0.50
