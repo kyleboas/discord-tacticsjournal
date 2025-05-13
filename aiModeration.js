@@ -37,51 +37,48 @@ const TRIGGER_PATTERNS = {
   ],
   LGTBQ_SLUR: [
     /\bf[a@4](g{1,2}|qq)([e3il1o0]t{1,2}(ry|r[i1l]e)?)?\b/i,
-    \btr[a4]n{1,2}([i1l][e3]|y|[e3]r)s?\b
+    /\btr[a4]n{1,2}([i1l][e3]|y|[e3]r)s?\b/i
   ],
   ABLEIST_SLUR: [
     /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d[\W_]*e?[\W_]*d?\b/i,
     /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
     /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
-  ]
+  ],
   RACIAL_SLUR: [
-  // n-word variants
-  /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
+    // n-word variants
+    /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
 
-  // kike
-  /\bk[il1y]k[e3](ry|rie)?s?\b/i,
+    // kike
+    /\bk[il1y]k[e3](ry|rie)?s?\b/i,
 
-  // coon
-  /\bc[o0]{2}ns?\b/i,
+    // coon
+    /\bc[o0]{2}ns?\b/i,
 
-  // chink
-  /\bch[i1l]nks?\b/i,
+    // chink
+    /\bch[i1l]nks?\b/i,
 
-  // gook
-  /\bg[o0]{2}ks?\b/i,
+    // gook
+    /\bg[o0]{2}ks?\b/i,
 
-  // spic
-  /\bsp[i1l][ckq]+\b/i,
+    // spic
+    /\bsp[i1l][ckq]+\b/i,
 
-  // wetback
-  /\bw[e3]t[\W_]*b[a@]ck\b/i,
+    // wetback
+    /\bw[e3]t[\W_]*b[a@]ck\b/i,
 
-  // zipperhead
-  /\bz[i1l]pp[e3]r[\W_]*h[e3]a[d]+\b/i,
+    // zipperhead
+    /\bz[i1l]pp[e3]r[\W_]*h[e3]a[d]+\b/i,
 
-  // jap (used derogatorily)
-  /\bj[a@]p[s]?\b/i,
+    // paki
+    /\bp[a@]k[i1l]s?\b/i,
 
-  // paki
-  /\bp[a@]k[i1l]s?\b/i,
+    // towelhead / raghead
+    /\bt[o0]w[e3]l[\W_]*h[e3]a[d]+\b/i,
+    /\br[a@]g[\W_]*h[e3]a[d]+\b/i,
 
-  // towelhead / raghead
-  /\bt[o0]w[e3]l[\W_]*h[e3]a[d]+\b/i,
-  /\br[a@]g[\W_]*h[e3]a[d]+\b/i,
-
-  // camel jockey
-  /\bc[a@]m[e3]l[\W_]*j[o0]ck[e3]y\b/i
-]
+    // camel jockey
+    /\bc[a@]m[e3]l[\W_]*j[o0]ck[e3]y\b/i
+  ]
 };
 
 // Environment-aware configuration
