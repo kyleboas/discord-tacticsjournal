@@ -90,7 +90,7 @@ async function handleViolation(message, violations, content) {
 export function setupModeration(client) {
   client.on('messageCreate', async (message) => {
     if (!ENABLE_AI_MOD) return;
-    if (message.channel.id !== WATCH_CHANNEL) return;
+    if (!WATCH_CHANNELS.includes(message.channel.id)) return;
     if (message.author.bot || message.system) return;
 
     if (message.member?.roles.cache.has('1100369095251206194')) return;
