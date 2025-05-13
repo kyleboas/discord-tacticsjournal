@@ -60,55 +60,61 @@ client.on('interactionCreate', async interaction => {
     }
   }
   
-  if (interaction.isStringSelectMenu() &&     interaction.customId.startsWith('score:')) {
-      const [, name] = interaction.customId.split(':');
-      const selected = interaction.values[0];
-      const score = Number(selected);
+  if (interaction.isStringSelectMenu() &&   interaction.customId.startsWith('score:')) {
+    const [, name] = interaction.customId.split(':');
+    const selected = interaction.values[0];
+    const score = Number(selected);
 
-      const userId = interaction.user.id;
-      const username = interaction.user.username;
+    const userId = interaction.user.id;
+    const username = interaction.user.username;
 
-      await setPlayerScore(name, userId, username, score);
-      const scores = await getAverageScores();
-      const avg = scores[name.toLowerCase()] 
-        ? parseFloat(scores[name.toLowerCase()]).toFixed(1) 
-        : '--';
+    await setPlayerScore(name, userId, username, score);
+    const scores = await getAverageScores();
+    const avg = scores[name.toLowerCase()] 
+      ? parseFloat(scores[name.toLowerCase()]).toFixed(1) 
+      : '--';
 
-      // Update the original message if possible
+    // Get the latest player data from the database
+    const list = await getWatchlist();
+    const match = list.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+    // Update the original message if we can find it in the database
+    if (match?.channel_id && match?.message_id) {
+      try {
+        const msgChannel = await interaction.client.channels.fetch(match.channel_id);
+        const msg = await msgChannel.messages.fetch(match.message_id);
+
+        await msg.edit({
+          content: `Added to watchlist by <@${match.user_id}>\n**${avg}** | ${match.position} | ${match.name} (${match.team})`,
+          components: msg.components
+        });
+      } catch (err) {
+        console.error('Failed to edit message for score update from database:', err);
+      }
+    } 
+    // Fallback to the cached reference if database doesn't have message IDs
+    else {
       const ref = confirmAddMap.get(name.toLowerCase());
-      if (ref) {
+      if (ref && ref.messageId && ref.channelId) {
         try {
           const msgChannel = await interaction.client.channels.fetch(ref.channelId);
           const msg = await msgChannel.messages.fetch(ref.messageId);
 
-          const components = msg.components;
-          const list = await getWatchlist();
-          const match = list.find(p => p.name.toLowerCase() === name.toLowerCase());
-
-          if (match?.channel_id && match?.message_id) {
-            const msgChannel = await interaction.client.channels.fetch(match.channel_id);
-            const msg = await msgChannel.messages.fetch(match.message_id);
-
-            await msg.edit({
-              content: `Added to watchlist by <@${match.user_id}>\n**${avg}** | ${match.position} | ${match.team} | ${match.name}`,
-              components: msg.components
-            });
-          }
-
           await msg.edit({
-          content: `Added to watchlist by <@${ref.userId}>\n**${avg}** | ${position} | ${name} (${team})`,
-          components
-        });
+            content: `Added to watchlist by <@${ref.userId}>\n**${avg}** | ${ref.position} | ${name} (${ref.team})`,
+            components: msg.components
+          });
         } catch (err) {
-          console.error('Failed to edit message for score update:', err);
+          console.error('Failed to edit message for score update from cache:', err);
         }
       }
-
-      await interaction.reply({
-        content: `You rated **${name}** ${score}/10. New avg: **${avg}**`,
-        flags: MessageFlags.Ephemeral
-      });
     }
+
+    await interaction.reply({
+      content: `You rated **${name}** ${score}/10. New avg: **${avg}**`,
+      flags: MessageFlags.Ephemeral
+    });
+  }
 
   if (interaction.isButton()) {
     const [action, id] = interaction.customId.split(':');
