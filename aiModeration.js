@@ -283,7 +283,7 @@ export function setupModeration(client) {
         THREAT: 0.30,
         OBSCENE: 0.85,
         IDENTITY_ATTACK: 0.60,
-        SEVERE_TOXICITY: 0.30
+        SEVERE_TOXICITY: 0.10
       };
 
       const rawViolations = Object.entries(attributes)
