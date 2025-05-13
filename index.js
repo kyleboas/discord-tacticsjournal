@@ -10,7 +10,6 @@ import { confirmAddMap } from './commands/watchlist.js';
 import { MessageFlags } from 'discord-api-types/v10';
 
 import { setupModeration } from './aiModeration.js';
-setupModeration(client);
 
 config();
 
@@ -25,6 +24,8 @@ const client = new Client({
   ]
 });
 client.commands = new Collection();
+
+setupModeration(client);
 
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
