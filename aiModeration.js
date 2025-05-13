@@ -218,10 +218,7 @@ export function setupModeration(client) {
       if (violations.length > 0) {
         await handleViolation(message, violations, content);
       }
-
-      if (violations.length > 0) {
-        await handleViolation(message, violations, content);
-      }
+      
       return;
     }
     
@@ -281,9 +278,6 @@ export function setupModeration(client) {
         await handleViolation(message, violations, content);
       }
 
-      if (violations.length > 0) {
-        await handleViolation(message, violations, content);
-      }
     } catch (err) {
       if (err.type === 'request-timeout') {
         console.error('Perspective API request timed out');
