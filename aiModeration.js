@@ -9,7 +9,7 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 // Environment-aware configuration
 const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
 const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
-const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '1.0'); // Only check 50% of messages
+const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '0.5'); // Only check 50% of messages
 
 // Rate limiting for Perspective API
 const messageCache = new Collection();
@@ -59,6 +59,33 @@ function setCachedResult(content, result) {
     result,
     timestamp: Date.now()
   });
+}
+
+async function handleViolation(message, violations, content) {
+  try {
+    await message.delete();
+    
+    // Try to DM the user, but don't fail if we can't
+    try {
+      await message.author.send(
+        `Your message was flagged and removed for violating community guidelines.\nReason: **${violations}**`
+      );
+    } catch (dmError) {
+      console.log(`Could not DM user ${message.author.id} about moderation action`);
+    }
+    
+    // Log the violation
+    try {
+      const logChannel = await message.client.channels.fetch(MOD_LOG_CHANNEL);
+      await logChannel.send(
+        `**Flagged Message Deleted**\nAuthor: <@${message.author.id}>\nReason: ${violations}\nContent:\n${content}`
+      );
+    } catch (logError) {
+      console.error('Could not log moderation action:', logError);
+    }
+  } catch (err) {
+    console.error('Failed to handle moderation violation:', err);
+  }
 }
 
 export function setupModeration(client) {
@@ -150,29 +177,3 @@ export function setupModeration(client) {
     }
   });
 }
-
-async function handleViolation(message, violations, content) {
-  try {
-    await message.delete();
-    
-    // Try to DM the user, but don't fail if we can't
-    try {
-      await message.author.send(
-        `Your message was flagged and removed for violating community guidelines.\nReason: **${violations}**`
-      );
-    } catch (dmError) {
-      console.log(`Could not DM user ${message.author.id} about moderation action`);
-    }
-    
-    // Log the violation
-    try {
-      const logChannel = await message.client.channels.fetch(MOD_LOG_CHANNEL);
-      await logChannel.send(
-        `**Flagged Message Deleted**\nAuthor: <@${message.author.id}>\nReason: ${violations}\nContent:\n${content}`
-      );
-    } catch (logError) {
-      console.error('Could not log moderation action:', logError);
-    }
-  } catch (err) {
-    console.error('Failed to handle moderation violation:', err);
-  }
