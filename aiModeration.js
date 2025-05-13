@@ -205,9 +205,19 @@ export function setupModeration(client) {
     // Check cache first
     const cachedResult = getCachedResult(content);
     if (cachedResult) {
-      const rawViolations =       Object.entries(attributes)
-        .filter(([_, v]) => v.summaryScore.value >= TOXICITY_THRESHOLD)
-        .map(([attr]) => attr);
+      const thresholds = {
+        TOXICITY: 0.75,
+        INSULT: 0.70,
+        PROFANITY: 0.75,
+        THREAT: 0.50,
+        OBSCENE: 0.70,
+        IDENTITY_ATTACK: 0.60,
+        SEVERE_TOXICITY: 0.65
+      };
+
+      const rawViolations = Object.entries(attributes)
+        .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
+        .map(([key]) => key);
 
       if (evasionTriggered && rawViolations.length > 0) {
         rawViolations.push('EVASION_ATTEMPT');
@@ -264,9 +274,19 @@ export function setupModeration(client) {
       );
       setCachedResult(content, scores);
 
-      const rawViolations = Object.entries(cachedResult)
-        .filter(([_, v]) => v.summaryScore.value >= TOXICITY_THRESHOLD)
-        .map(([attr]) => attr); 
+      const thresholds = {
+        TOXICITY: 0.75,
+        INSULT: 0.70,
+        PROFANITY: 0.75,
+        THREAT: 0.30,
+        OBSCENE: 0.70,
+        IDENTITY_ATTACK: 0.60,
+        SEVERE_TOXICITY: 0.30
+      };
+
+      const rawViolations = Object.entries(attributes)
+        .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
+        .map(([key]) => key); 
 
       if (evasionTriggered && rawViolations.length > 0) {
         rawViolations.push('EVASION_ATTEMPT');
