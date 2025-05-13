@@ -141,7 +141,7 @@ async function handleViolation(message, violations, content) {
     await message.delete();
 
     const strikeCount = incrementStrikes(message.author.id);
-    const timeoutMs = getTimeoutDuration(strikeCount, matchedCategories);
+    const timeoutMs = getTimeoutDuration(strikeCount, manualCategoryMatches);
     
     if (timeoutMs === 'BAN_30D') {
       await message.member.timeout(30 * 24 * 60 * 60 * 1000, `AI moderation: racial slur (strike ${strikeCount})`);
@@ -332,7 +332,7 @@ export function setupModeration(client) {
     if (cachedResult) {
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
-      const detected = Object.entries(attributes)
+      const detected = Object.entries(cachedResult)
       .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
       .map(([key]) => key);
 
