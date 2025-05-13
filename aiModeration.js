@@ -105,7 +105,7 @@ async function handleViolation(message, violations, content) {
   }
 }
 
-function normalizeText(text) {
+export function normalizeText(text) {
   // Replace common evasion tactics with normal characters
   return text
     .replace(/\s+/g, ' ')               // Normalize spaces
