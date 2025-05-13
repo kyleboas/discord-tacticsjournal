@@ -91,14 +91,13 @@ async function handleViolation(message, violations, content) {
     }
 
     // Temporary public reply (auto-deletes)
+    // DM user strike info
     try {
-      const reply = await message.channel.send({
-        content: `<@${message.author.id}> your message was removed for violating community guidelines.\nStrike ${strikeCount} -- Timeout: ${timeoutMs / 1000}s`,
-        allowedMentions: { users: [message.author.id] }
-      });
-      setTimeout(() => reply.delete().catch(() => {}), 5000);
-    } catch (err) {
-      console.error('Failed to notify user in channel:', err);
+      await message.author.send(
+        `You received strike ${strikeCount} for a removed message.\nReason: **${violations}**\nTimeout: ${timeoutMs / 1000}s`
+      );
+    } catch (dmError) {
+      console.warn(`Failed to DM user ${message.author.id} about timeout.`);
     }
   } catch (err) {
     console.error('Failed to handle moderation violation:', err);
@@ -268,7 +267,7 @@ export function setupModeration(client) {
       );
       setCachedResult(content, scores);
 
-      const rawViolations = Object.entries(attributes)
+      const rawViolations = Object.entries(cachedResult)
         .filter(([_, v]) => v.summaryScore.value >= TOXICITY_THRESHOLD)
         .map(([attr]) => attr);
 
