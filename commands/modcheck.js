@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages) // optional: restrict at default level
   .setDMPermission(false); // disallow in DMs
-
+  
 export async function execute(interaction) {
   const memberRoles = interaction.member.roles;
 
@@ -46,11 +46,22 @@ export async function execute(interaction) {
     /\bp+[\s._-]*[o0]+[\s._-]*[r]+[\s._-]*[n]+\b/i,
     /\b[s$5]+[\s._-]*[e3]+[\s._-]*[x]+/i
   ];
+  const evasionMatched = evasionPatterns.some(p => p.test(normalized));
 
-  const matched = evasionPatterns.some(p => p.test(normalized));
-  let evasion = matched ? 'Yes (evasion pattern matched)' : 'No';
+  const thresholds = {
+    TOXICITY: 0.75,
+    INSULT: 0.70,
+    PROFANITY: 0.70,
+    OBSCENE: 0.70,
+    IDENTITY_ATTACK: 0.60,
+    SEVERE_TOXICITY: 0.65,
+    THREAT: 0.50
+  };
 
+  let reasons = [];
   let perspectiveResult = '';
+  let moderationTriggered = false;
+
   try {
     const res = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${process.env.PERSPECTIVE_API_KEY}`, {
       method: 'POST',
@@ -58,24 +69,27 @@ export async function execute(interaction) {
       body: JSON.stringify({
         comment: { text: input },
         languages: ['en'],
-        requestedAttributes: {
-          TOXICITY: {},
-          INSULT: {},
-          THREAT: {},
-          PROFANITY: {},
-          IDENTITY_ATTACK: {},
-          SEVERE_TOXICITY: {},
-          OBSCENE: {}
-        }
+        requestedAttributes: Object.fromEntries(Object.keys(thresholds).map(k => [k, {}]))
       })
     });
 
     const data = await res.json();
 
     if (data.attributeScores) {
-      perspectiveResult = Object.entries(data.attributeScores)
-        .map(([key, value]) => `${key}: ${Math.round(value.summaryScore.value * 100)}%`)
+      const entries = Object.entries(data.attributeScores);
+      perspectiveResult = entries
+        .map(([key, val]) => {
+          const score = val.summaryScore.value;
+          const hit = score >= (thresholds[key] || 0.85);
+          if (hit) reasons.push(key);
+          return `${key}: ${Math.round(score * 100)}%${hit ? ' ⚠️' : ''}`;
+        })
         .join('\n');
+
+      if (reasons.length > 0 || evasionMatched) {
+        moderationTriggered = true;
+        if (evasionMatched) reasons.push('EVASION_ATTEMPT');
+      }
     } else {
       perspectiveResult = 'Perspective API returned no scores.';
     }
@@ -85,7 +99,7 @@ export async function execute(interaction) {
   }
 
   await interaction.reply({
-    content: `**Message:**\n\`${input}\`\n\n**Normalized:**\n\`${normalized}\`\n\n**Evasion Match:** ${evasion}\n\n**Perspective Scores:**\n${perspectiveResult}`,
+    content: `**Message:**\n\`${input}\`\n\n**Normalized:**\n\`${normalized}\`\n\n**Evasion Match:** ${evasionMatched ? 'Yes' : 'No'}\n\n**Perspective Scores:**\n${perspectiveResult}\n\n**Would Trigger Moderation:** ${moderationTriggered ? 'YES' : 'No'}${moderationTriggered ? `\nReasons: ${reasons.join(', ')}` : ''}`,
     ephemeral: true
   });
 }
