@@ -13,7 +13,7 @@ export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.90,
   INSULT: 0.90,
   PROFANITY: 0.90,
-  THREAT: 0.50,
+  THREAT: 0.60,
   IDENTITY_ATTACK: 0.50,
   SEVERE_TOXICITY: 0.65
 };
@@ -137,7 +137,10 @@ async function handleViolation(message, violations, content) {
       .join('\n');
   
       await message.author.send(
-      `You received strike ${strikeCount} for a removed message.\nReason: **${visibleViolations}**\n${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}\nTimeout: ${timeoutMs / 1000}s`
+      `**Your message was removed:**\n\`${content}\`\n\n` +
+      `You received strike ${strikeCount}.\nReason: **${visibleViolations}**` +
+      `${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}` +
+      `\nTimeout: ${timeoutMs / 1000}s`
     );
     } catch (dmError) {
       console.warn(`Failed to DM user ${message.author.id} about timeout.`);
