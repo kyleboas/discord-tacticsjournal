@@ -12,6 +12,7 @@ import {
   addToWatchlist,
   removeFromWatchlist,
   updateWatchlistPlayer,
+  updateWatchlistMessageMeta,
   setPlayerScore,
   getAverageScores,
   ensureSchema
