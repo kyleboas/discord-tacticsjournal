@@ -65,8 +65,7 @@ export async function execute(interaction) {
           PROFANITY: {},
           IDENTITY_ATTACK: {},
           SEVERE_TOXICITY: {},
-          OBSCENE: {},
-          SEXUAL_EXPLICIT: {}
+          OBSCENE: {}
         }
       })
     });
