@@ -139,7 +139,8 @@ export function setupModeration(client) {
             TOXICITY: {},
             INSULT: {},
             THREAT: {},
-            PROFANITY: {}
+            PROFANITY: {},
+            IDENTITY_ATTACK: {}
           }
         }),
         // Add timeout to prevent hanging requests
