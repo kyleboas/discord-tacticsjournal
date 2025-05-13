@@ -10,12 +10,12 @@ const userStrikes = new Collection();
 const STRIKE_RESET_MS = 60 * 60 * 1000; // 1 hour reset window
 
 export const ATTRIBUTE_THRESHOLDS = {
-  TOXICITY: 0.75,
-  INSULT: 0.70,
-  PROFANITY: 0.85,
-  THREAT: 0.07,
+  TOXICITY: 0.85,
+  INSULT: 0.75,
+  PROFANITY: 0.90,
+  THREAT: 0.25,
   IDENTITY_ATTACK: 0.30,
-  SEVERE_TOXICITY: 0.30
+  SEVERE_TOXICITY: 0.45
 };
 
 // Environment-aware configuration
