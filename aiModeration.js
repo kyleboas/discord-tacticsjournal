@@ -14,9 +14,9 @@ export const ATTRIBUTE_THRESHOLDS = {
   INSULT: 0.70,
   PROFANITY: 0.85,
   THREAT: 0.30,
-  OBSCENE: 0.85,
+  OBSCENE: 0.99,
   IDENTITY_ATTACK: 0.30,
-  SEVERE_TOXICITY: 0.10
+  SEVERE_TOXICITY: 0.15
 };
 
 // Environment-aware configuration
