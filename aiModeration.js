@@ -44,7 +44,6 @@ const TRIGGER_PATTERNS = {
     /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d[\W_]*e?[\W_]*d?\b/i,
     /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
     /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
-  ],
   RACIAL_SLUR: [
     // n-word variants
     /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
@@ -137,53 +136,19 @@ function setCachedResult(content, result) {
   });
 }
 
-async function handleViolation(message, violations, content, manualCategoryMatches = []) {
+async function handleViolation(message, violations, content) {
   try {
     await message.delete();
 
     const strikeCount = incrementStrikes(message.author.id);
-    const timeoutMs = getTimeoutDuration(strikeCount, manualCategoryMatches);
+    const timeoutMs = getTimeoutDuration(strikeCount);
 
-    const visibleViolations = violations
-      .split(', ')
-      .filter(reason => reason !== 'EVASION_ATTEMPT');
-
-    const explanations = visibleViolations
-      .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
-      .filter(Boolean)
-      .join('\n');
-
-    const dmMessage = [
-      `**Your message was removed:**\n\`${content}\``,
-      `\nYou received strike ${strikeCount}.`,
-      `\nReason: **${visibleViolations.join(', ') || 'unspecified violation'}**`,
-      explanations ? `\n\n**Explanation:**\n${explanations}` : '',
-      `\nTimeout: ${typeof timeoutMs === 'number' ? `${timeoutMs / 1000}s` : timeoutMs}`
-    ].join('');
-
-    // Try to DM before moderation action (important for bans)
-    try {
-      await message.author.send(dmMessage);
-    } catch (dmError) {
-      console.warn(`Failed to DM user ${message.author.id} about moderation.`);
-    }
-
-    // Moderation action
-    const member = message.member;
-    const guildMe = message.guild?.members.me;
-
-    if (message.guild && member && guildMe) {
-      const hasModPerms = guildMe.permissions.has('ModerateMembers');
-      const hasBanPerms = guildMe.permissions.has('BanMembers');
-
-      if (timeoutMs === 'BAN_30D' && hasModPerms) {
-        await member.timeout(30 * 24 * 60 * 60 * 1000, `AI moderation: racial slur (strike ${strikeCount})`);
-      } else if (timeoutMs === 'BAN_PERM' && hasBanPerms) {
-        await member.ban({ reason: `AI moderation: racial slur (strike ${strikeCount})` });
-      } else if (typeof timeoutMs === 'number' && hasModPerms) {
-        await member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
-      } else {
-        console.warn('Insufficient permissions to apply moderation action.');
+    // Timeout the user (if guild member)
+    if (message.guild && message.member) {
+      try {
+        await message.member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
+      } catch (err) {
+        console.error('Failed to timeout user:', err);
       }
     }
 
@@ -211,6 +176,32 @@ async function handleViolation(message, violations, content, manualCategoryMatch
       console.error('Could not log moderation action:', logErr);
     }
 
+    // Temporary public reply (auto-deletes)
+    // DM user strike info
+    try {
+      const visibleViolations = violations
+      .split(', ')
+      .filter(reason => reason !== 'EVASION_ATTEMPT')
+      .join(', ') || 'unspecified violation';
+      
+      const explanationSet = new Set(
+      visibleViolations
+        .split(', ')
+        .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
+        .filter(Boolean)
+    );
+
+    const explanations = [...explanationSet].join('\n');
+  
+      await message.author.send(
+      `**Your message was removed:**\n\`${content}\`\n\n` +
+      `You received strike ${strikeCount}.\nReason: **${visibleViolations}**` +
+      `${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}` +
+      `\nTimeout: ${timeoutMs / 1000}s`
+    );
+    } catch (dmError) {
+      console.warn(`Failed to DM user ${message.author.id} about timeout.`);
+    }
   } catch (err) {
     console.error('Failed to handle moderation violation:', err);
   }
@@ -244,17 +235,11 @@ function incrementStrikes(userId) {
   return updated.count;
 }
 
-function getTimeoutDuration(strikeCount, categories = []) {
-  if (categories.includes('RACIAL_SLUR')) {
-    if (strikeCount === 1) return 24 * 60 * 60 * 1000;       // 24h mute
-    if (strikeCount === 2) return 'BAN_30D';
-    if (strikeCount >= 3) return 'BAN_PERM';
-  }
-
+function getTimeoutDuration(strikeCount) {
   if (strikeCount === 1) return 30 * 1000;
   if (strikeCount === 2) return 60 * 1000;
   if (strikeCount === 3) return 5 * 60 * 1000;
-  return 10 * 60 * 1000;
+  return 10 * 60 * 1000; // escalated timeout
 }
 
 export function setupModeration(client) {
@@ -333,7 +318,7 @@ export function setupModeration(client) {
     if (cachedResult) {
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
-      const detected = Object.entries(cachedResult)
+      const detected = Object.entries(attributes)
       .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
       .map(([key]) => key);
 
@@ -349,7 +334,7 @@ export function setupModeration(client) {
       const violations = rawViolations.join(', ');
 
       if (violations.length > 0) {
-        await handleViolation(message, rawViolations.join(', '), content, manualCategoryMatches);
+        await handleViolation(message, violations, content);
       }
 
       return;
@@ -418,7 +403,7 @@ export function setupModeration(client) {
       const violations = rawViolations.join(', ');
 
       if (violations.length > 0) {
-        await handleViolation(message, rawViolations.join(', '), content, manualCategoryMatches);
+        await handleViolation(message, violations, content);
       }
 
     } catch (err) {
