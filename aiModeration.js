@@ -242,7 +242,6 @@ export function setupModeration(client) {
           TOXICITY: {},
           INSULT: {},
           THREAT: {},
-          PROFANITY: {},
           IDENTITY_ATTACK: {},
           SEVERE_TOXICITY: {},
           OBSCENE: {},
