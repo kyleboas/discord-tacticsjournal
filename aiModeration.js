@@ -208,11 +208,11 @@ export function setupModeration(client) {
       const thresholds = {
         TOXICITY: 0.75,
         INSULT: 0.70,
-        PROFANITY: 0.75,
-        THREAT: 0.50,
+        PROFANITY: 0.85,
+        THREAT: 0.30,
         OBSCENE: 0.70,
         IDENTITY_ATTACK: 0.60,
-        SEVERE_TOXICITY: 0.65
+        SEVERE_TOXICITY: 0.30
       };
 
       const rawViolations = Object.entries(attributes)
@@ -248,11 +248,13 @@ export function setupModeration(client) {
         comment: { text: content },
         languages: ['en'],
         requestedAttributes: {
-          TOXICITY: {},
-          INSULT: {},
-          THREAT: {},
-          IDENTITY_ATTACK: {},
-          SEVERE_TOXICITY: {}
+          TOXICITY,
+          INSULT,
+          PROFANITY,
+          THREAT,
+          OBSCENE,
+          IDENTITY_ATTACK,
+          SEVERE_TOXICITY
         }
       }),
         // Add timeout to prevent hanging requests
@@ -277,7 +279,7 @@ export function setupModeration(client) {
       const thresholds = {
         TOXICITY: 0.75,
         INSULT: 0.70,
-        PROFANITY: 0.75,
+        PROFANITY: 0.85,
         THREAT: 0.30,
         OBSCENE: 0.70,
         IDENTITY_ATTACK: 0.60,
