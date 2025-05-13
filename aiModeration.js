@@ -24,7 +24,25 @@ const ATTRIBUTE_EXPLANATIONS = {
   PROFANITY: 'Contains strong or offensive language.',
   THREAT: 'May be interpreted as threatening someone.',
   IDENTITY_ATTACK: 'Attacks based on race, gender, or other identity.',
-  SEVERE_TOXICITY: 'Extremely harmful or abusive language.'
+  SEVERE_TOXICITY: 'Extremely harmful or abusive language.',
+  SELF_HARM: 'Encourages or references self-harm or suicide.',
+  LGTBQ_SLUR: 'Contains anti-LGBTQ+ slurs or hate speech.',
+  ABLEIST_SLUR: 'Uses language offensive toward disabled individuals.'
+};
+
+const TRIGGER_PATTERNS = {
+  SELF_HARM: [
+    /\bk[\W_]*y[\W_]*s\b/i,
+    /\bkill[\W_]*your[\W_]*self(ves)?\b/i
+  ],
+  LGTBQ_SLUR: [
+    /\bf[\W_]*a[\W_]*g{1,2}[\W_]*o?[\W_]*t?\b/i
+  ],
+  ABLEIST_SLUR: [
+    /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d[\W_]*e?[\W_]*d?\b/i,
+    /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
+    /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
+  ]
 };
 
 // Environment-aware configuration
@@ -130,11 +148,14 @@ async function handleViolation(message, violations, content) {
       .filter(reason => reason !== 'EVASION_ATTEMPT')
       .join(', ') || 'unspecified violation';
       
-      const explanations = visibleViolations
-      .split(', ')
-      .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
-      .filter(Boolean)
-      .join('\n');
+      const explanationSet = new Set(
+      visibleViolations
+        .split(', ')
+        .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
+        .filter(Boolean)
+    );
+
+    const explanations = [...explanationSet].join('\n');
   
       await message.author.send(
       `**Your message was removed:**\n\`${content}\`\n\n` +
@@ -237,10 +258,18 @@ export function setupModeration(client) {
     ];
     
     let evasionTriggered = false;
+    const manualCategoryMatches = [];
 
     if (content) {
       const normalizedText = normalizeText(content);
+
       evasionTriggered = evasionPatterns.some(pattern => pattern.test(normalizedText));
+
+      for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
+        if (patterns.some(p => p.test(normalizedText))) {
+          manualCategoryMatches.push(category);
+        }
+      }
     }
     
     if (!PERSPECTIVE_API_KEY) {
@@ -262,8 +291,9 @@ export function setupModeration(client) {
       : detected;
 
       if (evasionTriggered && rawViolations.length > 0) {
-        rawViolations.push('EVASION_ATTEMPT');
-      }
+      rawViolations.push('EVASION_ATTEMPT');
+    }
+      rawViolations.push(...manualCategoryMatches);
 
       const violations = rawViolations.join(', ');
 
@@ -329,8 +359,10 @@ export function setupModeration(client) {
       : detected; 
 
       if (evasionTriggered && rawViolations.length > 0) {
-        rawViolations.push('EVASION_ATTEMPT');
-      }
+      rawViolations.push('EVASION_ATTEMPT');
+    }
+
+  rawViolations.push(...manualCategoryMatches);
 
       const violations = rawViolations.join(', ');
 
