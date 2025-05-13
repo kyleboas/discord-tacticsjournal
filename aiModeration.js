@@ -244,8 +244,7 @@ export function setupModeration(client) {
           THREAT: {},
           IDENTITY_ATTACK: {},
           SEVERE_TOXICITY: {},
-          OBSCENE: {},
-          SEXUAL_EXPLICIT: {}
+          OBSCENE: {}
         }
       }),
         // Add timeout to prevent hanging requests
