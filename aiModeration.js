@@ -18,6 +18,15 @@ export const ATTRIBUTE_THRESHOLDS = {
   SEVERE_TOXICITY: 0.45
 };
 
+const ATTRIBUTE_EXPLANATIONS = {
+  TOXICITY: 'Toxic language that may cause harm or discomfort.',
+  INSULT: 'Insulting or disparaging remarks toward others.',
+  PROFANITY: 'Contains strong or offensive language.',
+  THREAT: 'May be interpreted as threatening someone.',
+  IDENTITY_ATTACK: 'Attacks based on race, gender, or other identity.',
+  SEVERE_TOXICITY: 'Extremely harmful or abusive language.'
+};
+
 // Environment-aware configuration
 const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
 const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
@@ -117,13 +126,19 @@ async function handleViolation(message, violations, content) {
     // DM user strike info
     try {
       const visibleViolations = violations
-        .split(', ')
-        .filter(reason => reason !== 'EVASION_ATTEMPT')
-        .join(', ') || 'unspecified violation';
-
+      .split(', ')
+      .filter(reason => reason !== 'EVASION_ATTEMPT')
+      .join(', ') || 'unspecified violation';
+      
+      const explanations = visibleViolations
+      .split(', ')
+      .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
+      .filter(Boolean)
+      .join('\n');
+  
       await message.author.send(
-        `You received strike ${strikeCount} for a removed message.\nReason: **${visibleViolations}**\nTimeout: ${timeoutMs / 1000}s`
-      );
+      `You received strike ${strikeCount} for a removed message.\nReason: **${visibleViolations}**\n${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}\nTimeout: ${timeoutMs / 1000}s`
+    );
     } catch (dmError) {
       console.warn(`Failed to DM user ${message.author.id} about timeout.`);
     }
