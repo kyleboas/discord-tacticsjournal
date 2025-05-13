@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { Collection } from 'discord.js';
 
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
-const WATCH_CHANNEL = '1371677909902819360';
+const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '1098742662040920074', '1325150809104842752', '1273974012774711397', '1371507335372996760'];
 const MOD_LOG_CHANNEL = '1099892476627669012';
 
 // Environment-aware configuration
@@ -65,7 +65,6 @@ async function handleViolation(message, violations, content) {
   try {
     await message.delete();
     
-    // Try to DM the user, but don't fail if we can't
     try {
       await message.author.send(
         `Your message was flagged and removed for violating community guidelines.\nReason: **${violations}**`
@@ -93,6 +92,8 @@ export function setupModeration(client) {
     if (!ENABLE_AI_MOD) return;
     if (message.channel.id !== WATCH_CHANNEL) return;
     if (message.author.bot || message.system) return;
+
+    if (message.member?.roles.cache.has('1100369095251206194')) return;
     
     const content = message.content?.trim();
     if (!content) return;
