@@ -56,31 +56,7 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
   const commandData = client.commands.map(cmd => cmd.data.toJSON());
-  const guild = client.guilds.cache.get('YOUR_GUILD_ID'); // replace with actual guild/server ID
-  if (!guild) {
-    console.error('Guild not found.');
-    return;
-  }
-
-  // Role-limited: only show /modcheck to this role
-  const moderatorRoleId = '1100369095251206194';
-
-  const modcheckCommand = commandData.find(cmd => cmd.name === 'modcheck');
-  if (modcheckCommand) {
-    const registered = await guild.commands.create(modcheckCommand);
-    await registered.permissions.set({
-      permissions: [{
-        id: moderatorRoleId,
-        type: 1, // 1 = ROLE
-        permission: true
-      }]
-    });
-  }
-
-  // Register other commands normally
-  for (const cmd of commandData.filter(c => c.name !== 'modcheck')) {
-    await guild.commands.create(cmd);
-  }
+  await client.application.commands.set(commandData);
   console.log('Slash commands synced');
 });
 // Cache for lazy loading commands
@@ -254,31 +230,7 @@ client.once('ready', async () => {
   }
   
   const commandData = client.commands.map(cmd => cmd.data.toJSON());
-  const guild = client.guilds.cache.get('YOUR_GUILD_ID'); // replace with actual guild/server ID
-  if (!guild) {
-    console.error('Guild not found.');
-    return;
-  }
-
-  // Role-limited: only show /modcheck to this role
-  const moderatorRoleId = '1100369095251206194';
-
-  const modcheckCommand = commandData.find(cmd => cmd.name === 'modcheck');
-  if (modcheckCommand) {
-    const registered = await guild.commands.create(modcheckCommand);
-    await registered.permissions.set({
-      permissions: [{
-        id: moderatorRoleId,
-        type: 1, // 1 = ROLE
-        permission: true
-      }]
-    });
-  }
-
-  // Register other commands normally
-  for (const cmd of commandData.filter(c => c.name !== 'modcheck')) {
-    await guild.commands.create(cmd);
-  }
+  await client.application.commands.set(commandData);
   console.log('Slash commands synced');
 });
 
