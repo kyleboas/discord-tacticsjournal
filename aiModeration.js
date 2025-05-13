@@ -250,13 +250,13 @@ export function setupModeration(client) {
         comment: { text: content },
         languages: ['en'],
         requestedAttributes: {
-          TOXICITY,
-          INSULT,
-          PROFANITY,
-          THREAT,
-          IDENTITY_ATTACK,
-          OBSCENE,
-          SEVERE_TOXICITY
+          TOXICITY: {},
+          INSULT: {},
+          PROFANITY: {},
+          THREAT: {},
+          IDENTITY_ATTACK: {},
+          OBSCENE: {},
+          SEVERE_TOXICITY: {}
         }
       }),
         // Add timeout to prevent hanging requests
