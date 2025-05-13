@@ -9,6 +9,16 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 const userStrikes = new Collection();
 const STRIKE_RESET_MS = 60 * 60 * 1000; // 1 hour reset window
 
+const ATTRIBUTE_THRESHOLDS = {
+  TOXICITY: 0.75,
+  INSULT: 0.70,
+  PROFANITY: 0.85,
+  THREAT: 0.30,
+  OBSCENE: 0.85,
+  IDENTITY_ATTACK: 0.60,
+  SEVERE_TOXICITY: 0.10
+};
+
 // Environment-aware configuration
 const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
 const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
@@ -205,15 +215,7 @@ export function setupModeration(client) {
     // Check cache first
     const cachedResult = getCachedResult(content);
     if (cachedResult) {
-      const thresholds = {
-        TOXICITY: 0.75,
-        INSULT: 0.70,
-        PROFANITY: 0.85,
-        THREAT: 0.30,
-        OBSCENE: 0.85,
-        IDENTITY_ATTACK: 0.60,
-        SEVERE_TOXICITY: 0.30
-      };
+      const thresholds = ATTRIBUTE_THRESHOLDS;
 
       const rawViolations = Object.entries(cachedResult)
         .filter(([key, score]) => (thresholds[key] || TOXICITY_THRESHOLD) <= score)
@@ -276,15 +278,7 @@ export function setupModeration(client) {
       );
       setCachedResult(content, scores);
 
-      const thresholds = {
-        TOXICITY: 0.75,
-        INSULT: 0.70,
-        PROFANITY: 0.85,
-        THREAT: 0.30,
-        OBSCENE: 0.85,
-        IDENTITY_ATTACK: 0.60,
-        SEVERE_TOXICITY: 0.10
-      };
+      const thresholds = ATTRIBUTE_THRESHOLDS;
 
       const rawViolations = Object.entries(attributes)
         .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
