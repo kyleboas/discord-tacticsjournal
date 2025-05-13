@@ -210,13 +210,13 @@ export function setupModeration(client) {
         INSULT: 0.70,
         PROFANITY: 0.85,
         THREAT: 0.30,
-        OBSCENE: 0.90,
+        OBSCENE: 0.95,
         IDENTITY_ATTACK: 0.60,
         SEVERE_TOXICITY: 0.30
       };
 
-      const rawViolations = Object.entries(attributes)
-        .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
+      const rawViolations = Object.entries(cachedResult)
+        .filter(([key, score]) => (thresholds[key] || TOXICITY_THRESHOLD) <= score)
         .map(([key]) => key);
 
       if (evasionTriggered && rawViolations.length > 0) {
@@ -228,7 +228,7 @@ export function setupModeration(client) {
       if (violations.length > 0) {
         await handleViolation(message, violations, content);
       }
-      
+
       return;
     }
     
@@ -252,8 +252,8 @@ export function setupModeration(client) {
           INSULT,
           PROFANITY,
           THREAT,
-          OBSCENE,
           IDENTITY_ATTACK,
+          OBSCENE,
           SEVERE_TOXICITY
         }
       }),
@@ -281,7 +281,7 @@ export function setupModeration(client) {
         INSULT: 0.70,
         PROFANITY: 0.85,
         THREAT: 0.30,
-        OBSCENE: 0.90,
+        OBSCENE: 0.95,
         IDENTITY_ATTACK: 0.60,
         SEVERE_TOXICITY: 0.30
       };

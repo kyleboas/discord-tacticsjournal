@@ -49,14 +49,14 @@ export async function execute(interaction) {
   const evasionMatched = evasionPatterns.some(p => p.test(normalized));
 
   const thresholds = {
-    TOXICITY: 0.75,
-    INSULT: 0.70,
-    PROFANITY: 0.70,
-    OBSCENE: 0.90,
-    IDENTITY_ATTACK: 0.60,
-    SEVERE_TOXICITY: 0.65,
-    THREAT: 0.50
-  };
+        TOXICITY: 0.75,
+        INSULT: 0.70,
+        PROFANITY: 0.85,
+        THREAT: 0.30,
+        OBSCENE: 0.95,
+        IDENTITY_ATTACK: 0.60,
+        SEVERE_TOXICITY: 0.30
+      };
 
   let reasons = [];
   let perspectiveResult = '';
