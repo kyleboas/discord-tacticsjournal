@@ -9,7 +9,7 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 // Environment-aware configuration
 const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
 const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
-const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '0.5'); // Only check 50% of messages
+const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '1.0'); // Only check 50% of messages
 
 // Rate limiting for Perspective API
 const messageCache = new Collection();
