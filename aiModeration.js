@@ -91,17 +91,16 @@ async function handleViolation(message, violations, content) {
     }
 
     // Temporary public reply (auto-deletes)
-    try {
-      const reply = await message.channel.send({
-        content: `<@${message.author.id}> your message was removed for violating community guidelines.\nStrike ${strikeCount} -- Timeout: ${timeoutMs / 1000}s`,
-        allowedMentions: { users: [message.author.id] }
-      });
-      setTimeout(() => reply.delete().catch(() => {}), 5000);
-    } catch (err) {
-      console.error('Failed to notify user in channel:', err);
-    }
-  } catch (err) {
-    console.error('Failed to handle moderation violation:', err);
+    // Private DM notification
+  try {
+    await message.author.send(
+      `Your message was removed for violating community guidelines.\n` +
+      `**Reason:** ${violations}\n` +
+      `**Strike:** ${strikeCount}\n` +
+      `**Timeout:** ${timeoutMs / 1000} seconds`
+    );
+  } catch (dmError) {
+    console.log(`Could not DM user ${message.author.id} about moderation action`);
   }
 }
 
