@@ -10,7 +10,7 @@ const userStrikes = new Collection();
 const STRIKE_RESET_MS = 60 * 60 * 1000; // 1 hour reset window
 
 export const ATTRIBUTE_THRESHOLDS = {
-  TOXICITY: 0.93,
+  TOXICITY: 0.92,
   INSULT: 0.92,
   PROFANITY: 0.92,
   THREAT: 0.70,
