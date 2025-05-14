@@ -1,6 +1,6 @@
 // aiModeration.js
 import fetch from 'node-fetch';
-import { Collection } from 'discord.js';
+import { Collection, EmbedBuilder } from 'discord.js';
 
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
 const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '1098742662040920074', '1325150809104842752', '1273974012774711397', '1371507335372996760'];
@@ -143,8 +143,8 @@ async function handleViolation(message, violations, content) {
 
     const strikeCount = incrementStrikes(message.author.id);
     const timeoutMs = getTimeoutDuration(strikeCount);
+    const minutes = timeoutMs / 60000;
 
-    // Timeout the user (if guild member)
     if (message.guild && message.member) {
       try {
         await message.member.timeout(timeoutMs, `AI moderation strike ${strikeCount}: ${violations}`);
@@ -156,6 +156,7 @@ async function handleViolation(message, violations, content) {
     // Send log message
     try {
       const logChannel = await message.client.channels.fetch(MOD_LOG_CHANNEL);
+      const scoreData = moderationCache.get(Buffer.from(content).toString('base64'))?.result || {};
       await logChannel.send({
         content: [
           `**Message:**\n\`${content}\``,
@@ -163,12 +164,11 @@ async function handleViolation(message, violations, content) {
           `\n**User:**\n<@${message.author.id}>`,
           `\n**Evasion Match:** ${violations.includes('EVASION_ATTEMPT') ? 'Yes' : 'No'}`,
           `\n**Perspective Scores:**`,
-          ...Object.entries(moderationCache.get(Buffer.from(content).toString('base64'))?.result || {})
-            .map(([key, val]) => {
-              const percent = Math.round(val * 100);
-              const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' ⚠️' : '';
-              return `${key}: ${percent}%${warn}`;
-            }),
+          ...Object.entries(scoreData).map(([key, val]) => {
+            const percent = Math.round(val * 100);
+            const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' ⚠️' : '';
+            return `${key}: ${percent}%${warn}`;
+          }),
           `\n\n**Would Trigger Moderation:** YES`,
           `Reasons: ${violations}`
         ].join('\n')
@@ -177,31 +177,40 @@ async function handleViolation(message, violations, content) {
       console.error('Could not log moderation action:', logErr);
     }
 
-    // Temporary public reply (auto-deletes)
-    // DM user strike info
+    // Public embed notice instead of DM
     try {
       const visibleViolations = violations
-      .split(', ')
-      .filter(reason => reason !== 'EVASION_ATTEMPT')
-      .join(', ') || 'unspecified violation';
+        .split(', ')
+        .filter(reason => reason !== 'EVASION_ATTEMPT');
       
       const explanationSet = new Set(
-      visibleViolations
-        .split(', ')
-        .map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim())
-        .filter(Boolean)
-    );
+        visibleViolations.map(v => ATTRIBUTE_EXPLANATIONS[v]?.trim()).filter(Boolean)
+      );
 
-    const explanations = [...explanationSet].join('\n');
-  
-      await message.author.send(
-      `**Your message was removed:**\n\`${content}\`\n\n` +
-      `You received strike ${strikeCount}.\nReason: **${visibleViolations}**` +
-      `${explanations ? `\n\n**Explanation:**\n${explanations}` : ''}` +
-      `\nTimeout: ${timeoutMs / 1000}s`
-    );
-    } catch (dmError) {
-      console.warn(`Failed to DM user ${message.author.id} about timeout.`);
+      const explanations = [...explanationSet].join('\n');
+      const scoreData = moderationCache.get(Buffer.from(content).toString('base64'))?.result || {};
+      const scoreLines = Object.entries(scoreData).map(([key, val]) => {
+        const percent = Math.round(val * 100);
+        const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' ⚠️' : '';
+        return `${key}: ${percent}%${warn}`;
+      });
+
+      const embed = new EmbedBuilder()
+        .setTitle('**Message Removed**')
+        .setDescription(`\`${content}\``)
+        .addFields(
+          { name: 'User', value: `<@${message.author.id}>`, inline: true },
+          { name: 'Reason', value: `Strike ${strikeCount} - ${visibleViolations.join(', ')}`, inline: true },
+          { name: 'Explanation', value: explanations || 'Unspecified', inline: false },
+          { name: 'Reason Scores', value: scoreLines.join('\n') || 'N/A', inline: false },
+          { name: 'Timeout Duration', value: `${minutes} minutes`, inline: false }
+        )
+        .setColor(0xff0000)
+        .setTimestamp();
+
+      await message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('Failed to send public moderation embed:', err);
     }
   } catch (err) {
     console.error('Failed to handle moderation violation:', err);
