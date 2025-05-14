@@ -319,7 +319,7 @@ export function setupModeration(client) {
     if (cachedResult) {
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
-      const detected = Object.entries(attributes)
+      const detected = Object.entries(cachedResult)
       .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
       .map(([key]) => key);
 
