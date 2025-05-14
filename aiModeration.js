@@ -207,7 +207,7 @@ async function handleViolation(message, violations, content) {
       });
 
       const embed = new EmbedBuilder()
-        .setTitle('**Message Removed**')
+        .setTitle('**AutoMod Violation - Message Removed** ⚠️')
         .setDescription(`\`${content}\``)
         .addFields(
           { name: 'User', value: `<@${message.author.id}>`, inline: true },
