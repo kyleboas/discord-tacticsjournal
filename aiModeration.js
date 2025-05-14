@@ -395,9 +395,9 @@ export function setupModeration(client) {
 
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
-      const detected = 
-      Object.entries(attributes)
-      .filter(([key, val]) => (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
+      const detected = Object.entries(attributes)
+     .filter(([key, val]) => val?.summaryScore?.value !== undefined && 
+        (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
       .map(([key]) => key);
 
     const rawViolations = detected.includes('THREAT') && !detected.includes('TOXICITY')
