@@ -3,11 +3,11 @@ import { config } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addToWatchlist, getWatchlist, setPlayerScore, getAverageScores } from './db.js';
+import { addToWatchlist, getWatchlist, setPlayerScore, getAverageScores, recordQuizAnswer, getQuizLeaderboard, ensureQuizSchema } from './db.js';
 import { isValidTeam } from './teams.js';
 import { confirmAddMap } from './commands/watchlist.js';
 import { MessageFlags } from 'discord-api-types/v10';
-
+import { getTodayAnswer, setupQuizScheduler } from './quiz/quizScheduler.js';
 import { setupModeration } from './aiModeration.js';
 
 config();
@@ -56,6 +56,8 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
   const commandData = client.commands.map(cmd => cmd.data.toJSON());
+  await ensureQuizSchema();
+setupQuizScheduler(client);
   await client.application.commands.set(commandData);
   console.log('Slash commands synced');
 });
@@ -207,6 +209,27 @@ client.on('interactionCreate', async interaction => {
         content: 'Team selection cancelled.',
         components: []
       });
+    }
+  }
+});
+
+client.on('interactionCreate', async interaction => {
+  if (interaction.isButton() && interaction.customId.startsWith('quiz:')) {
+    const choiceIndex = parseInt(interaction.customId.split(':')[1], 10);
+    const today = new Date().getDate() % QUESTIONS.length;
+    const userAnswer = QUESTIONS[today].options[choiceIndex];
+    const isCorrect = userAnswer === QUESTIONS[today].answer;
+
+    await recordQuizAnswer(interaction.user.id, interaction.user.username, isCorrect);
+    await interaction.reply({ content: isCorrect ? 'Correct!' : 'Wrong answer!', ephemeral: true });
+  }
+
+  if (interaction.isChatInputCommand() && interaction.commandName === 'quiz') {
+    const sub = interaction.options.getSubcommand();
+    if (sub === 'leaderboard') {
+      const leaderboard = await getQuizLeaderboard();
+      const display = leaderboard.map((u, i) => `${i + 1}. ${u.username} - ${u.correct_count} correct`).join('\n');
+      await interaction.reply({ content: `**Quiz Leaderboard**\n${display}`, ephemeral: true });
     }
   }
 });

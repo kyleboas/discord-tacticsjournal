@@ -1,0 +1,202 @@
+[
+  {
+    "question": "What is the primary tactical goal of a 'false 9' in football?",
+    "options": [
+      "Act as a traditional target man",
+      "Stretch the play wide",
+      "Drop deep to create space for wingers",
+      "Man-mark the opposition center back"
+    ],
+    "answer": "Drop deep to create space for wingers"
+  },
+  {
+    "question": "Which formation is most associated with 'tiki-taka' style of play?",
+    "options": [
+      "4-2-3-1",
+      "3-4-3",
+      "4-3-3",
+      "5-3-2"
+    ],
+    "answer": "4-3-3"
+  },
+  {
+    "question": "What is a key characteristic of a high pressing system?",
+    "options": [
+      "Defending deep with compact lines",
+      "Dropping midfielders into defense",
+      "Forcing turnovers high up the pitch",
+      "Prioritizing long ball clearances"
+    ],
+    "answer": "Forcing turnovers high up the pitch"
+  },
+  {
+    "question": "What role does a 'regista' play in midfield?",
+    "options": [
+      "Box-to-box runner",
+      "Deep-lying playmaker",
+      "Defensive enforcer",
+      "Attacking midfielder"
+    ],
+    "answer": "Deep-lying playmaker"
+  },
+  {
+    "question": "Which defensive strategy involves defending space rather than individual players?",
+    "options": [
+      "Zonal marking",
+      "Man-marking",
+      "Sweeper system",
+      "Counter-press"
+    ],
+    "answer": "Zonal marking"
+  },
+  {
+    "question": "What does 'gegenpressing' involve?",
+    "options": [
+      "Switching flanks during possession",
+      "Sitting deep and absorbing pressure",
+      "Pressing immediately after losing possession",
+      "Man-marking the opposition’s striker"
+    ],
+    "answer": "Pressing immediately after losing possession"
+  },
+  {
+    "question": "In a 3-5-2 formation, what is the typical role of the wide midfielders?",
+    "options": [
+      "Central playmakers",
+      "Second strikers",
+      "Wing-backs",
+      "Target men"
+    ],
+    "answer": "Wing-backs"
+  },
+  {
+    "question": "What is a key strength of a 4-2-3-1 formation?",
+    "options": [
+      "Defensive solidity with three center backs",
+      "Attacking width from overlapping wing-backs",
+      "Balance between attack and defense",
+      "Pure attacking overload in the final third"
+    ],
+    "answer": "Balance between attack and defense"
+  },
+  {
+    "question": "Which tactical term refers to overloading one side of the pitch to create space on the opposite side?",
+    "options": [
+      "Switch of play",
+      "Press trap",
+      "Underlap",
+      "Positional play"
+    ],
+    "answer": "Switch of play"
+  },
+  {
+    "question": "What is the purpose of a 'double pivot' in midfield?",
+    "options": [
+      "To provide two attackers in the box",
+      "To support wingers defensively",
+      "To distribute and shield the defense",
+      "To create a false sense of width"
+    ],
+    "answer": "To distribute and shield the defense"
+  },
+  {
+    "question": "Which manager popularized the concept of 'total football'?",
+    "options": [
+      "Arrigo Sacchi",
+      "Johan Cruyff",
+      "Pep Guardiola",
+      "Marcelo Bielsa"
+    ],
+    "answer": "Johan Cruyff"
+  },
+  {
+    "question": "What defines an inverted full-back?",
+    "options": [
+      "A full-back who plays on the opposite side of their dominant foot",
+      "A full-back who cuts inside to join the midfield",
+      "A full-back who overlaps wide wingers",
+      "A full-back who only defends in a low block"
+    ],
+    "answer": "A full-back who cuts inside to join the midfield"
+  },
+  {
+    "question": "Which pressing trap is used to bait opponents into one side of the field?",
+    "options": [
+      "Zonal pressing",
+      "Wide press trap",
+      "Midfield overload",
+      "Man-to-man press"
+    ],
+    "answer": "Wide press trap"
+  },
+  {
+    "question": "What does an 'underlap' refer to in attacking play?",
+    "options": [
+      "A defender overlapping on the outside",
+      "A midfielder running behind the striker",
+      "A full-back running inside the winger",
+      "A winger switching flanks"
+    ],
+    "answer": "A full-back running inside the winger"
+  },
+  {
+    "question": "Why is a 3-4-3 formation often used in possession-heavy teams?",
+    "options": [
+      "It provides extra defensive cover",
+      "It isolates wingers",
+      "It overloads midfield for control",
+      "It allows long ball transitions"
+    ],
+    "answer": "It overloads midfield for control"
+  },
+  {
+    "question": "What is the main drawback of a high defensive line?",
+    "options": [
+      "Less support for midfielders",
+      "Exposure to long balls behind",
+      "Reduced pressing effectiveness",
+      "Crowding the penalty box"
+    ],
+    "answer": "Exposure to long balls behind"
+  },
+  {
+    "question": "Which player role focuses on disrupting opponent’s play and recovering possession?",
+    "options": [
+      "Trequartista",
+      "Box-to-box midfielder",
+      "Ball-winning midfielder",
+      "Libero"
+    ],
+    "answer": "Ball-winning midfielder"
+  },
+  {
+    "question": "What is 'verticality' in football tactics?",
+    "options": [
+      "Maintaining a low defensive block",
+      "Direct, progressive ball movement forward",
+      "Switching flanks repeatedly",
+      "Retaining possession with short passes"
+    ],
+    "answer": "Direct, progressive ball movement forward"
+  },
+  {
+    "question": "What tactical role requires a striker to constantly press and chase defenders?",
+    "options": [
+      "Poacher",
+      "Target man",
+      "Pressing forward",
+      "Deep-lying forward"
+    ],
+    "answer": "Pressing forward"
+  },
+  {
+    "question": "Which coach is best known for popularizing 'vertical tiki-taka'?",
+    "options": [
+      "Luis Enrique",
+      "Ernesto Valverde",
+      "Diego Simeone",
+      "Pep Guardiola"
+    ],
+    "answer": "Luis Enrique"
+  }
+]

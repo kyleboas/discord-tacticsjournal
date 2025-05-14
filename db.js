@@ -112,3 +112,54 @@ export async function ensureSchema() {
     ADD COLUMN IF NOT EXISTS channel_id TEXT;
   `);
 }
+
+export async function ensureQuizSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS quiz_scores (
+      user_id TEXT NOT NULL,
+      username TEXT NOT NULL,
+      correct_count INTEGER DEFAULT 0,
+      PRIMARY KEY(user_id)
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS quiz_attempts (
+      date DATE NOT NULL,
+      user_id TEXT NOT NULL,
+      correct BOOLEAN DEFAULT false,
+      PRIMARY KEY (date, user_id)
+    );
+  `);
+}
+
+export async function recordQuizAnswer(userId, username, correct) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const exists = await pool.query(`
+    SELECT * FROM quiz_attempts WHERE date = $1 AND user_id = $2
+  `, [today, userId]);
+
+  if (exists.rowCount === 0) {
+    await pool.query(`
+      INSERT INTO quiz_attempts (date, user_id, correct) VALUES ($1, $2, $3)
+    `, [today, userId, correct]);
+
+    if (correct) {
+      await pool.query(`
+        INSERT INTO quiz_scores (user_id, username, correct_count)
+        VALUES ($1, $2, 1)
+        ON CONFLICT (user_id)
+        DO UPDATE SET correct_count = quiz_scores.correct_count + 1, username = $2
+      `, [userId, username]);
+    }
+  }
+}
+
+export async function getQuizLeaderboard() {
+  const res = await pool.query(`
+    SELECT username, correct_count FROM quiz_scores
+    ORDER BY correct_count DESC LIMIT 10
+  `);
+  return res.rows;
+}
