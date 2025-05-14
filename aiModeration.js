@@ -85,11 +85,11 @@ const TRIGGER_PATTERNS = {
 // Environment-aware configuration
 const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
 const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
-const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '1.0'); // Only check 50% of messages
+const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '1.0');
 
 // Rate limiting for Perspective API
 const messageCache = new Collection();
-const RATE_LIMIT = parseInt(process.env.PERSPECTIVE_RATE_LIMIT || '10'); // Max requests per minute
+const RATE_LIMIT = parseInt(process.env.PERSPECTIVE_RATE_LIMIT || '30'); // Max requests per minute
 let requestsThisMinute = 0;
 let rateLimitReset = Date.now() + 60000;
 
