@@ -211,10 +211,10 @@ async function handleViolation(message, violations, content) {
         .addFields(
           { name: 'Message', value: `\`${content}\``, inline: true },
           { name: 'User', value: `<@${message.author.id}>`, inline: true },
-          { name: 'Reason', value: `Strike ${strikeCount} - ${visibleViolations.join(', ')}`, inline: true },
+          { name: 'Reason', value: visibleViolations.join(', '), inline: true },
           { name: 'Explanation', value: explanations || 'Unspecified', inline: false },
           { name: 'Reason Scores', value: scoreLines.join('\n') || 'N/A', inline: false },
-          { name: 'Punishment', value: durationDisplay, inline: false }
+          { name: 'Punishment', value: `Strike ${strikeCount} -- ${durationDisplay}`, inline: false }
         )
         .setColor(0xff0000)
         .setTimestamp();
