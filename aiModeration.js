@@ -214,7 +214,7 @@ async function handleViolation(message, violations, content) {
           { name: 'Reason', value: `Strike ${strikeCount} - ${visibleViolations.join(', ')}`, inline: true },
           { name: 'Explanation', value: explanations || 'Unspecified', inline: false },
           { name: 'Reason Scores', value: scoreLines.join('\n') || 'N/A', inline: false },
-          { name: 'Timeout Duration', value: durationDisplay, inline: false }
+          { name: 'Punishment', value: durationDisplay, inline: false }
         )
         .setColor(0xff0000)
         .setTimestamp();
