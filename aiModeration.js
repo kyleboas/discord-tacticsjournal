@@ -84,11 +84,11 @@ const TRIGGER_PATTERNS = {
 
 function formatDuration(ms) {
   const seconds = Math.round(ms / 1000);
-  if (seconds < 60) return `${seconds} second'}`;
+  if (seconds < 60) return `${seconds} second`;
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes} minute'}`;
+  if (minutes < 60) return `${minutes} minute`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour'}`;
+  if (hours < 24) return `${hours} hour`;
   const days = Math.round(hours / 24);
   return `${days} day`;
 }
