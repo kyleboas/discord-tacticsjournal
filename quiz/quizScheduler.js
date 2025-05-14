@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
-import { recordQuizAnswer } from './db.js';
+import { recordQuizAnswer } from '../db.js';
 
 const CHANNEL_ID = '1372225536406978640';
 const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
