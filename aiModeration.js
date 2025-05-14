@@ -84,13 +84,13 @@ const TRIGGER_PATTERNS = {
 
 function formatDuration(ms) {
   const seconds = Math.round(ms / 1000);
-  if (seconds < 60) return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+  if (seconds < 60) return `${seconds} second'}`;
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  if (minutes < 60) return `${minutes} minute'}`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  if (hours < 24) return `${hours} hour'}`;
   const days = Math.round(hours / 24);
-  return `${days} day${days !== 1 ? 's' : ''}`;
+  return `${days} day`;
 }
 
 // Environment-aware configuration
