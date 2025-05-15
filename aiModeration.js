@@ -31,7 +31,7 @@ const ATTRIBUTE_EXPLANATIONS = {
   RACIAL_SLUR: 'Uses racially offensive or dehumanizing language targeting individuals or groups based on race or ethnicity.'
 };
 
-const TRIGGER_PATTERNS = {
+export const TRIGGER_PATTERNS = {
   SELF_HARM: [
     /\bk[\W_]*y[\W_]*s\b/i,
     /\bkill[\W_]*your[\W_]*self(ves)?\b/i
@@ -82,7 +82,7 @@ const TRIGGER_PATTERNS = {
   ]
 };
 
-const EVASION_ATTRIBUTE_PATTERNS = [
+export const EVASION_ATTRIBUTE_PATTERNS = [
   { attribute: 'PROFANITY', pattern: /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+\b/i },
   { attribute: 'PROFANITY', pattern: /\bf[a@]k\b/i },
   { attribute: 'PROFANITY', pattern: /\bf[\s]*u[\s]*k\b/i },
