@@ -7,7 +7,8 @@
       "Drop deep to create space for wingers",
       "Man-mark the opposition center back"
     ],
-    "answer": "Drop deep to create space for wingers"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "Which formation is most associated with 'tiki-taka' style of play?",
@@ -17,7 +18,8 @@
       "4-3-3",
       "5-3-2"
     ],
-    "answer": "4-3-3"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "What is a key characteristic of a high pressing system?",
@@ -27,7 +29,8 @@
       "Forcing turnovers high up the pitch",
       "Prioritizing long ball clearances"
     ],
-    "answer": "Forcing turnovers high up the pitch"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "What role does a 'regista' play in midfield?",
@@ -37,7 +40,8 @@
       "Defensive enforcer",
       "Attacking midfielder"
     ],
-    "answer": "Deep-lying playmaker"
+    "answerIndex": 1,
+    "points": 10
   },
   {
     "question": "Which defensive strategy involves defending space rather than individual players?",
@@ -47,7 +51,8 @@
       "Sweeper system",
       "Counter-press"
     ],
-    "answer": "Zonal marking"
+    "answerIndex": 0,
+    "points": 10
   },
   {
     "question": "What does 'gegenpressing' involve?",
@@ -57,7 +62,8 @@
       "Pressing immediately after losing possession",
       "Man-marking the opposition’s striker"
     ],
-    "answer": "Pressing immediately after losing possession"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "In a 3-5-2 formation, what is the typical role of the wide midfielders?",
@@ -67,7 +73,8 @@
       "Wing-backs",
       "Target men"
     ],
-    "answer": "Wing-backs"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "What is a key strength of a 4-2-3-1 formation?",
@@ -77,7 +84,8 @@
       "Balance between attack and defense",
       "Pure attacking overload in the final third"
     ],
-    "answer": "Balance between attack and defense"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "Which tactical term refers to overloading one side of the pitch to create space on the opposite side?",
@@ -87,7 +95,8 @@
       "Underlap",
       "Positional play"
     ],
-    "answer": "Switch of play"
+    "answerIndex": 0,
+    "points": 10
   },
   {
     "question": "What is the purpose of a 'double pivot' in midfield?",
@@ -97,7 +106,8 @@
       "To distribute and shield the defense",
       "To create a false sense of width"
     ],
-    "answer": "To distribute and shield the defense"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "Which manager popularized the concept of 'total football'?",
@@ -107,7 +117,8 @@
       "Pep Guardiola",
       "Marcelo Bielsa"
     ],
-    "answer": "Johan Cruyff"
+    "answerIndex": 1,
+    "points": 10
   },
   {
     "question": "What defines an inverted full-back?",
@@ -117,7 +128,8 @@
       "A full-back who overlaps wide wingers",
       "A full-back who only defends in a low block"
     ],
-    "answer": "A full-back who cuts inside to join the midfield"
+    "answerIndex": 1,
+    "points": 10
   },
   {
     "question": "Which pressing trap is used to bait opponents into one side of the field?",
@@ -127,7 +139,8 @@
       "Midfield overload",
       "Man-to-man press"
     ],
-    "answer": "Wide press trap"
+    "answerIndex": 1,
+    "points": 10
   },
   {
     "question": "What does an 'underlap' refer to in attacking play?",
@@ -137,7 +150,8 @@
       "A full-back running inside the winger",
       "A winger switching flanks"
     ],
-    "answer": "A full-back running inside the winger"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "Why is a 3-4-3 formation often used in possession-heavy teams?",
@@ -147,7 +161,8 @@
       "It overloads midfield for control",
       "It allows long ball transitions"
     ],
-    "answer": "It overloads midfield for control"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "What is the main drawback of a high defensive line?",
@@ -157,7 +172,8 @@
       "Reduced pressing effectiveness",
       "Crowding the penalty box"
     ],
-    "answer": "Exposure to long balls behind"
+    "answerIndex": 1,
+    "points": 10
   },
   {
     "question": "Which player role focuses on disrupting opponent’s play and recovering possession?",
@@ -167,7 +183,8 @@
       "Ball-winning midfielder",
       "Libero"
     ],
-    "answer": "Ball-winning midfielder"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "What is 'verticality' in football tactics?",
@@ -177,7 +194,8 @@
       "Switching flanks repeatedly",
       "Retaining possession with short passes"
     ],
-    "answer": "Direct, progressive ball movement forward"
+    "answerIndex": 1,
+    "points": 10
   },
   {
     "question": "What tactical role requires a striker to constantly press and chase defenders?",
@@ -187,7 +205,8 @@
       "Pressing forward",
       "Deep-lying forward"
     ],
-    "answer": "Pressing forward"
+    "answerIndex": 2,
+    "points": 10
   },
   {
     "question": "Which coach is best known for popularizing 'vertical tiki-taka'?",
@@ -197,6 +216,7 @@
       "Diego Simeone",
       "Pep Guardiola"
     ],
-    "answer": "Luis Enrique"
+    "answerIndex": 0,
+    "points": 10
   }
 ]
