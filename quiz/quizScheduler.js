@@ -45,7 +45,7 @@ export async function runTestQuiz(client) {
   const embed = new EmbedBuilder()
     .setTitle('Test Quiz')
     .setDescription(
-      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\n**This is a test quiz and will close automatically after 60 seconds.**`
+      `${question}\n\n${questionText}\n\n**Points:** ${points}\n\n**This is a test quiz and will close automatically after 60 seconds.**`
     )
     .setTimestamp();
 
@@ -123,7 +123,7 @@ export async function runDailyQuiz(client) {
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
     .setDescription(
-      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThis quiz will close <t:${nextUnix}:R>.`
+      `${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThis quiz will close <t:${nextUnix}:R>.`
     )
     .setTimestamp();
 
@@ -235,7 +235,7 @@ export function setupQuizScheduler(client) {
         const updatedEmbed = new EmbedBuilder()
           .setTitle('Question of the Day')
           .setDescription(
-            `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
+            `${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
             `\n**Participants:** ${total}\n**Correct Responses:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
           )
           .setTimestamp();
