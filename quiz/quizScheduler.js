@@ -125,3 +125,12 @@ export function setupQuizScheduler(client) {
     });
   });
 }
+
+export {
+  QUESTIONS,
+  todayMessageId,
+  todayQuestionIndex,
+  todayCorrectIndex,
+  todayPoints,
+  userResponses
+};
