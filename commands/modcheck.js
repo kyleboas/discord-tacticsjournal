@@ -32,15 +32,17 @@ export async function execute(interaction) {
   const input = interaction.options.getString('message');
   const normalized = normalizeText(input);
 
-  const matchedAttributes = new Set();
-  const matchedCategories = new Set();
+  const patternMatches = new Set();
+  const validViolations = new Set();
 
+  // Only store pattern matches initially, don't add to validViolations yet
   for (const { attribute, pattern } of EVASION_ATTRIBUTE_PATTERNS) {
-    if (pattern.test(normalized)) matchedAttributes.add(attribute);
+    if (pattern.test(normalized)) patternMatches.add(attribute);
   }
 
+  // Trigger patterns (slurs, etc.) are added directly to validViolations
   for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
-    if (patterns.some(p => p.test(normalized))) matchedCategories.add(category);
+    if (patterns.some(p => p.test(normalized))) validViolations.add(category);
   }
 
   let reasons = [];
@@ -62,14 +64,26 @@ export async function execute(interaction) {
 
     if (data.attributeScores) {
       const entries = Object.entries(data.attributeScores);
+      const scores = {};
+      
       perspectiveResult = entries
         .map(([key, val]) => {
           const score = val.summaryScore.value;
+          scores[key] = score;
           const hit = score >= ATTRIBUTE_THRESHOLDS[key];
           if (hit) reasons.push(key);
           return `${key}: ${Math.round(score * 100)}%${hit ? ' ⚠️' : ''}`;
         })
         .join('\n');
+      
+      // Only add pattern matches to violations if they also meet score thresholds
+      for (const attribute of patternMatches) {
+        if (scores[attribute] !== undefined && 
+            scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || 0.85)) {
+          validViolations.add(attribute);
+          validViolations.add('EVASION_ATTEMPT');
+        }
+      }
     } else {
       perspectiveResult = 'Perspective API returned no scores.';
     }
@@ -77,10 +91,9 @@ export async function execute(interaction) {
     perspectiveResult = 'Perspective API error: ' + err.message;
   }
 
-  if (matchedAttributes.size || matchedCategories.size || reasons.length > 0) {
+  if (validViolations.size || reasons.length > 0) {
     moderationTriggered = true;
-    matchedAttributes.forEach(a => reasons.push(a));
-    matchedCategories.forEach(c => reasons.push(c));
+    reasons.push(...validViolations);
   }
 
   await interaction.reply({
@@ -88,9 +101,10 @@ export async function execute(interaction) {
       `**Message:**\n\`${input}\``,
       `\n**Normalized:**\n\`${normalized}\``,
       `\n**Perspective Scores:**\n${perspectiveResult}`,
-      `\n**Manual Pattern Match:** ${[...matchedAttributes, ...matchedCategories].join(', ') || 'None'}`,
+      `\n**Pattern Matches:** ${[...patternMatches].join(', ') || 'None'}`,
+      `\n**Valid Violations:** ${[...validViolations].join(', ') || 'None'}`,
       `\n**Would Trigger Moderation:** ${moderationTriggered ? 'YES' : 'No'}`,
-      moderationTriggered ? `Reasons: ${reasons.join(', ')}` : ''
+      moderationTriggered ? `Reasons: ${[...new Set(reasons)].join(', ')}` : ''
     ].join('\n'),
     ephemeral: true
   });
