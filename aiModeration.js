@@ -339,7 +339,7 @@ export function setupModeration(client) {
       /\b[s$5]+[\s._-]*[e3]+[\s._-]*[x]+/i
     ];
         
-    const manualCategoryMatches = [];
+    const evasionTriggered = manualCategoryMatches.length > 0;
 
     if (content) {
       const normalizedText = normalizeText(content);
