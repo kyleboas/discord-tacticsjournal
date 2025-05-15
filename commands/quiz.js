@@ -120,11 +120,6 @@ export async function execute(interaction) {
         points: QUESTIONS[index].points,
         message: msg
       });
-      
-      todayQuestionIndex = index;
-      todayCorrectIndex = QUESTIONS[index].answerIndex;
-      todayPoints = QUESTIONS[index].points;
-      quizMessage = msg;
 
       return interaction.reply({
         content: `Marked quiz: **"${questionText}"** as active.\nID: \`${id}\``,
