@@ -1,12 +1,8 @@
 // commands/quiz.js
 import {
   SlashCommandBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
   EmbedBuilder
 } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
 import {
   getQuizLeaderboard,
   recordQuizAnswerDetailed
@@ -28,7 +24,7 @@ export const data = new SlashCommandBuilder()
   .setName('quiz')
   .setDescription('Quiz commands')
   .addSubcommand(sub =>
-    sub.setName('test').setDescription('Post a test quiz to verify functionality')
+    sub.setName('test').setDescription('Post a test quiz and close it in 1 minute')
   )
   .addSubcommand(sub =>
     sub.setName('leaderboard').setDescription('View the quiz leaderboard')
@@ -41,8 +37,70 @@ export async function execute(interaction) {
   const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === 'test') {
+    await interaction.reply({ content: 'Test quiz sent! It will close in 1 minute.', ephemeral: true });
+
+    const channel = await interaction.client.channels.fetch(quizChannelId);
+
+    // Post test quiz
     await runDailyQuiz(interaction.client);
-    return interaction.reply({ content: 'Test quiz sent!', ephemeral: true });
+
+    // Wait 1 minute then simulate closing
+    setTimeout(async () => {
+      if (
+        todayQuestionIndex === null ||
+        todayCorrectIndex === null ||
+        todayMessageId === null
+      ) return;
+
+      const { question, options } = QUESTIONS[todayQuestionIndex];
+      const correctAnswer = options[todayCorrectIndex];
+      const correctLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
+      const total = userResponses.size;
+      const correctCount = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
+
+      try {
+        const msg = await channel.messages.fetch(todayMessageId);
+        await msg.delete();
+      } catch (err) {
+        console.warn('Could not delete quiz message:', err.message);
+      }
+
+      const now = new Date();
+      const nextUnix = Math.floor(now.getTime() / 1000) + 60 * 60 * 24;
+
+      const answerEmbed = new EmbedBuilder()
+        .setTitle('Question of the Day -- Answer')
+        .setDescription(
+          `**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}\n\n**Correct responses:** ${correctCount}/${total}\n\nThe next question will be posted <t:${nextUnix}:R>.`
+        )
+        .setTimestamp();
+
+      await channel.send({
+        content: `<@&${ROLE_ID}> today's answer has been posted.`,
+        embeds: [answerEmbed]
+      });
+
+      for (const [userId, selectedIndex] of userResponses.entries()) {
+        const member = await interaction.client.users.fetch(userId);
+        const isCorrect = selectedIndex === todayCorrectIndex;
+
+        await recordQuizAnswerDetailed({
+          userId,
+          username: member.username,
+          selectedIndex,
+          messageId: todayMessageId,
+          isCorrect,
+          points: isCorrect ? todayPoints : 0
+        });
+      }
+
+      // Reset quiz state
+      todayMessageId = null;
+      todayQuestionIndex = null;
+      todayCorrectIndex = null;
+      todayPoints = 0;
+      userResponses.clear();
+    }, 60 * 1000); // 1 minute
   }
 
   if (subcommand === 'leaderboard') {
@@ -85,7 +143,6 @@ export async function execute(interaction) {
       .setDescription(`**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}`)
       .setTimestamp();
 
-    // Delete original question message
     try {
       const msg = await channel.messages.fetch(todayMessageId);
       await msg.delete();
@@ -112,7 +169,6 @@ export async function execute(interaction) {
       });
     }
 
-    // Reset state
     todayMessageId = null;
     todayQuestionIndex = null;
     todayCorrectIndex = null;
