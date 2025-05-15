@@ -1,4 +1,4 @@
-// database.js
+// db.js
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -137,11 +137,13 @@ export async function ensureQuizSchema() {
 }
 
 export async function setActiveQuizInDB({ messageId, questionIndex, correctIndex, points, channelId }) {
-  await pool.query(`
-    DELETE FROM active_quiz;
-    INSERT INTO active_quiz (message_id, question_index, correct_index, points, channel_id)
-    VALUES ($1, $2, $3, $4, $5)
-  `, [messageId, questionIndex, correctIndex, points, channelId]);
+  await pool.query(`DELETE FROM active_quiz`);
+
+  await pool.query(
+    `INSERT INTO active_quiz (message_id, question_index, correct_index, points, channel_id)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [messageId, questionIndex, correctIndex, points, channelId]
+  );
 }
 
 export async function getActiveQuizFromDB() {
