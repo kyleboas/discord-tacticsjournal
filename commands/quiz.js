@@ -1,28 +1,40 @@
-import { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+// commands/quiz.js
+import {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+  EmbedBuilder
+} from 'discord.js';
 import fs from 'fs';
 import path from 'path';
-import { getQuizLeaderboard, recordQuizAnswerDetailed } from '../db.js';
-import { runDailyQuiz } from '../quiz/quizScheduler.js';
-import { QUESTIONS } from '../quiz/quizScheduler.js'; // assuming it's exported
-import { todayQuestionIndex, todayCorrectIndex, todayMessageId, todayPoints, userResponses } from '../quiz/quizScheduler.js'; // also export these
+import {
+  getQuizLeaderboard,
+  recordQuizAnswerDetailed
+} from '../db.js';
+import {
+  runDailyQuiz,
+  QUESTIONS,
+  todayQuestionIndex,
+  todayCorrectIndex,
+  todayMessageId,
+  todayPoints,
+  userResponses
+} from '../quiz/quizScheduler.js';
 
+const ROLE_ID = '1372372259812933642';
 const quizChannelId = '1372225536406978640';
-const questionsPath = path.resolve('./quiz/questions.json');
 
 export const data = new SlashCommandBuilder()
   .setName('quiz')
   .setDescription('Quiz commands')
   .addSubcommand(sub =>
-    sub.setName('test')
-      .setDescription('Post a test quiz to verify functionality')
+    sub.setName('test').setDescription('Post a test quiz to verify functionality')
   )
   .addSubcommand(sub =>
-    sub.setName('leaderboard')
-      .setDescription('View the quiz leaderboard')
+    sub.setName('leaderboard').setDescription('View the quiz leaderboard')
   )
   .addSubcommand(sub =>
-    sub.setName('close')
-      .setDescription('Manually close the active quiz and award points')
+    sub.setName('close').setDescription('Manually close the active quiz and award points')
   );
 
 export async function execute(interaction) {
@@ -30,7 +42,7 @@ export async function execute(interaction) {
 
   if (subcommand === 'test') {
     await runDailyQuiz(interaction.client);
-    await interaction.reply({ content: 'Test quiz sent!', ephemeral: true });
+    return interaction.reply({ content: 'Test quiz sent!', ephemeral: true });
   }
 
   if (subcommand === 'leaderboard') {
@@ -41,10 +53,13 @@ export async function execute(interaction) {
     }
 
     const leaderboardMsg = leaderboard
-      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} points`)
+      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
       .join('\n');
 
-    await interaction.reply({ content: `**Question of the Day Leaderboard:**\n${leaderboardMsg}`, ephemeral: true });
+    return interaction.reply({
+      content: `**Question of the Day Leaderboard:**\n${leaderboardMsg}`,
+      ephemeral: true
+    });
   }
 
   if (subcommand === 'close') {
@@ -61,29 +76,31 @@ export async function execute(interaction) {
 
     const { question, options } = QUESTIONS[todayQuestionIndex];
     const correctAnswer = options[todayCorrectIndex];
-    const answerLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
+    const correctLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
 
     const channel = await interaction.client.channels.fetch(quizChannelId);
+
+    const answerEmbed = new EmbedBuilder()
+      .setTitle('Question of the Day -- Answer')
+      .setDescription(`**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}`)
+      .setTimestamp();
+
+    // Delete original question message
+    try {
+      const msg = await channel.messages.fetch(todayMessageId);
+      await msg.delete();
+    } catch (err) {
+      console.warn('Could not delete quiz message:', err.message);
+    }
+
     await channel.send({
-      content: `**Question of the Day Answer:**`,
-      embeds: [
-        {
-          title: 'Question of the Day',
-          description: `Question: ${question}\n\nAnswer: ${answerLabel}) ${correctAnswer}`,
-          timestamp: new Date().toISOString()
-        }
-      ]
+      content: `<@&${ROLE_ID}> today's answer has been posted.`,
+      embeds: [answerEmbed]
     });
 
     for (const [userId, selectedIndex] of userResponses.entries()) {
       const member = await interaction.client.users.fetch(userId);
       const isCorrect = selectedIndex === todayCorrectIndex;
-
-      if (isCorrect) {
-        await member.send(`You answered ${['A', 'B', 'C', 'D'][selectedIndex]}, you have been awarded ${todayPoints} points.`);
-      } else {
-        await member.send(`You did not answer ${['A', 'B', 'C', 'D'][todayCorrectIndex]}, you have been awarded no points.`);
-      }
 
       await recordQuizAnswerDetailed({
         userId,
@@ -102,6 +119,9 @@ export async function execute(interaction) {
     todayPoints = 0;
     userResponses.clear();
 
-    await interaction.reply({ content: 'The quiz has been closed and points awarded.', ephemeral: true });
+    return interaction.reply({
+      content: 'Quiz closed and results posted.',
+      ephemeral: true
+    });
   }
 }
