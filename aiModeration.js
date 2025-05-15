@@ -340,26 +340,26 @@ export function setupModeration(client) {
       /\b[s$5]+[\s._-]*[e3]+[\s._-]*[x]+/i
     ];
         
+    let normalizedText = '';
     const manualCategoryMatches = [];
-    const evasionTriggered = manualCategoryMatches.length > 0;
 
     if (content) {
-      const normalizedText = normalizeText(content);
+      normalizedText = normalizeText(content);
 
-      // Check for evasion pattern triggers mapped to Perspective attributes
       for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
         if (pattern.test(normalizedText)) {
           manualCategoryMatches.push(attribute);
         }
       }
 
-      // Check for slur categories
       for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
         if (patterns.some(p => p.test(normalizedText))) {
           manualCategoryMatches.push(category);
         }
       }
     }
+
+    const evasionTriggered = manualCategoryMatches.includes('EVASION_ATTEMPT') || manualCategoryMatches.length > 0;
     
     if (!PERSPECTIVE_API_KEY) {
       console.error('Missing PERSPECTIVE_API_KEY');
