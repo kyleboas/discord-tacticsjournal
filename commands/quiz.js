@@ -81,21 +81,45 @@ export async function execute(interaction) {
   }
   
   if (subcommand === 'active') {
-    if (!hasQuizRole) {
-      return interaction.reply({
-        content: 'Only quiz moderators can use this command.',
-        flags: MessageFlags.Ephemeral
-      });
-    }
-
     const id = interaction.options.getString('id');
     try {
       const msg = await channel.messages.fetch(id);
+      const embed = msg.embeds?.[0];
+
+      if (!embed || !embed.description) {
+        return interaction.reply({
+          content: 'No embed found in that message.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      // Try to match the question from the embed with one in QUESTIONS
+      const questionLine = embed.description.match(/\*\*Question:\*\* (.*?)\n/);
+      if (!questionLine) {
+        return interaction.reply({
+          content: 'Failed to extract question from embed.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      const questionText = questionLine[1].trim();
+      const index = QUESTIONS.findIndex(q => q.question === questionText);
+
+      if (index === -1) {
+        return interaction.reply({
+          content: 'Question not found in question bank.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
       todayMessageId = msg.id;
+      todayQuestionIndex = index;
+      todayCorrectIndex = QUESTIONS[index].answerIndex;
+      todayPoints = QUESTIONS[index].points;
       quizMessage = msg;
 
       return interaction.reply({
-        content: `Marked message ID \`${id}\` as the active quiz.`,
+        content: `Marked quiz: **"${questionText}"** as active.\nID: \`${id}\``,
         flags: MessageFlags.Ephemeral
       });
     } catch (err) {
