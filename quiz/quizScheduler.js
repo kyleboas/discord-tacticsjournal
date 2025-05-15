@@ -110,10 +110,17 @@ export function setupQuizScheduler(client) {
     userResponses.set(interaction.user.id, selectedIndex);
 
     await interaction.reply({
-      content: "Your answer has been recorded. The answer will be revealed later today.",
+      content: "Your answer has been recorded. You may change it before the deadline. The answer will be revealed later today.",
       ephemeral: true
     });
 
-    await recordQuizAnswer(interaction.user.id, interaction.user.username, false);
+    await recordQuizAnswerDetailed({
+      userId: interaction.user.id,
+      username: interaction.user.username,
+      selectedIndex,
+      messageId: todayMessageId,
+      isCorrect: false,
+      points: 0
+    });
   });
 }

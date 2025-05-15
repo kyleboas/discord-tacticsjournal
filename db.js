@@ -116,43 +116,45 @@ export async function ensureSchema() {
 export async function ensureQuizSchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS quiz_scores (
-      user_id TEXT NOT NULL,
+      user_id TEXT PRIMARY KEY,
       username TEXT NOT NULL,
-      correct_count INTEGER DEFAULT 0,
-      PRIMARY KEY(user_id)
+      total_points INTEGER DEFAULT 0
     );
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS quiz_attempts (
       date DATE NOT NULL,
+      time TIMESTAMP NOT NULL,
+      message_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
-      correct BOOLEAN DEFAULT false,
-      PRIMARY KEY (date, user_id)
+      username TEXT NOT NULL,
+      selected_index INTEGER,
+      points INTEGER DEFAULT 0,
+      PRIMARY KEY (user_id, message_id)
     );
   `);
 }
 
-export async function recordQuizAnswer(userId, username, correct) {
-  const today = new Date().toISOString().split('T')[0];
 
-  const exists = await pool.query(`
-    SELECT * FROM quiz_attempts WHERE date = $1 AND user_id = $2
-  `, [today, userId]);
+export async function recordQuizAnswerDetailed({ userId, username, selectedIndex, messageId, isCorrect, points }) {
+  const now = new Date();
+  const date = now.toISOString().split('T')[0];
 
-  if (exists.rowCount === 0) {
+  await pool.query(`
+    INSERT INTO quiz_attempts (date, time, message_id, user_id, username, selected_index, points)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (user_id, message_id)
+    DO UPDATE SET time = $2, selected_index = $6, points = $7, username = $5
+  `, [date, now, messageId, userId, username, selectedIndex, isCorrect ? points : 0]);
+
+  if (isCorrect) {
     await pool.query(`
-      INSERT INTO quiz_attempts (date, user_id, correct) VALUES ($1, $2, $3)
-    `, [today, userId, correct]);
-
-    if (correct) {
-      await pool.query(`
-        INSERT INTO quiz_scores (user_id, username, correct_count)
-        VALUES ($1, $2, 1)
-        ON CONFLICT (user_id)
-        DO UPDATE SET correct_count = quiz_scores.correct_count + 1, username = $2
-      `, [userId, username]);
-    }
+      INSERT INTO quiz_scores (user_id, username, total_points)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (user_id)
+      DO UPDATE SET total_points = quiz_scores.total_points + $3, username = $2
+    `, [userId, username, points]);
   }
 }
 
