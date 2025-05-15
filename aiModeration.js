@@ -378,8 +378,15 @@ export function setupModeration(client) {
       ? detected.filter(v => v !== 'THREAT')
       : detected;
 
-      if (evasionTriggered && rawViolations.length > 0) {
-      rawViolations.push('EVASION_ATTEMPT');
+      for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
+      if (
+        pattern.test(normalizedText) &&
+        scores[attribute] !== undefined &&
+        scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD)
+      ) {
+        rawViolations.push(attribute);
+        rawViolations.push('EVASION_ATTEMPT');
+      }
     }
       rawViolations.push(...manualCategoryMatches);
 
@@ -446,8 +453,15 @@ export function setupModeration(client) {
       ? detected.filter(v => v !== 'THREAT')
       : detected; 
 
-      if (evasionTriggered && rawViolations.length > 0) {
-      rawViolations.push('EVASION_ATTEMPT');
+      for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
+      if (
+        pattern.test(normalizedText) &&
+        scores[attribute] !== undefined &&
+        scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD)
+      ) {
+        rawViolations.push(attribute);
+        rawViolations.push('EVASION_ATTEMPT');
+      }
     }
 
   rawViolations.push(...manualCategoryMatches);
