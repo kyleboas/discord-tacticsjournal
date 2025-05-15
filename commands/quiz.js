@@ -1,6 +1,7 @@
 import {
   SlashCommandBuilder,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } from 'discord.js';
 import {
   getQuizLeaderboard,
@@ -38,17 +39,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   const subcommand = interaction.options.getSubcommand();
-
   const hasQuizRole = interaction.member.roles.cache.has(QUIZ_ROLE_ID);
+  const channel = await interaction.client.channels.fetch(QUIZ_CHANNEL_ID);
 
   if (subcommand !== 'leaderboard' && !hasQuizRole) {
     return interaction.reply({
       content: 'You must have the quiz role to use this command.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
-
-  const channel = await interaction.client.channels.fetch(QUIZ_CHANNEL_ID);
 
   if (subcommand === 'test' || subcommand === 'open') {
     if (todayMessageId) {
@@ -64,35 +63,29 @@ export async function execute(interaction) {
 
     return interaction.reply({
       content: subcommand === 'test' ? 'Test quiz posted.' : 'New quiz started.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
   if (subcommand === 'close') {
-    if (
-      todayQuestionIndex === null ||
-      todayCorrectIndex === null ||
-      todayMessageId === null
-    ) {
+    if (!todayMessageId || todayQuestionIndex === null || todayCorrectIndex === null) {
       return interaction.reply({
         content: 'There is no active quiz to close.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
     const { question, options } = QUESTIONS[todayQuestionIndex];
     const correctAnswer = options[todayCorrectIndex];
     const correctLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
-
-    const now = new Date();
-    const nextQuestionTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
-    const nextRevealUnix = Math.floor(nextQuestionTime.getTime() / 1000);
+    const nextTime = new Date();
+    nextTime.setDate(nextTime.getDate() + 1);
+    nextTime.setHours(8, 0, 0, 0);
+    const nextUnix = Math.floor(nextTime.getTime() / 1000);
 
     const embed = new EmbedBuilder()
       .setTitle('Question of the Day')
-      .setDescription(
-        `**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}\n\nThe next question will be posted <t:${nextRevealUnix}:R>.`
-      )
+      .setDescription(`**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}\n\nThe next question will be posted <t:${nextUnix}:R>.`)
       .setTimestamp();
 
     try {
@@ -102,7 +95,7 @@ export async function execute(interaction) {
       console.warn('Could not delete quiz message:', err.message);
     }
 
-    const answerMsg = await channel.send({
+    await channel.send({
       content: `<@&${POST_ROLE_ID}> today's answer has been posted.`,
       embeds: [embed]
     });
@@ -129,24 +122,23 @@ export async function execute(interaction) {
 
     return interaction.reply({
       content: 'Quiz closed.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
   if (subcommand === 'leaderboard') {
     const leaderboard = await getQuizLeaderboard();
-
     if (!leaderboard.length) {
-      return interaction.reply({ content: 'No leaderboard data yet.', ephemeral: true });
+      return interaction.reply({ content: 'No leaderboard data yet.', flags: MessageFlags.Ephemeral });
     }
 
-    const leaderboardMsg = leaderboard
+    const msg = leaderboard
       .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
       .join('\n');
 
     return interaction.reply({
-      content: `**Question of the Day Leaderboard:**\n${leaderboardMsg}`,
-      ephemeral: true
+      content: `**Question of the Day Leaderboard:**\n${msg}`,
+      flags: MessageFlags.Ephemeral
     });
   }
 }

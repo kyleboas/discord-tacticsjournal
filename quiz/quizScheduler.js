@@ -7,7 +7,8 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  Events
+  Events,
+  MessageFlags
 } from 'discord.js';
 import { recordQuizAnswerDetailed } from '../db.js';
 
@@ -34,8 +35,8 @@ export async function runDailyQuiz(client) {
   const questionText = options.map((opt, i) => `${labels[i]}) ${opt}`).join('\n');
 
   const now = new Date();
-  const nextQuestionTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
-  const nextUnix = Math.floor(nextQuestionTime.getTime() / 1000);
+  const nextTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+  const nextUnix = Math.floor(nextTime.getTime() / 1000);
 
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
@@ -87,7 +88,7 @@ export function setupQuizScheduler(client) {
     if (userResponses.has(interaction.user.id)) {
       return interaction.reply({
         content: 'You have already answered today\'s quiz. Come back tomorrow!',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -105,14 +106,14 @@ export function setupQuizScheduler(client) {
       points: isCorrect ? todayPoints : 0
     });
 
-    const answerLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
-    const correctAnswer = QUESTIONS[todayQuestionIndex].options[todayCorrectIndex];
+    const label = ['A', 'B', 'C', 'D'][todayCorrectIndex];
+    const answer = QUESTIONS[todayQuestionIndex].options[todayCorrectIndex];
 
     await interaction.reply({
       content: isCorrect
         ? `Correct! You earned ${todayPoints} point(s).`
-        : `Wrong. The correct answer was ${answerLabel}) ${correctAnswer}.`,
-      ephemeral: true
+        : `Wrong. The correct answer was ${label}) ${answer}.`,
+      flags: MessageFlags.Ephemeral
     });
   });
 }
