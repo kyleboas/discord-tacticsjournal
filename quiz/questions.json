@@ -110,14 +110,14 @@
     "points": 10
   },
   {
-    "question": "Which manager popularized the concept of 'total football'?",
+    "question": "Which coach developed the concept of 'Total Football'?",
     "options": [
-      "Arrigo Sacchi",
+      "Rinus Michels",
       "Johan Cruyff",
       "Pep Guardiola",
       "Marcelo Bielsa"
     ],
-    "answerIndex": 1,
+    "answerIndex": 0,
     "points": 10
   },
   {
@@ -218,5 +218,258 @@
     ],
     "answerIndex": 0,
     "points": 10
-  }
+  },
+  {
+    "question":"Which manager won the UEFA Champions League with two different clubs between 2000 and 2025?",
+    "options":[
+      "Pep Guardiola",
+      "José Mourinho",
+      "Carlo Ancelotti",
+      "Zinedine Zidane"
+    ],
+    "answerIndex":2,
+    "points":10
+  },
+  {
+    "question":"Which national team won the most major international tournaments between 2000 and 2025?",
+    "options":[
+      "Germany",
+      "France",
+      "Brazil",
+      "Spain"
+    ],
+    "answerIndex":3,
+    "points":10
+  },
+  {
+    "question":"Which club achieved a historic treble in 2008-2009 under Pep Guardiola?",
+    "options":[
+      "Bayern Munich",
+      "Real Madrid",
+      "Barcelona",
+      "Manchester City"
+    ],
+    "answerIndex":2,
+    "points":10
+  },
+  {
+    "question":"Which coach led Leicester City to a shocking Premier League title win in 2015-2016?",
+    "options":[
+      "Brendan Rodgers",
+      "Claudio Ranieri",
+      "Nigel Pearson",
+      "Sam Allardyce"
+    ],
+    "answerIndex":1,
+    "points":10
+  },
+  {
+    "question":"Who scored the decisive goal in the 2014 World Cup final?",
+    "options":[
+      "Thomas Muller",
+      "Mario Gotze",
+      "Mesut Ozil",
+      "Andre Schucrrle"
+    ],
+    "answerIndex":1,
+    "points":10
+  },
+  {
+    "question":"Which country won Euro 2004 in one of the biggest upsets in football history?",
+    "options":[
+      "Portugal",
+      "Italy",
+      "Greece",
+      "Czech Republic"
+    ],
+    "answerIndex":2,
+    "points":10
+  },
+  {
+    "question":"Which team was the first to win the Club World Cup three times in a row (2016-2018)?",
+    "options":[
+      "Barcelona",
+      "Liverpool",
+      "Bayern Munich",
+      "Real Madrid"
+    ],
+    "answerIndex":3,
+    "points":10
+  },
+  {
+    "question":"Who scored a hat-trick in the 2022 World Cup final?",
+    "options":[
+      "Lionel Messi",
+      "Kylian Mbappe",
+      "Olivier Giroud",
+      "Karim Benzema"
+    ],
+    "answerIndex":1,
+    "points":10
+  },
+  {
+    "question":"Who won the Ballon d'Or in 2018, breaking Messi and Ronaldo's streak?",
+    "options":[
+      "Luka Modric",
+      "Neymar",
+      "Kylian Mbappe",
+      "Mohamed Salah"
+    ],
+    "answerIndex":0,
+    "points":10
+  },
+  {
+    "question":"Which team made a dramatic comeback from 3-0 down to win the 2005 UCL Final?",
+    "options":[
+      "Chelsea",
+      "Liverpool",
+      "AC Milan",
+      "Barcelona"
+    ],
+    "answerIndex":1,
+    "points":10
+  },
+  {
+    "question": "Which country used a 3-4-2-1 to great effect during Euro 2020?",
+    "options": [
+      "Italy",
+      "England",
+      "Germany",
+      "Denmark"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "Which manager is associated with the concept of 'Juego de Posición' (positional play)?",
+    "options": [
+      "Diego Simeone",
+      "Marcelo Bielsa",
+      "Pep Guardiola",
+      "José Mourinho"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which system emphasizes creating numerical superiority in every zone of the pitch?",
+    "options": [
+      "Vertical tiki-taka",
+      "Man-to-man marking",
+      "Positional play",
+      "Low block"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "What was significant about France’s setup in the 2018 World Cup final?",
+    "options": [
+      "They played with no striker",
+      "They used a compact 4-4-2 to counter",
+      "They sat deep and countered with pace",
+      "They played 3 at the back"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which team used a back three and inverted wing-backs to dominate the Bundesliga under Julian Nagelsmann?",
+    "options": [
+      "RB Leipzig",
+      "Borussia Dortmund",
+      "Bayern Munich",
+      "Hoffenheim"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "Which club was famous for employing a highly fluid 3-1-4-2 under Gian Piero Gasperini?",
+    "options": [
+      "Napoli",
+      "Atalanta",
+      "Torino",
+      "Sassuolo"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which midfielder was central to Spain’s Euro 2012 dominance with a false 9 system?",
+    "options": [
+      "Xavi",
+      "David Silva",
+      "Andrés Iniesta",
+      "Cesc Fàbregas"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "What made Italy's approach unique during Euro 2020?",
+    "options": [
+      "Defensive-first mentality",
+      "Sweeper system",
+      "Flexible midfield rotation and attacking full-backs",
+      "Strict zonal man-marking"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which of these best describes a ‘third man run’ in football?",
+    "options": [
+      "A winger switching flanks",
+      "A late run by a player receiving a pass after two teammates combine",
+      "A center-back pushing forward",
+      "A striker running offside to distract defenders"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "What tactic is used to neutralize a high press through central overloads?",
+    "options": [
+      "Inverted full-backs",
+      "Double pivot with third man support",
+      "Target man hold-up",
+      "Deep block"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which UCL-winning team was most reliant on transitions and individual brilliance?",
+    "options": [
+      "2010 Inter Milan",
+      "2021 Chelsea",
+      "2023 Manchester City",
+      "2011 Barcelona"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Who was the tactical mastermind behind Chile’s aggressive 3-4-1-2 at Copa América 2016?",
+    "options": [
+      "Tite",
+      "Jorge Sampaoli",
+      "Marcelo Bielsa",
+      "Juan Antonio Pizzi"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "What distinguishes Pep Guardiola’s Manchester City buildup from traditional 4-3-3 systems?",
+    "options": [
+      "Constant long balls",
+      "Use of a midfield box and inverted full-backs",
+      "Man-marking defensive line",
+      "Emphasis on wing crosses"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  } 
 ]
