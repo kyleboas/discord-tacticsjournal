@@ -1,32 +1,50 @@
+// src/scheduler/quizScheduler.ts
 import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Events } from 'discord.js';
 import { recordQuizAnswer } from '../db.js';
 
 const CHANNEL_ID = '1372225536406978640';
+const ROLE_ID = '1372372259812933642';
 const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
-let todayMessageId = null;
-let todayAnswer = null;
+let todayMessageId: string | null = null;
+let todayQuestionIndex: number | null = null;
+let todayCorrectIndex: number | null = null;
+let todayPoints: number = 0;
+let userResponses: Map<string, number> = new Map();
 
 export function setupQuizScheduler(client) {
   cron.schedule('0 8 * * *', async () => {
     const questionIndex = new Date().getDate() % QUESTIONS.length;
-    const { question, options, answer } = QUESTIONS[questionIndex];
-    todayAnswer = answer;
+    const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
 
-    const row = {
-      type: 1,
-      components: options.map((opt, i) => ({
-        type: 2,
-        style: 1,
-        label: opt,
-        custom_id: `quiz:${i}`
-      }))
-    };
+    todayQuestionIndex = questionIndex;
+    todayCorrectIndex = answerIndex;
+    todayPoints = points;
+    userResponses = new Map();
+
+    const labels = ['A', 'B', 'C', 'D'];
+    const questionText = options.map((opt, i) => `${labels[i]}: ${opt}`).join('\n');
+
+    const embed = new EmbedBuilder()
+      .setTitle('Question of the Day')
+      .setDescription(`Question: ${question}\n\n${questionText}\n\nPoints: ${points}\n\nThe answer will be shared at 5:00 PM ET.`)
+      .setTimestamp();
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      options.map((opt, i) =>
+        new ButtonBuilder()
+          .setCustomId(`quiz:${i}`)
+          .setLabel(labels[i])
+          .setStyle(ButtonStyle.Primary)
+      )
+    );
 
     const channel = await client.channels.fetch(CHANNEL_ID);
     const msg = await channel.send({
-      content: `**Daily Quiz:** ${question}`,
+      content: `<@&${ROLE_ID}> today's question has been posted.`,
+      embeds: [embed],
       components: [row]
     });
 
@@ -34,16 +52,54 @@ export function setupQuizScheduler(client) {
   }, { timezone: 'America/New_York' });
 
   cron.schedule('0 17 * * *', async () => {
-    if (!todayAnswer || !todayMessageId) return;
+    if (todayQuestionIndex === null || todayCorrectIndex === null || todayMessageId === null) return;
+
+    const { question, options } = QUESTIONS[todayQuestionIndex];
+    const correctAnswer = options[todayCorrectIndex];
+    const answerLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
 
     const channel = await client.channels.fetch(CHANNEL_ID);
-    await channel.send(`**Quiz Closed!** The correct answer was: **${todayAnswer}**`);
+    await channel.send({
+      content: `<@&${ROLE_ID}> today's question has been posted.`,
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Question of the Day')
+          .setDescription(`Question: ${question}\n\nAnswer: ${answerLabel}) ${correctAnswer}`)
+          .setTimestamp()
+      ]
+    });
 
-    todayAnswer = null;
+    for (const [userId, selectedIndex] of userResponses.entries()) {
+      const member = await client.users.fetch(userId);
+      if (selectedIndex === todayCorrectIndex) {
+        await member.send(`You answered ${['A', 'B', 'C', 'D'][selectedIndex]}, you have been awarded ${todayPoints} points.`);
+        await recordQuizAnswer(userId, todayQuestionIndex, todayPoints);
+      } else {
+        await member.send(`You did not answer ${answerLabel}, you have been awarded no points.`);
+        await recordQuizAnswer(userId, todayQuestionIndex, 0);
+      }
+    }
+
     todayMessageId = null;
+    todayQuestionIndex = null;
+    todayCorrectIndex = null;
+    todayPoints = 0;
+    userResponses.clear();
   }, { timezone: 'America/New_York' });
-}
 
-export function getTodayAnswer() {
-  return todayAnswer;
+  client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith('quiz:')) return;
+    if (todayCorrectIndex === null || todayQuestionIndex === null) return;
+
+    const selectedIndex = parseInt(interaction.customId.split(':')[1]);
+    userResponses.set(interaction.user.id, selectedIndex);
+
+    await interaction.reply({
+      content: `Your answer has been recorded.`,
+      ephemeral: true
+    });
+
+    await recordQuizAnswer(interaction.user.id, todayQuestionIndex, 0);
+  });
 }
