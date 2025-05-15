@@ -14,7 +14,7 @@ export const ATTRIBUTE_THRESHOLDS = {
   INSULT: 0.95,
   PROFANITY: 0.95,
   THREAT: 0.70,
-  IDENTITY_ATTACK: 0.75,
+  IDENTITY_ATTACK: 0.65,
   SEVERE_TOXICITY: 0.70
 };
 
@@ -81,6 +81,25 @@ const TRIGGER_PATTERNS = {
     /\bc[a@]m[e3]l[\W_]*j[o0]ck[e3]y\b/i
   ]
 };
+
+const EVASION_ATTRIBUTE_PATTERNS = [
+  { attribute: 'PROFANITY', pattern: /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+\b/i },
+  { attribute: 'PROFANITY', pattern: /\bf[a@]k\b/i },
+  { attribute: 'PROFANITY', pattern: /\bf[\s]*u[\s]*k\b/i },
+  { attribute: 'PROFANITY', pattern: /\bf[\s._-]*a[\s._-]*r[\s._-]*k\b/i },
+  { attribute: 'PROFANITY', pattern: /\bf[\s._-]*r[\s._-]*[i1!|l]+[\s._-]*[c(kq)]+\b/i },
+
+  { attribute: 'PROFANITY', pattern: /\bs+[\s._-]*[h]+[\s._-]*[i1!|í]+[\s._-]*[t7]+\b/i },
+  { attribute: 'PROFANITY', pattern: /\bs[\s]*h[\s]*e[e3]*[\s]*t/i },
+
+  { attribute: 'INSULT', pattern: /\bb+[\s._-]*[i1!|]+[\s._-]*[t7]+[\s._-]*[c(kq)]+[\s._-]*h+\b/i },
+  { attribute: 'INSULT', pattern: /\bb[e3]+[\s]*[t7]+[\s]*c[h]+/i },
+
+  { attribute: 'PROFANITY', pattern: /\b[a@]+[\s._-]*[s$5]+[\s._-]*[s$5]+\b/i },
+
+  { attribute: 'THREAT', pattern: /\bi['’`"]?ll\s+[^ ]+\s+you\b/i },
+  { attribute: 'THREAT', pattern: /\bi\s*am\s+g[o0]nna\s+(kill|hurt|fuck|wreck|beat|destroy|harm)\b/i }
+];
 
 function formatDuration(ms) {
   const seconds = Math.round(ms / 1000);
@@ -279,12 +298,14 @@ export function setupModeration(client) {
     
     const evasionPatterns = [
       // fuck variations
-      /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k*\b/i,
+      /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+\b/i,
       /\bf[a@]k\b/i,
       /\bf[\s]*u[\s]*k\b/i,
+      /\bf[\s._-]*a[\s._-]*r[\s._-]*k\b/i, // fark
+      /\bf[\s._-]*r[\s._-]*[i1!|l]+[\s._-]*[c(kq)]+\b/i, // frick, freak
 
       // shit variations
-      /\bs+[\s._-]*[h]+[\s._-]*[i1!|]+[\s._-]*[t7]+\b/i,
+      /\bs+[\s._-]*[h]+[\s._-]*[i1!|í]+[\s._-]*[t7]+\b/i,
       /\bs[\s]*h[\s]*e[e3]*[\s]*t/i,
 
       // bitch variations
@@ -303,6 +324,10 @@ export function setupModeration(client) {
       // kill
       /\bk+[\s._-]*[i1!|]+[\s._-]*l+[\s._-]*l+\b/i,
 
+      // threats like "I'll X you"
+      /\bi['’`"]?ll\s+[^ ]+\s+you\b/i,
+      /\bi\s*am\s+g[o0]nna\s+(kill|hurt|fuck|wreck|beat|destroy|harm)\b/i,
+
       // gay insult use
       /\bg+[\s._-]*[a@]+[\s._-]*[y]+[\s._-]*[b]+[\s._-]*[o0]+[\s._-]*[i1!|]+\b/i,
 
@@ -313,15 +338,20 @@ export function setupModeration(client) {
       /\bp+[\s._-]*[o0]+[\s._-]*[r]+[\s._-]*[n]+\b/i,
       /\b[s$5]+[\s._-]*[e3]+[\s._-]*[x]+/i
     ];
-    
-    let evasionTriggered = false;
+        
     const manualCategoryMatches = [];
 
     if (content) {
       const normalizedText = normalizeText(content);
 
-      evasionTriggered = evasionPatterns.some(pattern => pattern.test(normalizedText));
+      // Check for evasion pattern triggers mapped to Perspective attributes
+      for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
+        if (pattern.test(normalizedText)) {
+          manualCategoryMatches.push(attribute);
+        }
+      }
 
+      // Check for slur categories
       for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
         if (patterns.some(p => p.test(normalizedText))) {
           manualCategoryMatches.push(category);
