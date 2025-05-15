@@ -155,8 +155,7 @@ export async function runDailyQuiz(client) {
 }
 
 export function setupQuizScheduler(client) {
-  // Schedule to close the previous day's quiz and open a new one at 8AM EST
-  cron.schedule('0 8 * * *', async () => {
+  cron.schedule('1 2 * * *', async () => {
     // Close the previous quiz if it exists
     if (todayMessageId) {
       try {
