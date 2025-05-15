@@ -26,17 +26,17 @@ export async function runDailyQuiz(client) {
   const labels = ['A', 'B', 'C', 'D'];
   const questionText = options.map((opt, i) => `${labels[i]}: ${opt}`).join('\n');
 
+  const now = new Date();
+  const revealTime = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    17, 0, 0
+  );
+  const revealUnix = Math.floor(revealTime.getTime() / 1000);
+
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
-    const now = new Date();
-    const revealTime = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      17, 0, 0 // 5:00 PM
-    );
-    const revealUnix = Math.floor(revealTime.getTime() / 1000);
-
     .setDescription(`Question: ${question}\n\n${questionText}\n\nPoints: ${points}\n\nThe answer will be revealed <t:${revealUnix}:t> (<t:${revealUnix}:R>).`)
     .setTimestamp();
 
