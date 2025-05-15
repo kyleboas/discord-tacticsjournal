@@ -29,6 +29,15 @@ export const data = new SlashCommandBuilder()
     sub.setName('test').setDescription('Post a test quiz that lasts 60 seconds')
   )
   .addSubcommand(sub =>
+    sub.setName('active')
+      .setDescription('Manually mark a message as the active quiz (admin only)')
+      .addStringOption(opt =>
+        opt.setName('id')
+          .setDescription('Message ID of the active quiz')
+          .setRequired(true)
+      )
+  )
+  .addSubcommand(sub =>
     sub.setName('open').setDescription('Start a new quiz that closes at 8AM EST')
   )
   .addSubcommand(sub =>
@@ -69,6 +78,32 @@ export async function execute(interaction) {
       content: 'Test quiz posted. It will automatically close after 60 seconds.',
       flags: MessageFlags.Ephemeral
     });
+  }
+  
+  if (subcommand === 'active') {
+    if (!hasQuizRole) {
+      return interaction.reply({
+        content: 'Only quiz moderators can use this command.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const id = interaction.options.getString('id');
+    try {
+      const msg = await channel.messages.fetch(id);
+      todayMessageId = msg.id;
+      quizMessage = msg;
+
+      return interaction.reply({
+        content: `Marked message ID \`${id}\` as the active quiz.`,
+        flags: MessageFlags.Ephemeral
+      });
+    } catch (err) {
+      return interaction.reply({
+        content: `Failed to fetch message with ID \`${id}\`: ${err.message}`,
+        flags: MessageFlags.Ephemeral
+      });
+    }
   }
   
   if (subcommand === 'status') {
