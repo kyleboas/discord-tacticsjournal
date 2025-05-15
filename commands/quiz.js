@@ -15,7 +15,8 @@ import {
   todayCorrectIndex,
   todayMessageId,
   todayPoints,
-  userResponses
+  userResponses,
+  setActiveQuizState
 } from '../quiz/quizScheduler.js';
 
 const QUIZ_ROLE_ID = '1100369095251206194';
@@ -112,7 +113,14 @@ export async function execute(interaction) {
         });
       }
 
-      todayMessageId = msg.id;
+      setActiveQuizState({
+        messageId: msg.id,
+        questionIndex: index,
+        correctIndex: QUESTIONS[index].answerIndex,
+        points: QUESTIONS[index].points,
+        message: msg
+      });
+      
       todayQuestionIndex = index;
       todayCorrectIndex = QUESTIONS[index].answerIndex;
       todayPoints = QUESTIONS[index].points;

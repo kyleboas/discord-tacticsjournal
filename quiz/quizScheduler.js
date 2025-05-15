@@ -262,6 +262,14 @@ export function setupQuizScheduler(client) {
   });
 }
 
+export function setActiveQuizState({ messageId, questionIndex, correctIndex, points, message }) {
+  todayMessageId = messageId;
+  todayQuestionIndex = questionIndex;
+  todayCorrectIndex = correctIndex;
+  todayPoints = points;
+  quizMessage = message;
+}
+
 export {
   QUESTIONS,
   todayMessageId,
