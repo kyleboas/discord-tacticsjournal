@@ -111,7 +111,7 @@ export function setupQuizScheduler(client) {
 
     await interaction.reply({
       content: isCorrect
-        ? `Correct! You earned ${todayPoints} point(s).`
+        ? `Correct! You earned ${todayPoints} points.`
         : `Wrong. The correct answer was ${label}) ${answer}.`,
       flags: MessageFlags.Ephemeral
     });
