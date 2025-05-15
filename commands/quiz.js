@@ -69,7 +69,7 @@ export async function execute(interaction) {
       const nextUnix = Math.floor(now.getTime() / 1000) + 60 * 60 * 24;
 
       const answerEmbed = new EmbedBuilder()
-        .setTitle('Question of the Day -- Answer')
+        .setTitle('Question of the Day')
         .setDescription(
           `**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}\n\n**Correct responses:** ${correctCount}/${total}\n\nThe next question will be posted <t:${nextUnix}:R>.`
         )
@@ -139,7 +139,7 @@ export async function execute(interaction) {
     const channel = await interaction.client.channels.fetch(quizChannelId);
 
     const answerEmbed = new EmbedBuilder()
-      .setTitle('Question of the Day -- Answer')
+      .setTitle('Question of the Day')
       .setDescription(`**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}`)
       .setTimestamp();
 
