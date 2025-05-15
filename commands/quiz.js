@@ -32,6 +32,9 @@ export const data = new SlashCommandBuilder()
     sub.setName('open').setDescription('Start a new quiz that closes at 8AM EST')
   )
   .addSubcommand(sub =>
+    sub.setName('status').setDescription('Check current quiz status (admin only)')
+  )
+  .addSubcommand(sub =>
     sub.setName('close').setDescription('Manually close the active quiz')
   )
   .addSubcommand(sub =>
@@ -67,6 +70,48 @@ export async function execute(interaction) {
       flags: MessageFlags.Ephemeral
     });
   }
+  
+  if (subcommand === 'status') {
+    if (!hasQuizRole) {
+      return interaction.reply({
+        content: 'You must have the quiz role to use this command.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    if (todayQuestionIndex === null || todayCorrectIndex === null || todayMessageId === null) {
+      return interaction.reply({
+        content: 'No active quiz currently running.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const { question, options } = QUESTIONS[todayQuestionIndex];
+    const total = userResponses.size;
+    const correctCount = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
+    const correctLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
+    const correctAnswer = options[todayCorrectIndex];
+
+    const now = new Date();
+    const nextTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+    const nextUnix = Math.floor(nextTime.getTime() / 1000);
+
+    const embed = new EmbedBuilder()
+      .setTitle('Current Quiz Status')
+      .setDescription(
+        `**Question:** ${question}\n\n` +
+        `**Correct Answer:** ${correctLabel}) ${correctAnswer}\n` +
+        `**Participants:** ${total}\n` +
+        `**Correct Responses:** ${correctCount}\n\n` +
+        `**Closes:** <t:${nextUnix}:R>`
+      )
+      .setTimestamp();
+
+    return interaction.reply({
+      embeds: [embed],
+      flags: MessageFlags.Ephemeral
+    });
+  } 
 
   if (subcommand === 'open') {
     if (todayMessageId) {

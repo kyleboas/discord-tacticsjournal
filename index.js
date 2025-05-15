@@ -17,6 +17,14 @@ import { confirmAddMap } from './commands/watchlist.js';
 import { MessageFlags } from 'discord-api-types/v10';
 import { setupQuizScheduler } from './quiz/quizScheduler.js';
 import { setupModeration } from './aiModeration.js';
+import {
+  QUESTIONS,
+  todayMessageId,
+  todayCorrectIndex,
+  todayQuestionIndex,
+  todayPoints,
+  userResponses
+} from './quiz/quizScheduler.js';
 
 config();
 
@@ -217,42 +225,6 @@ client.on('interactionCreate', async interaction => {
         content: 'Team selection cancelled.',
         components: []
       });
-    }
-  }
-});
-
-client.on('interactionCreate', async interaction => {
-  if (interaction.isButton() && interaction.customId.startsWith('quiz:')) {
-    const choiceIndex = parseInt(interaction.customId.split(':')[1], 10);
-    const today = new Date().getDate() % QUESTIONS.length;
-    const question = QUESTIONS[today];
-    const isCorrect = choiceIndex === question.answerIndex;
-
-    await recordQuizAnswerDetailed({
-      userId: interaction.user.id,
-      username: interaction.user.username,
-      selectedIndex: choiceIndex,
-      messageId: todayMessageId,
-      isCorrect,
-      points: isCorrect ? question.points : 0
-    });
-
-    await interaction.reply({
-      content: isCorrect
-        ? `Correct! You earned ${question.points} points.`
-        : `Wrong answer. The correct answer was ${question.options[question.answerIndex]}.`,
-      ephemeral: true
-    });
-  }
-
-  if (interaction.isChatInputCommand() && interaction.commandName === 'quiz') {
-    const sub = interaction.options.getSubcommand();
-    if (sub === 'leaderboard') {
-      const leaderboard = await getQuizLeaderboard();
-      const display = leaderboard.map((u, i) =>
-        `${i + 1}. ${u.username} - ${u.total_points} pts`
-      ).join('\n');
-      await interaction.reply({ content: `**Quiz Leaderboard**\n${display}`, ephemeral: true });
     }
   }
 });
