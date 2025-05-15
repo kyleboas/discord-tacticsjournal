@@ -136,6 +136,19 @@ export async function ensureQuizSchema() {
   `);
 }
 
+export async function setActiveQuizInDB({ messageId, questionIndex, correctIndex, points, channelId }) {
+  await pool.query(`
+    DELETE FROM active_quiz;
+    INSERT INTO active_quiz (message_id, question_index, correct_index, points, channel_id)
+    VALUES ($1, $2, $3, $4, $5)
+  `, [messageId, questionIndex, correctIndex, points, channelId]);
+}
+
+export async function getActiveQuizFromDB() {
+  const res = await pool.query('SELECT * FROM active_quiz LIMIT 1');
+  return res.rows[0] || null;
+}
+
 
 export async function recordQuizAnswerDetailed({ userId, username, selectedIndex, messageId, isCorrect, points }) {
   const now = new Date();

@@ -10,7 +10,7 @@ import {
   Events,
   MessageFlags
 } from 'discord.js';
-import { recordQuizAnswerDetailed } from '../db.js';
+import { recordQuizAnswerDetailed, getActiveQuizFromDB, setActiveQuizInDB  } from '../db.js';
 
 const CHANNEL_ID = '1372225536406978640';
 const ROLE_ID = '1372372259812933642';
@@ -103,6 +103,23 @@ export async function runTestQuiz(client) {
   }, 60000); // 60 seconds
 }
 
+export async function setActiveQuizState({ messageId, questionIndex, correctIndex, points, message }) {
+  todayMessageId = messageId;
+  todayQuestionIndex = questionIndex;
+  todayCorrectIndex = correctIndex;
+  todayPoints = points;
+  quizMessage = message;
+
+  // Persist to DB
+  await setActiveQuizInDB({
+    messageId,
+    questionIndex,
+    correctIndex,
+    points,
+    channelId: quizChannelId
+  });
+}
+
 export async function runDailyQuiz(client) {
   const questionIndex = new Date().getDate() % QUESTIONS.length;
   const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
@@ -160,25 +177,22 @@ export async function runDailyQuiz(client) {
 
 export function setupQuizScheduler(client) {
   cron.schedule('1 2 * * *', async () => {
-    // Close the previous quiz if it exists
     if (todayMessageId) {
       try {
-        const channel = await client.channels.fetch(CHANNEL_ID);
+        const channel = await client.channels.fetch(quizChannelId);
         const msg = await channel.messages.fetch(todayMessageId);
         await msg.delete();
       } catch (err) {
         console.warn('Could not delete quiz message:', err.message);
       }
-      
-      // Reset quiz state
+
       todayMessageId = null;
       todayQuestionIndex = null;
       todayCorrectIndex = null;
       todayPoints = 0;
       userResponses.clear();
     }
-    
-    // Start a new quiz
+
     await runDailyQuiz(client);
   }, { timezone: 'America/New_York' });
 
@@ -221,7 +235,6 @@ export function setupQuizScheduler(client) {
         flags: MessageFlags.Ephemeral
       });
 
-      // Refresh embed stats
       if (quizMessage) {
         const total = userResponses.size;
         const correct = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
@@ -244,12 +257,11 @@ export function setupQuizScheduler(client) {
           const channel = await client.channels.fetch(quizChannelId);
           const liveMessage = await channel.messages.fetch(todayMessageId);
           await liveMessage.edit({ embeds: [updatedEmbed] });
-          quizMessage = liveMessage; // refresh stored ref
+          quizMessage = liveMessage;
         } catch (err) {
           console.warn('Failed to update quiz message:', err.message);
         }
       }
-
     } catch (err) {
       console.error('Quiz button interaction failed:', err);
       if (!interaction.replied) {
@@ -260,7 +272,35 @@ export function setupQuizScheduler(client) {
       }
     }
   });
+
+  // Rehydrate persisted active quiz on startup
+  (async () => {
+    try {
+      const saved = await getActiveQuizFromDB();
+      if (!saved) return;
+
+      const channel = await client.channels.fetch(saved.channel_id);
+      const msg = await channel.messages.fetch(saved.message_id).catch(() => null);
+
+      if (!msg) {
+        console.warn('Saved active quiz message not found in Discord.');
+        return;
+      }
+
+      todayMessageId = saved.message_id;
+      todayQuestionIndex = saved.question_index;
+      todayCorrectIndex = saved.correct_index;
+      todayPoints = saved.points;
+      quizMessage = msg;
+      quizChannelId = saved.channel_id;
+
+      console.log('Restored active quiz from database.');
+    } catch (err) {
+      console.error('Failed to restore active quiz:', err);
+    }
+  })();
 }
+
 
 export function setActiveQuizState({ messageId, questionIndex, correctIndex, points, message }) {
   todayMessageId = messageId;
