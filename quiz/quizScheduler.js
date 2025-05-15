@@ -34,18 +34,18 @@ export async function runDailyQuiz(client) {
   const questionText = options.map((opt, i) => `${labels[i]}) ${opt}`).join('\n');
 
   const now = new Date();
-  const revealTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-  const revealUnix = Math.floor(revealTime.getTime() / 1000);
+  const nextQuestionTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+  const nextUnix = Math.floor(nextQuestionTime.getTime() / 1000);
 
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
     .setDescription(
-      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe answer will be revealed <t:${revealUnix}:R>.`
+      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe next question will be posted <t:${nextUnix}:R>.`
     )
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
-    options.map((opt, i) =>
+    options.map((_, i) =>
       new ButtonBuilder()
         .setCustomId(`quiz:${i}`)
         .setLabel(labels[i])
@@ -60,7 +60,7 @@ export async function runDailyQuiz(client) {
       const prev = await channel.messages.fetch(previousMessageId);
       await prev.delete();
     } catch (err) {
-      console.warn('Failed to delete previous answer:', err.message);
+      console.warn('Failed to delete previous message:', err.message);
     }
   }
 
@@ -71,105 +71,48 @@ export async function runDailyQuiz(client) {
   });
 
   todayMessageId = msg.id;
+  previousMessageId = msg.id;
 }
 
 export function setupQuizScheduler(client) {
-  cron.schedule(
-    '0 8 * * *',
-    async () => {
-      await runDailyQuiz(client);
-    },
-    { timezone: 'America/New_York' }
-  );
-
-  cron.schedule(
-    '0 17 * * *',
-    async () => {
-      if (
-        todayQuestionIndex === null ||
-        todayCorrectIndex === null ||
-        todayMessageId === null
-      ) return;
-
-      const { question, options } = QUESTIONS[todayQuestionIndex];
-      const correctAnswer = options[todayCorrectIndex];
-      const answerLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
-
-      const totalParticipants = userResponses.size;
-      const correctCount = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
-
-      const now = new Date();
-      const nextQuestionTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
-      const nextRevealUnix = Math.floor(nextQuestionTime.getTime() / 1000);
-
-      const channel = await client.channels.fetch(CHANNEL_ID);
-
-      const embed = new EmbedBuilder()
-        .setTitle('Question of the Day')
-        .setDescription(
-          `**Question:** ${question}\n\n**Answer:** ${answerLabel}) ${correctAnswer}\n\n**Correct responses:** ${correctCount}/${totalParticipants}\n\nThe next question will be posted <t:${nextRevealUnix}:R>.`
-        )
-        .setTimestamp();
-
-      if (todayMessageId) {
-        try {
-          const msg = await channel.messages.fetch(todayMessageId);
-          await msg.delete();
-        } catch (err) {
-          console.warn('Failed to delete quiz question:', err.message);
-        }
-      }
-
-      const answerMsg = await channel.send({
-        content: `<@&${ROLE_ID}> today's answer has been posted.`,
-        embeds: [embed]
-      });
-
-      previousMessageId = answerMsg.id;
-
-      for (const [userId, selectedIndex] of userResponses.entries()) {
-        const isCorrect = selectedIndex === todayCorrectIndex;
-        const member = await client.users.fetch(userId);
-
-        await recordQuizAnswerDetailed({
-          userId,
-          username: member.username,
-          selectedIndex,
-          messageId: todayMessageId,
-          isCorrect,
-          points: isCorrect ? todayPoints : 0
-        });
-      }
-
-      todayMessageId = null;
-      todayQuestionIndex = null;
-      todayCorrectIndex = null;
-      todayPoints = 0;
-      userResponses.clear();
-    },
-    { timezone: 'America/New_York' }
-  );
+  cron.schedule('0 8 * * *', async () => {
+    await runDailyQuiz(client);
+  }, { timezone: 'America/New_York' });
 
   client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith('quiz:')) return;
     if (todayCorrectIndex === null || todayQuestionIndex === null) return;
 
-    const selectedIndex = parseInt(interaction.customId.split(':')[1]);
-    userResponses.set(interaction.user.id, selectedIndex);
+    if (userResponses.has(interaction.user.id)) {
+      return interaction.reply({
+        content: 'You have already answered today\'s quiz. Come back tomorrow!',
+        ephemeral: true
+      });
+    }
 
-    await interaction.reply({
-      content: 'Your answer has been recorded. You may change it before the deadline.',
-      ephemeral: true
-    });
+    const selectedIndex = parseInt(interaction.customId.split(':')[1]);
+    const isCorrect = selectedIndex === todayCorrectIndex;
+
+    userResponses.set(interaction.user.id, selectedIndex);
 
     await recordQuizAnswerDetailed({
       userId: interaction.user.id,
       username: interaction.user.username,
       selectedIndex,
       messageId: todayMessageId,
-      isCorrect: false,
-      points: 0
+      isCorrect,
+      points: isCorrect ? todayPoints : 0
+    });
+
+    const answerLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
+    const correctAnswer = QUESTIONS[todayQuestionIndex].options[todayCorrectIndex];
+
+    await interaction.reply({
+      content: isCorrect
+        ? `Correct! You earned ${todayPoints} point(s).`
+        : `Wrong. The correct answer was ${answerLabel}) ${correctAnswer}.`,
+      ephemeral: true
     });
   });
 }
