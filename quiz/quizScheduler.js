@@ -22,6 +22,7 @@ let todayCorrectIndex = null;
 let todayPoints = 0;
 let userResponses = new Map();
 let testQuizTimeout = null;
+let quizMessage = null;
 
 export async function runTestQuiz(client) {
   // Clear any existing test quiz timeout
@@ -75,6 +76,7 @@ export async function runTestQuiz(client) {
 
   todayMessageId = msg.id;
   previousMessageId = msg.id;
+  quizMessage = msg;
   
   // Set a timeout to close the quiz after 60 seconds
   testQuizTimeout = setTimeout(async () => {
@@ -152,6 +154,7 @@ export async function runDailyQuiz(client) {
 
   todayMessageId = msg.id;
   previousMessageId = msg.id;
+  quizMessage = msg;
 }
 
 export function setupQuizScheduler(client) {
@@ -192,7 +195,6 @@ export function setupQuizScheduler(client) {
 
     const selectedIndex = parseInt(interaction.customId.split(':')[1]);
     const isCorrect = selectedIndex === todayCorrectIndex;
-
     userResponses.set(interaction.user.id, selectedIndex);
 
     await recordQuizAnswerDetailed({
@@ -213,6 +215,29 @@ export function setupQuizScheduler(client) {
         : `Wrong. The correct answer was ${label}) ${answer}.`,
       flags: MessageFlags.Ephemeral
     });
+
+    // --- Embed live stats update ---
+    if (quizMessage) {
+      const total = userResponses.size;
+      const correct = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
+
+      const { question, options } = QUESTIONS[todayQuestionIndex];
+      const questionText = options.map((opt, i) => `${['A', 'B', 'C', 'D'][i]}) ${opt}`).join('\n');
+
+      const now = new Date();
+      const closesAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+      const nextUnix = Math.floor(closesAt.getTime() / 1000);
+
+      const updatedEmbed = new EmbedBuilder()
+        .setTitle('Question of the Day')
+        .setDescription(
+          `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
+          `\n**Answered:** ${total}\n**Correct:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
+        )
+        .setTimestamp();
+
+      await quizMessage.edit({ embeds: [updatedEmbed] });
+    }
   });
 }
 
