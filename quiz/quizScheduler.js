@@ -232,7 +232,7 @@ export function setupQuizScheduler(client) {
         .setTitle('Question of the Day')
         .setDescription(
           `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
-          `\n**Answered:** ${total}\n**Correct:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
+          `\n**Participants:** ${total}\n**Correct Responses:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
         )
         .setTimestamp();
 
