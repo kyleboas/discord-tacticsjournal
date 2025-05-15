@@ -23,6 +23,7 @@ let todayPoints = 0;
 let userResponses = new Map();
 let testQuizTimeout = null;
 let quizMessage = null;
+let quizChannelId = CHANNEL_ID;
 
 export async function runTestQuiz(client) {
   // Clear any existing test quiz timeout
@@ -184,59 +185,79 @@ export function setupQuizScheduler(client) {
   client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith('quiz:')) return;
-    if (todayCorrectIndex === null || todayQuestionIndex === null) return;
 
-    if (userResponses.has(interaction.user.id)) {
-      return interaction.reply({
-        content: 'You have already answered.',
+    try {
+      if (todayCorrectIndex === null || todayQuestionIndex === null) {
+        return interaction.reply({ content: 'No active quiz found.', flags: MessageFlags.Ephemeral });
+      }
+
+      if (userResponses.has(interaction.user.id)) {
+        return interaction.reply({
+          content: 'You have already answered.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      const selectedIndex = parseInt(interaction.customId.split(':')[1]);
+      const isCorrect = selectedIndex === todayCorrectIndex;
+      userResponses.set(interaction.user.id, selectedIndex);
+
+      await recordQuizAnswerDetailed({
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        selectedIndex,
+        messageId: todayMessageId,
+        isCorrect,
+        points: isCorrect ? todayPoints : 0
+      });
+
+      const label = ['A', 'B', 'C', 'D'][todayCorrectIndex];
+      const answer = QUESTIONS[todayQuestionIndex].options[todayCorrectIndex];
+
+      await interaction.reply({
+        content: isCorrect
+          ? `Correct! You earned ${todayPoints} points.`
+          : `Wrong. The correct answer was ${label}) ${answer}.`,
         flags: MessageFlags.Ephemeral
       });
-    }
 
-    const selectedIndex = parseInt(interaction.customId.split(':')[1]);
-    const isCorrect = selectedIndex === todayCorrectIndex;
-    userResponses.set(interaction.user.id, selectedIndex);
+      // Refresh embed stats
+      if (quizMessage) {
+        const total = userResponses.size;
+        const correct = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
 
-    await recordQuizAnswerDetailed({
-      userId: interaction.user.id,
-      username: interaction.user.username,
-      selectedIndex,
-      messageId: todayMessageId,
-      isCorrect,
-      points: isCorrect ? todayPoints : 0
-    });
+        const { question, options } = QUESTIONS[todayQuestionIndex];
+        const questionText = options.map((opt, i) => `${['A', 'B', 'C', 'D'][i]}) ${opt}`).join('\n');
+        const now = new Date();
+        const closesAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
+        const nextUnix = Math.floor(closesAt.getTime() / 1000);
 
-    const label = ['A', 'B', 'C', 'D'][todayCorrectIndex];
-    const answer = QUESTIONS[todayQuestionIndex].options[todayCorrectIndex];
+        const updatedEmbed = new EmbedBuilder()
+          .setTitle('Question of the Day')
+          .setDescription(
+            `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
+            `\n**Participants:** ${total}\n**Correct Responses:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
+          )
+          .setTimestamp();
 
-    await interaction.reply({
-      content: isCorrect
-        ? `Correct! You earned ${todayPoints} points.`
-        : `Wrong. The correct answer was ${label}) ${answer}.`,
-      flags: MessageFlags.Ephemeral
-    });
+        try {
+          const channel = await client.channels.fetch(quizChannelId);
+          const liveMessage = await channel.messages.fetch(todayMessageId);
+          await liveMessage.edit({ embeds: [updatedEmbed] });
+          quizMessage = liveMessage; // refresh stored ref
+        } catch (err) {
+          console.warn('Failed to update quiz message:', err.message);
+        }
+      }
 
-    // --- Embed live stats update ---
-    if (quizMessage) {
-      const total = userResponses.size;
-      const correct = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
-
-      const { question, options } = QUESTIONS[todayQuestionIndex];
-      const questionText = options.map((opt, i) => `${['A', 'B', 'C', 'D'][i]}) ${opt}`).join('\n');
-
-      const now = new Date();
-      const closesAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
-      const nextUnix = Math.floor(closesAt.getTime() / 1000);
-
-      const updatedEmbed = new EmbedBuilder()
-        .setTitle('Question of the Day')
-        .setDescription(
-          `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
-          `\n**Participants:** ${total}\n**Correct Responses:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
-        )
-        .setTimestamp();
-
-      await quizMessage.edit({ embeds: [updatedEmbed] });
+    } catch (err) {
+      console.error('Quiz button interaction failed:', err);
+      if (!interaction.replied) {
+        await interaction.reply({
+          content: 'Something went wrong while handling your answer.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
     }
   });
 }
