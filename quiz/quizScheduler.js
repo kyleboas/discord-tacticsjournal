@@ -114,9 +114,9 @@ export async function runDailyQuiz(client) {
 
   // Calculate time until 8AM EST tomorrow
   const now = new Date();
-  const nextTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
-  const nextUnix = Math.floor(nextTime.getTime() / 1000);
-
+  const closesAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+  const nextUnix = Math.floor(closesAt.getTime() / 1000);
+  
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
     .setDescription(
