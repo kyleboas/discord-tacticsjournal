@@ -8,11 +8,11 @@ import { recordQuizAnswer } from '../db.js';
 const CHANNEL_ID = '1372225536406978640';
 const ROLE_ID = '1372372259812933642';
 const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
-let todayMessageId: string | null = null;
-let todayQuestionIndex: number | null = null;
-let todayCorrectIndex: number | null = null;
-let todayPoints: number = 0;
-let userResponses: Map<string, number> = new Map();
+let todayMessageId = null;
+let todayQuestionIndex = null;
+let todayCorrectIndex = null;
+let todayPoints = 0;
+let userResponses = new Map();
 
 export function setupQuizScheduler(client) {
   cron.schedule('0 8 * * *', async () => {
