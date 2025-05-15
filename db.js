@@ -158,10 +158,39 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
   }
 }
 
-export async function getQuizLeaderboard() {
-  const res = await pool.query(`
-    SELECT username, correct_count FROM qotd_scores
-    ORDER BY correct_count DESC LIMIT 10
+export async function getQuizLeaderboard(userId) {
+  // Get top 10
+  const topRes = await pool.query(`
+    SELECT username, total_points, user_id
+    FROM qotd_scores
+    ORDER BY total_points DESC
+    LIMIT 10
   `);
-  return res.rows;
+
+  const top10 = topRes.rows;
+
+  // Check if requester is in top 10
+  const isInTop10 = top10.some(row => row.user_id === userId);
+
+  let userRankInfo = null;
+
+  if (!isInTop10) {
+    const rankRes = await pool.query(`
+      SELECT username, total_points, rank FROM (
+        SELECT user_id, username, total_points,
+               RANK() OVER (ORDER BY total_points DESC) AS rank
+        FROM qotd_scores
+      ) ranked
+      WHERE user_id = $1
+    `, [userId]);
+
+    if (rankRes.rows.length > 0) {
+      userRankInfo = rankRes.rows[0]; // { username, total_points, rank }
+    }
+  }
+
+  return {
+    top10,
+    userRankInfo
+  };
 }

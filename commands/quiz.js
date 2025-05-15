@@ -161,17 +161,27 @@ export async function execute(interaction) {
   }
 
   if (subcommand === 'leaderboard') {
-    const leaderboard = await getQuizLeaderboard();
-    if (!leaderboard.length) {
-      return interaction.reply({ content: 'No leaderboard data yet.', flags: MessageFlags.Ephemeral });
+    const { top10, userRankInfo } = await getQuizLeaderboard(interaction.user.id);
+
+    if (!top10.length) {
+      return interaction.reply({
+        content: 'No leaderboard data yet.',
+        flags: MessageFlags.Ephemeral
+      });
     }
 
-    const msg = leaderboard
+    const leaderboardMsg = top10
       .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
       .join('\n');
 
+    let reply = `**Question of the Day Leaderboard:**\n${leaderboardMsg}`;
+
+    if (userRankInfo) {
+      reply += `\n\nYou are ranked **#${userRankInfo.rank}** with **${userRankInfo.total_points}** points.`;
+    }
+
     return interaction.reply({
-      content: `**Question of the Day Leaderboard:**\n${msg}`,
+      content: reply,
       flags: MessageFlags.Ephemeral
     });
   }
