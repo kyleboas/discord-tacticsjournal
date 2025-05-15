@@ -93,7 +93,7 @@ export async function execute(interaction) {
     const correctAnswer = options[todayCorrectIndex];
 
     const now = new Date();
-    const nextTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+    const nextTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
     const nextUnix = Math.floor(nextTime.getTime() / 1000);
 
     const embed = new EmbedBuilder()
