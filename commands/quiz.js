@@ -9,6 +9,7 @@ import {
 } from '../db.js';
 import {
   runDailyQuiz,
+  runTestQuiz,
   QUESTIONS,
   todayQuestionIndex,
   todayCorrectIndex,
@@ -25,10 +26,10 @@ export const data = new SlashCommandBuilder()
   .setName('quiz')
   .setDescription('Quiz commands')
   .addSubcommand(sub =>
-    sub.setName('test').setDescription('Post a test quiz')
+    sub.setName('test').setDescription('Post a test quiz that lasts 60 seconds')
   )
   .addSubcommand(sub =>
-    sub.setName('open').setDescription('Start a new quiz manually')
+    sub.setName('open').setDescription('Start a new quiz that closes at 8AM EST')
   )
   .addSubcommand(sub =>
     sub.setName('close').setDescription('Manually close the active quiz')
@@ -49,7 +50,25 @@ export async function execute(interaction) {
     });
   }
 
-  if (subcommand === 'test' || subcommand === 'open') {
+  if (subcommand === 'test') {
+    if (todayMessageId) {
+      try {
+        const prev = await channel.messages.fetch(todayMessageId);
+        await prev.delete();
+      } catch (err) {
+        console.warn('Failed to delete quiz message:', err.message);
+      }
+    }
+
+    await runTestQuiz(interaction.client);
+
+    return interaction.reply({
+      content: 'Test quiz posted. It will automatically close after 60 seconds.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (subcommand === 'open') {
     if (todayMessageId) {
       try {
         const prev = await channel.messages.fetch(todayMessageId);
@@ -62,7 +81,7 @@ export async function execute(interaction) {
     await runDailyQuiz(interaction.client);
 
     return interaction.reply({
-      content: subcommand === 'test' ? 'Test quiz posted.' : 'New quiz started.',
+      content: 'New quiz started. It will close at 8AM EST tomorrow.',
       flags: MessageFlags.Ephemeral
     });
   }

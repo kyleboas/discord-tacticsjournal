@@ -1,4 +1,4 @@
-// src/scheduler/quizScheduler.js
+// quizScheduler.js
 import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
@@ -21,6 +21,84 @@ let todayQuestionIndex = null;
 let todayCorrectIndex = null;
 let todayPoints = 0;
 let userResponses = new Map();
+let testQuizTimeout = null;
+
+export async function runTestQuiz(client) {
+  // Clear any existing test quiz timeout
+  if (testQuizTimeout) {
+    clearTimeout(testQuizTimeout);
+  }
+
+  const questionIndex = Math.floor(Math.random() * QUESTIONS.length);
+  const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
+
+  todayQuestionIndex = questionIndex;
+  todayCorrectIndex = answerIndex;
+  todayPoints = points;
+  userResponses.clear();
+
+  const labels = ['A', 'B', 'C', 'D'];
+  const questionText = options.map((opt, i) => `${labels[i]}) ${opt}`).join('\n');
+
+  const embed = new EmbedBuilder()
+    .setTitle('Test Quiz')
+    .setDescription(
+      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\n**This is a test quiz and will close automatically after 60 seconds.**`
+    )
+    .setTimestamp();
+
+  const row = new ActionRowBuilder().addComponents(
+    options.map((_, i) =>
+      new ButtonBuilder()
+        .setCustomId(`quiz:${i}`)
+        .setLabel(labels[i])
+        .setStyle(ButtonStyle.Primary)
+    )
+  );
+
+  const channel = await client.channels.fetch(CHANNEL_ID);
+
+  if (previousMessageId) {
+    try {
+      const prev = await channel.messages.fetch(previousMessageId);
+      await prev.delete();
+    } catch (err) {
+      console.warn('Failed to delete previous message:', err.message);
+    }
+  }
+
+  const msg = await channel.send({
+    content: `<@&${ROLE_ID}> A test quiz has been posted. You have 60 seconds to answer!`,
+    embeds: [embed],
+    components: [row]
+  });
+
+  todayMessageId = msg.id;
+  previousMessageId = msg.id;
+  
+  // Set a timeout to close the quiz after 60 seconds
+  testQuizTimeout = setTimeout(async () => {
+    try {
+      const quizMsg = await channel.messages.fetch(todayMessageId);
+      await quizMsg.delete();
+      
+      // Reset quiz state
+      todayMessageId = null;
+      todayQuestionIndex = null;
+      todayCorrectIndex = null;
+      todayPoints = 0;
+      userResponses.clear();
+      
+      // Notify that the test quiz has ended
+      await channel.send({
+        content: "The test quiz has ended. Thanks for participating!",
+        flags: MessageFlags.Ephemeral
+      });
+    } catch (err) {
+      console.warn('Error closing test quiz:', err.message);
+    }
+  }, 60000); // 60 seconds
+}
 
 export async function runDailyQuiz(client) {
   const questionIndex = new Date().getDate() % QUESTIONS.length;
@@ -29,11 +107,12 @@ export async function runDailyQuiz(client) {
   todayQuestionIndex = questionIndex;
   todayCorrectIndex = answerIndex;
   todayPoints = points;
-  userResponses = new Map();
+  userResponses.clear();
 
   const labels = ['A', 'B', 'C', 'D'];
   const questionText = options.map((opt, i) => `${labels[i]}) ${opt}`).join('\n');
 
+  // Calculate time until 8AM EST tomorrow
   const now = new Date();
   const nextTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
   const nextUnix = Math.floor(nextTime.getTime() / 1000);
@@ -41,7 +120,7 @@ export async function runDailyQuiz(client) {
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
     .setDescription(
-      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe next question will be posted <t:${nextUnix}:R>.`
+      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThis quiz will close <t:${nextUnix}:R>.`
     )
     .setTimestamp();
 
@@ -76,7 +155,27 @@ export async function runDailyQuiz(client) {
 }
 
 export function setupQuizScheduler(client) {
+  // Schedule to close the previous day's quiz and open a new one at 8AM EST
   cron.schedule('0 8 * * *', async () => {
+    // Close the previous quiz if it exists
+    if (todayMessageId) {
+      try {
+        const channel = await client.channels.fetch(CHANNEL_ID);
+        const msg = await channel.messages.fetch(todayMessageId);
+        await msg.delete();
+      } catch (err) {
+        console.warn('Could not delete quiz message:', err.message);
+      }
+      
+      // Reset quiz state
+      todayMessageId = null;
+      todayQuestionIndex = null;
+      todayCorrectIndex = null;
+      todayPoints = 0;
+      userResponses.clear();
+    }
+    
+    // Start a new quiz
     await runDailyQuiz(client);
   }, { timezone: 'America/New_York' });
 
@@ -87,7 +186,7 @@ export function setupQuizScheduler(client) {
 
     if (userResponses.has(interaction.user.id)) {
       return interaction.reply({
-        content: 'You have already answered today\'s quiz. Come back tomorrow!',
+        content: 'You have already answered this quiz. Wait for the next one!',
         flags: MessageFlags.Ephemeral
       });
     }
