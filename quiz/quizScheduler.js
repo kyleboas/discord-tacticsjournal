@@ -116,7 +116,7 @@ export async function runDailyQuiz(client) {
 
   // Calculate time until 8AM EST tomorrow
   const now = new Date();
-  const closesAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+  const closesAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
   const nextUnix = Math.floor(closesAt.getTime() / 1000);
   
   const embed = new EmbedBuilder()
@@ -225,7 +225,7 @@ export function setupQuizScheduler(client) {
       const questionText = options.map((opt, i) => `${['A', 'B', 'C', 'D'][i]}) ${opt}`).join('\n');
 
       const now = new Date();
-      const closesAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+      const closesAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
       const nextUnix = Math.floor(closesAt.getTime() / 1000);
 
       const updatedEmbed = new EmbedBuilder()
