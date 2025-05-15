@@ -186,7 +186,7 @@ export function setupQuizScheduler(client) {
 
     if (userResponses.has(interaction.user.id)) {
       return interaction.reply({
-        content: 'You have already answered this quiz. Wait for the next one!',
+        content: 'You have already answered. Wait for tomorrow's next question!',
         flags: MessageFlags.Ephemeral
       });
     }
