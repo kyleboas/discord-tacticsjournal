@@ -11,6 +11,17 @@
     "points": 10
   },
   {
+    "question": "What is the main drawback of a high defensive line?",
+    "options": [
+      "Less support for midfielders",
+      "Exposure to long balls behind",
+      "Reduced pressing effectiveness",
+      "Crowding the penalty box"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
     "question": "Which formation is most associated with 'tiki-taka' style of play?",
     "options": [
       "4-2-3-1",
