@@ -59,7 +59,7 @@ export async function execute(interaction) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        comment: { text: input },
+        comment: { text: normalized },
         languages: ['en'],
         requestedAttributes: Object.fromEntries(Object.keys(thresholds).map(k => [k, {}]))
       })
