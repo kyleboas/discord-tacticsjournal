@@ -140,7 +140,7 @@ export async function runDailyQuiz(client) {
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
     .setDescription(
-      `${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThis quiz will close <t:${nextUnix}:R>.`
+      `${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe next question will be posted <t:${nextUnix}:R>.`
     )
     .setTimestamp();
 
@@ -249,7 +249,7 @@ export function setupQuizScheduler(client) {
           .setTitle('Question of the Day')
           .setDescription(
             `${question}\n\n${questionText}\n\n**Points:** ${todayPoints}` +
-            `\n**Participants:** ${total}\n**Correct Responses:** ${correct}\n\nThis quiz will close <t:${nextUnix}:R>.`
+            `\n**Participants:** ${total}\n**Correct Responses:** ${correct}\n\nThis next question will be posted <t:${nextUnix}:R>.`
           )
           .setTimestamp();
 
