@@ -369,6 +369,7 @@ export function setupModeration(client) {
     // Check cache first
     const cachedResult = getCachedResult(content);
     if (cachedResult) {
+      const normalizedText = normalizeText(content);
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
       const detected = Object.entries(cachedResult)
@@ -382,8 +383,8 @@ export function setupModeration(client) {
       for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
       if (
         pattern.test(normalizedText) &&
-        scores[attribute] !== undefined &&
-        scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD)
+        cachedResult[attribute] !== undefined && // Change scores to cachedResult
+        cachedResult[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD) // Change scores to cachedResult
       ) {
         rawViolations.push(attribute);
         rawViolations.push('EVASION_ATTEMPT');
