@@ -71,13 +71,14 @@ export function setupQuizScheduler(client) {
 
     for (const [userId, selectedIndex] of userResponses.entries()) {
       const member = await client.users.fetch(userId);
-      if (selectedIndex === todayCorrectIndex) {
-        await member.send(`You answered ${['A', 'B', 'C', 'D'][selectedIndex]}, you have been awarded ${todayPoints} points.`);
-        await recordQuizAnswer(userId, todayQuestionIndex, todayPoints);
-      } else {
-        await member.send(`You did not answer ${answerLabel}, you have been awarded no points.`);
-        await recordQuizAnswer(userId, todayQuestionIndex, 0);
-      }
+      const isCorrect = selectedIndex === todayCorrectIndex;
+
+      await interaction.reply({
+      content: "Your answer has been recorded. The answer will be revealed later today. You can change your answer before the deadline.",
+      ephemeral: true
+    });
+
+      await recordQuizAnswer(userId, member.username, isCorrect);
     }
 
     todayMessageId = null;
@@ -100,6 +101,6 @@ export function setupQuizScheduler(client) {
       ephemeral: true
     });
 
-    await recordQuizAnswer(interaction.user.id, todayQuestionIndex, 0);
+    await recordQuizAnswer(interaction.user.id, interaction.user.username, false);
   });
 }
