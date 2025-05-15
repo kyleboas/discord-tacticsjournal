@@ -94,17 +94,18 @@ export async function execute(interaction) {
         });
       }
 
-      // Try to match the question from the embed with one in QUESTIONS
-      const questionLine = embed.description.match(/\*\*Question:\*\* (.*?)\n/);
-      if (!questionLine) {
+      // Get the first non-empty line of the embed description
+      const lines = embed.description?.split('\n') || [];
+      const questionText = lines.find(line => line.trim());
+
+      if (!questionText) {
         return interaction.reply({
           content: 'Failed to extract question from embed.',
           flags: MessageFlags.Ephemeral
         });
       }
 
-      const questionText = questionLine[1].trim();
-      const index = QUESTIONS.findIndex(q => q.question === questionText);
+      const index = QUESTIONS.findIndex(q => q.question.trim() === questionText.trim());
 
       if (index === -1) {
         return interaction.reply({
