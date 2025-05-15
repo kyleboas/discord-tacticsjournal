@@ -115,7 +115,7 @@ export async function ensureSchema() {
 
 export async function ensureQuizSchema() {
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS quiz_scores (
+    CREATE TABLE IF NOT EXISTS qotd_scores (
       user_id TEXT PRIMARY KEY,
       username TEXT NOT NULL,
       total_points INTEGER DEFAULT 0
@@ -123,7 +123,7 @@ export async function ensureQuizSchema() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS quiz_attempts (
+    CREATE TABLE IF NOT EXISTS qotd_attempts (
       date DATE NOT NULL,
       time TIMESTAMP NOT NULL,
       message_id TEXT NOT NULL,
@@ -142,7 +142,7 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
   const date = now.toISOString().split('T')[0];
 
   await pool.query(`
-    INSERT INTO quiz_attempts (date, time, message_id, user_id, username, selected_index, points)
+    INSERT INTO qotd_attempts (date, time, message_id, user_id, username, selected_index, points)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT (user_id, message_id)
     DO UPDATE SET time = $2, selected_index = $6, points = $7, username = $5
@@ -150,17 +150,17 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
 
   if (isCorrect) {
     await pool.query(`
-      INSERT INTO quiz_scores (user_id, username, total_points)
+      INSERT INTO qotd_scores (user_id, username, total_points)
       VALUES ($1, $2, $3)
       ON CONFLICT (user_id)
-      DO UPDATE SET total_points = quiz_scores.total_points + $3, username = $2
+      DO UPDATE SET total_points = qotd_scores.total_points + $3, username = $2
     `, [userId, username, points]);
   }
 }
 
 export async function getQuizLeaderboard() {
   const res = await pool.query(`
-    SELECT username, correct_count FROM quiz_scores
+    SELECT username, correct_count FROM qotd_scores
     ORDER BY correct_count DESC LIMIT 10
   `);
   return res.rows;
