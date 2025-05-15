@@ -248,19 +248,20 @@ async function handleViolation(message, violations, content) {
 }
 
 export function normalizeText(text) {
-  // Replace common evasion tactics with normal characters
   return text
-    .replace(/\s+/g, ' ')               // Normalize spaces
-    .replace(/[0@\*\(\)\[\]{}]/g, 'o')  // Replace 0, @, *, etc. with 'o'
-    .replace(/[$5]/g, 's')              // $ and 5 to 's'
-    .replace(/[1!|]/g, 'i')             // 1, !, | to 'i'
-    .replace(/[4@]/g, 'a')              // 4, @ to 'a'
-    .replace(/3/g, 'e')                 // 3 to 'e'
-    .replace(/7/g, 't')                 // 7 to 't'
-    .replace(/0/g, 'o')                 // 0 to 'o'
-    .replace(/\+/g, 't')                // + to 't'
-    .replace(/\./g, '')                 // Remove dots (s.h.i.t)
-    .toLowerCase();                     // Make lowercase
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[0@\*\(\)\[\]{}]/g, 'o')
+    .replace(/[$5]/g, 's')
+    .replace(/[1!|]/g, 'i')
+    .replace(/[4@]/g, 'a')
+    .replace(/3/g, 'e')
+    .replace(/7/g, 't')
+    .replace(/0/g, 'o')
+    .replace(/\+/g, 't')
+    .replace(/\./g, '')
+    .toLowerCase();
 }
 
 function incrementStrikes(userId) {
