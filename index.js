@@ -7,7 +7,7 @@ import { addToWatchlist, getWatchlist, setPlayerScore, getAverageScores, recordQ
 import { isValidTeam } from './teams.js';
 import { confirmAddMap } from './commands/watchlist.js';
 import { MessageFlags } from 'discord-api-types/v10';
-import { getTodayAnswer, setupQuizScheduler } from './quiz/quizScheduler.js';
+import { setupQuizScheduler } from './quiz/quizScheduler.js';
 import { setupModeration } from './aiModeration.js';
 
 config();
