@@ -68,52 +68,22 @@ export async function execute(interaction) {
   }
 
   if (subcommand === 'close') {
-    if (!todayMessageId || todayQuestionIndex === null || todayCorrectIndex === null) {
+    if (!todayMessageId) {
       return interaction.reply({
         content: 'There is no active quiz to close.',
         flags: MessageFlags.Ephemeral
       });
     }
 
-    const { question, options } = QUESTIONS[todayQuestionIndex];
-    const correctAnswer = options[todayCorrectIndex];
-    const correctLabel = ['A', 'B', 'C', 'D'][todayCorrectIndex];
-    const nextTime = new Date();
-    nextTime.setDate(nextTime.getDate() + 1);
-    nextTime.setHours(8, 0, 0, 0);
-    const nextUnix = Math.floor(nextTime.getTime() / 1000);
-
-    const embed = new EmbedBuilder()
-      .setTitle('Question of the Day')
-      .setDescription(`**Question:** ${question}\n\n**Answer:** ${correctLabel}) ${correctAnswer}\n\nThe next question will be posted <t:${nextUnix}:R>.`)
-      .setTimestamp();
-
     try {
+      const channel = await interaction.client.channels.fetch(QUIZ_CHANNEL_ID);
       const msg = await channel.messages.fetch(todayMessageId);
       await msg.delete();
     } catch (err) {
       console.warn('Could not delete quiz message:', err.message);
     }
 
-    await channel.send({
-      content: `<@&${POST_ROLE_ID}> today's answer has been posted.`,
-      embeds: [embed]
-    });
-
-    for (const [userId, selectedIndex] of userResponses.entries()) {
-      const member = await interaction.client.users.fetch(userId);
-      const isCorrect = selectedIndex === todayCorrectIndex;
-
-      await recordQuizAnswerDetailed({
-        userId,
-        username: member.username,
-        selectedIndex,
-        messageId: todayMessageId,
-        isCorrect,
-        points: isCorrect ? todayPoints : 0
-      });
-    }
-
+    // Reset quiz state
     todayMessageId = null;
     todayQuestionIndex = null;
     todayCorrectIndex = null;
@@ -121,7 +91,7 @@ export async function execute(interaction) {
     userResponses.clear();
 
     return interaction.reply({
-      content: 'Quiz closed.',
+      content: 'Quiz closed and deleted.',
       flags: MessageFlags.Ephemeral
     });
   }
