@@ -92,7 +92,7 @@ export function setupQuizScheduler(client) {
       ephemeral: true
     });
 
-      await recordQuizAnswer(userId, member.username, isCorrect);
+      await recordQuizAnswerDetailed(userId, member.username, isCorrect);
     }
 
     todayMessageId = null;
