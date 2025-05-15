@@ -233,7 +233,7 @@ export async function execute(interaction) {
     }
 
     const leaderboardMsg = top10
-      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
+      .map((user, index) => `**${index + 1}.** ${user.username} - ${user.total_points} pts`)
       .join('\n');
 
     let reply = `**Question of the Day Leaderboard:**\n${leaderboardMsg}`;
