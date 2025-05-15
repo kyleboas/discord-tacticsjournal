@@ -97,7 +97,7 @@ export const EVASION_ATTRIBUTE_PATTERNS = [
 
   { attribute: 'PROFANITY', pattern: /\b[a@]+[\s._-]*[s$5]+[\s._-]*[s$5]+\b/i },
 
-  { attribute: 'THREAT', pattern: /\bi['’`"]?ll\s+[^ ]+\s+you\b/i },
+  { attribute: 'THREAT', pattern: /\bi[''`"]?ll\s+[^ ]+\s+you\b/i },
   { attribute: 'THREAT', pattern: /\bi\s*am\s+g[o0]nna\s+(kill|hurt|fuck|wreck|beat|destroy|harm)\b/i }
 ];
 
@@ -326,7 +326,7 @@ export function setupModeration(client) {
       /\bk+[\s._-]*[i1!|]+[\s._-]*l+[\s._-]*l+\b/i,
 
       // threats like "I'll X you"
-      /\bi['’`"]?ll\s+[^ ]+\s+you\b/i,
+      /\bi[''`"]?ll\s+[^ ]+\s+you\b/i,
       /\bi\s*am\s+g[o0]nna\s+(kill|hurt|fuck|wreck|beat|destroy|harm)\b/i,
 
       // gay insult use
@@ -341,25 +341,26 @@ export function setupModeration(client) {
     ];
         
     let normalizedText = '';
-    const manualCategoryMatches = [];
+    const patternMatches = [];
+    const validViolations = [];
 
     if (content) {
       normalizedText = normalizeText(content);
 
+      // Detect pattern matches but don't add to violations yet
       for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
         if (pattern.test(normalizedText)) {
-          manualCategoryMatches.push(attribute);
+          patternMatches.push(attribute);
         }
       }
 
+      // Check for trigger patterns (slurs, etc.) - these are added directly to violations
       for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
         if (patterns.some(p => p.test(normalizedText))) {
-          manualCategoryMatches.push(category);
+          validViolations.push(category);
         }
       }
     }
-
-    const evasionTriggered = manualCategoryMatches.includes('EVASION_ATTEMPT') || manualCategoryMatches.length > 0;
     
     if (!PERSPECTIVE_API_KEY) {
       console.error('Missing PERSPECTIVE_API_KEY');
@@ -372,27 +373,31 @@ export function setupModeration(client) {
       const normalizedText = normalizeText(content);
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
+      // Add attributes that exceed thresholds to violations
       const detected = Object.entries(cachedResult)
       .filter(([key, val]) => val !== undefined && (thresholds[key] || TOXICITY_THRESHOLD) <= val)
       .map(([key]) => key);
 
-    const rawViolations = detected.includes('THREAT') && !detected.includes('TOXICITY')
-      ? detected.filter(v => v !== 'THREAT')
-      : detected;
-
+      const thresholdViolations = detected.includes('THREAT') && !detected.includes('TOXICITY')
+        ? detected.filter(v => v !== 'THREAT')
+        : detected;
+      
+      // Add pattern violations only if they also meet threshold
       for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
-      if (
-        pattern.test(normalizedText) &&
-        cachedResult[attribute] !== undefined && // Change scores to cachedResult
-        cachedResult[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD) // Change scores to cachedResult
-      ) {
-        rawViolations.push(attribute);
-        rawViolations.push('EVASION_ATTEMPT');
+        if (
+          pattern.test(normalizedText) &&
+          cachedResult[attribute] !== undefined && 
+          cachedResult[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD)
+        ) {
+          thresholdViolations.push(attribute);
+          thresholdViolations.push('EVASION_ATTEMPT');
+        }
       }
-    }
-      rawViolations.push(...manualCategoryMatches);
+      
+      // Combine violations
+      validViolations.push(...thresholdViolations);
 
-      const violations = rawViolations.join(', ');
+      const violations = [...new Set(validViolations)].join(', ');
 
       if (violations.length > 0) {
         await handleViolation(message, violations, content);
@@ -446,29 +451,32 @@ export function setupModeration(client) {
 
       const thresholds = ATTRIBUTE_THRESHOLDS;
 
+      // Add attributes that exceed thresholds to violations
       const detected = Object.entries(attributes)
-     .filter(([key, val]) => val?.summaryScore?.value !== undefined && 
-        (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
-      .map(([key]) => key);
+        .filter(([key, val]) => val?.summaryScore?.value !== undefined && 
+          (thresholds[key] || TOXICITY_THRESHOLD) <= val.summaryScore.value)
+        .map(([key]) => key);
 
-    const rawViolations = detected.includes('THREAT') && !detected.includes('TOXICITY')
-      ? detected.filter(v => v !== 'THREAT')
-      : detected; 
+      const thresholdViolations = detected.includes('THREAT') && !detected.includes('TOXICITY')
+        ? detected.filter(v => v !== 'THREAT')
+        : detected; 
 
+      // Add pattern violations only if they also meet threshold
       for (const { pattern, attribute } of EVASION_ATTRIBUTE_PATTERNS) {
-      if (
-        pattern.test(normalizedText) &&
-        scores[attribute] !== undefined &&
-        scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD)
-      ) {
-        rawViolations.push(attribute);
-        rawViolations.push('EVASION_ATTEMPT');
+        if (
+          pattern.test(normalizedText) &&
+          scores[attribute] !== undefined &&
+          scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || TOXICITY_THRESHOLD)
+        ) {
+          thresholdViolations.push(attribute);
+          thresholdViolations.push('EVASION_ATTEMPT');
+        }
       }
-    }
+      
+      // Combine violations
+      validViolations.push(...thresholdViolations);
 
-  rawViolations.push(...manualCategoryMatches);
-
-      const violations = rawViolations.join(', ');
+      const violations = [...new Set(validViolations)].join(', ');
 
       if (violations.length > 0) {
         await handleViolation(message, violations, content);
