@@ -1,8 +1,8 @@
-// src/scheduler/quizScheduler.ts
+// src/scheduler/quizScheduler.js
 import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, Events } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
 import { recordQuizAnswer } from '../db.js';
 
 const CHANNEL_ID = '1372225536406978640';
@@ -14,41 +14,45 @@ let todayCorrectIndex = null;
 let todayPoints = 0;
 let userResponses = new Map();
 
+export async function runDailyQuiz(client) {
+  const questionIndex = new Date().getDate() % QUESTIONS.length;
+  const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
+
+  todayQuestionIndex = questionIndex;
+  todayCorrectIndex = answerIndex;
+  todayPoints = points;
+  userResponses = new Map();
+
+  const labels = ['A', 'B', 'C', 'D'];
+  const questionText = options.map((opt, i) => `${labels[i]}: ${opt}`).join('\n');
+
+  const embed = new EmbedBuilder()
+    .setTitle('Question of the Day')
+    .setDescription(`Question: ${question}\n\n${questionText}\n\nPoints: ${points}\n\nThe answer will be shared at 5:00 PM ET.`)
+    .setTimestamp();
+
+  const row = new ActionRowBuilder().addComponents(
+    options.map((opt, i) =>
+      new ButtonBuilder()
+        .setCustomId(`quiz:${i}`)
+        .setLabel(labels[i])
+        .setStyle(ButtonStyle.Primary)
+    )
+  );
+
+  const channel = await client.channels.fetch(CHANNEL_ID);
+  const msg = await channel.send({
+    content: `<@&${ROLE_ID}> today's question has been posted.`,
+    embeds: [embed],
+    components: [row]
+  });
+
+  todayMessageId = msg.id;
+}
+
 export function setupQuizScheduler(client) {
   cron.schedule('0 8 * * *', async () => {
-    const questionIndex = new Date().getDate() % QUESTIONS.length;
-    const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
-
-    todayQuestionIndex = questionIndex;
-    todayCorrectIndex = answerIndex;
-    todayPoints = points;
-    userResponses = new Map();
-
-    const labels = ['A', 'B', 'C', 'D'];
-    const questionText = options.map((opt, i) => `${labels[i]}: ${opt}`).join('\n');
-
-    const embed = new EmbedBuilder()
-      .setTitle('Question of the Day')
-      .setDescription(`Question: ${question}\n\n${questionText}\n\nPoints: ${points}\n\nThe answer will be shared at 5:00 PM ET.`)
-      .setTimestamp();
-
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      options.map((opt, i) =>
-        new ButtonBuilder()
-          .setCustomId(`quiz:${i}`)
-          .setLabel(labels[i])
-          .setStyle(ButtonStyle.Primary)
-      )
-    );
-
-    const channel = await client.channels.fetch(CHANNEL_ID);
-    const msg = await channel.send({
-      content: `<@&${ROLE_ID}> today's question has been posted.`,
-      embeds: [embed],
-      components: [row]
-    });
-
-    todayMessageId = msg.id;
+    await runDailyQuiz(client);
   }, { timezone: 'America/New_York' });
 
   cron.schedule('0 17 * * *', async () => {
@@ -97,7 +101,7 @@ export function setupQuizScheduler(client) {
     userResponses.set(interaction.user.id, selectedIndex);
 
     await interaction.reply({
-      content: `Your answer has been recorded.`,
+      content: "Your answer has been recorded. The answer will be revealed later today.",
       ephemeral: true
     });
 

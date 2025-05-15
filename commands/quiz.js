@@ -3,6 +3,7 @@ import { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder } from '
 import fs from 'fs';
 import path from 'path';
 import { getQuizLeaderboard } from '../db.js';
+import { runDailyQuiz } from '../quiz/quizScheduler.js';
 
 const questionsPath = path.resolve('./quiz/questions.json');
 const quizChannelId = '1372225536406978640';
@@ -23,24 +24,7 @@ export async function execute(interaction) {
   const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === 'test') {
-    const raw = fs.readFileSync(questionsPath, 'utf-8');
-    const questions = JSON.parse(raw);
-    const random = questions[Math.floor(Math.random() * questions.length)];
-
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId(`quiz_answer:${random.question}`)
-      .setPlaceholder('Select your answer...')
-      .addOptions(random.options.map(opt => ({
-        label: opt,
-        value: opt
-      })));
-
-    const row = new ActionRowBuilder().addComponents(menu);
-    const quizMsg = `**Quiz Time!**\n${random.question}`;
-
-    const channel = await interaction.client.channels.fetch(quizChannelId);
-    await channel.send({ content: quizMsg, components: [row] });
-
+    await runDailyQuiz(interaction.client);
     await interaction.reply({ content: 'Test quiz sent!', ephemeral: true });
   }
 
@@ -55,6 +39,6 @@ export async function execute(interaction) {
       .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.correct_count} correct`)
       .join('\n');
 
-    await interaction.reply({ content: `**Quiz Leaderboard:**\n${leaderboardMsg}`, ephemeral: true });
+    await interaction.reply({ content: `**Question of the Day Leaderboard:**\n${leaderboardMsg}`, ephemeral: true });
   }
 }
