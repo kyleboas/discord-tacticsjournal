@@ -40,7 +40,7 @@ export async function runDailyQuiz(client) {
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
     .setDescription(
-      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe answer will be revealed <t:${revealUnix}:t> (<t:${revealUnix}:R>).`
+      `**Question:** ${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe answer will be revealed <t:${revealUnix}:R>.`
     )
     .setTimestamp();
 
@@ -98,12 +98,16 @@ export function setupQuizScheduler(client) {
       const totalParticipants = userResponses.size;
       const correctCount = [...userResponses.values()].filter(i => i === todayCorrectIndex).length;
 
+      const now = new Date();
+      const nextQuestionTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8, 0, 0);
+      const nextRevealUnix = Math.floor(nextQuestionTime.getTime() / 1000);
+
       const channel = await client.channels.fetch(CHANNEL_ID);
 
       const embed = new EmbedBuilder()
-        .setTitle('Question of the Day -- Answer')
+        .setTitle('Question of the Day')
         .setDescription(
-          `**Question:** ${question}\n\n**Answer:** ${answerLabel}) ${correctAnswer}\n\n**Correct responses:** ${correctCount}/${totalParticipants}`
+          `**Question:** ${question}\n\n**Answer:** ${answerLabel}) ${correctAnswer}\n\n**Correct responses:** ${correctCount}/${totalParticipants}\n\nThe next question will be posted <t:${nextRevealUnix}:R>.`
         )
         .setTimestamp();
 
