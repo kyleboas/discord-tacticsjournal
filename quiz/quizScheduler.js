@@ -3,7 +3,8 @@ import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
-import { recordQuizAnswer } from '../db.js';
+import { recordQuizAnswerDetailed } from '../db.js';
+
 
 const CHANNEL_ID = '1372225536406978640';
 const ROLE_ID = '1372372259812933642';
