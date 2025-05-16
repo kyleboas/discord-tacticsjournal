@@ -134,6 +134,15 @@ export async function ensureQuizSchema() {
       PRIMARY KEY (user_id, message_id)
     );
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS active_quiz (
+      message_id TEXT NOT NULL,
+      question_index INTEGER NOT NULL,
+      correct_index INTEGER NOT NULL,
+      points INTEGER NOT NULL,
+      channel_id TEXT NOT NULL
+    );
+  `);
 }
 
 export async function setActiveQuizInDB({ messageId, questionIndex, correctIndex, points, channelId }) {
