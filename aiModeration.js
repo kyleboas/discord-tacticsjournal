@@ -10,7 +10,7 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 const userStrikes = new Collection();
 const STRIKE_RESET_MS = 7 * 24 * 60 * 60 * 1000;
 
-const DIRECT_TARGETING_ALLOWLIST = new Set(['the', 'this', 'that', 'it', 'game', 'thing', 'shit']);
+const DIRECT_TARGETING_ALLOWLIST = new Set(['the', 'this', 'that', 'was', 'it', 'game', 'thing', 'shit']);
 
 export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.93,
