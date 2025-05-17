@@ -251,3 +251,27 @@ export async function incrementStrike(userId, username) {
   `, [userId, username, now]);
   return res.rows[0].count;
 }
+
+
+export async function incrementMajorStrike(userId, username) {
+  const now = new Date();
+  const res = await pool.query(`
+    INSERT INTO major_strikes (user_id, username, count, last_strike_at)
+    VALUES ($1, $2, 1, $3)
+    ON CONFLICT (user_id)
+    DO UPDATE SET count = major_strikes.count + 1, last_strike_at = $3, username = $2
+    RETURNING count
+  `, [userId, username, now]);
+  return res.rows[0].count;
+}
+
+export async function ensureMajorStrikeSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS major_strikes (
+      user_id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      count INTEGER DEFAULT 1,
+      last_strike_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}

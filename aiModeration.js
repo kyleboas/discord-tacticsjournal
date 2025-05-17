@@ -177,8 +177,31 @@ async function handleViolation(message, violations, content) {
   try {
     await message.delete();
 
-    const strikeCount = await incrementStrikes(message.author);
-    const timeoutMs = getTimeoutDuration(strikeCount);
+    let strikeCount = 0;
+    let timeoutMs = 0;
+
+    if (violations.includes('RACIAL_SLUR')) {
+      strikeCount = await incrementMajorStrike(message.author.id, message.author.username);
+      
+      if (strikeCount === 1) {
+        timeoutMs = 12 * 60 * 60 * 1000; // 12 hours
+      } else if (strikeCount === 2) {
+        await message.member.ban({ reason: `Major Strike 2: 7 day ban for racial slur` });
+        // optional: schedule unban in 7 days via job/queue
+        return;
+      } else if (strikeCount === 3) {
+        await message.member.ban({ reason: `Major Strike 3: 30 day ban for racial slur` });
+        // optional: schedule unban in 30 days
+        return;
+      } else if (strikeCount >= 4) {
+        await message.member.ban({ reason: `Major Strike 4+: Permanent ban for repeated racial slurs` });
+        return;
+      }
+    } else {
+      strikeCount = await incrementStrikes(message.author);
+      timeoutMs = getTimeoutDuration(strikeCount);
+    }
+
     const durationDisplay = formatDuration(timeoutMs);
 
     if (message.guild && message.member) {
