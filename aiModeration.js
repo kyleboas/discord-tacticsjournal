@@ -25,6 +25,7 @@ const ATTRIBUTE_EXPLANATIONS = {
   THREAT: 'May be interpreted as threatening someone.',
   IDENTITY_ATTACK: 'Attacks based on race, gender, or other identity.',
   SEVERE_TOXICITY: 'Extremely harmful or abusive language.',
+  DIRECT_TARGETING: 'Direct verbal attack or harm directed at another person.'
   SELF_HARM: 'Encourages or references self-harm or suicide.',
   LGTBQ_SLUR: 'Contains anti-LGBTQ+ slurs or hate speech.',
   ABLEIST_SLUR: 'Uses language offensive toward disabled individuals.',
@@ -79,6 +80,10 @@ export const TRIGGER_PATTERNS = {
 
     // camel jockey
     /\bc[a@]m[e3]l[\W_]*j[o0]ck[e3]y\b/i
+  ],
+  
+  DIRECT_TARGETING: [
+   /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+[\s._-]*(@?[a-zA-Z0-9_]{2,})\b/i
   ]
 };
 
