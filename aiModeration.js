@@ -7,7 +7,7 @@ const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '109874266
 const MOD_LOG_CHANNEL = '1099892476627669012';
 
 const userStrikes = new Collection();
-const STRIKE_RESET_MS = 60 * 60 * 1000; // 1 hour reset window
+const STRIKE_RESET_MS = 24 * 60 * 60 * 1000; // 24 hour reset window
 
 export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.93,

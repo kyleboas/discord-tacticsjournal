@@ -145,6 +145,10 @@ export async function ensureQuizSchema() {
   `);
 }
 
+export async function clearActiveQuizInDB() {
+  await pool.query(`DELETE FROM active_quiz`);
+}
+
 export async function setActiveQuizInDB({ messageId, questionIndex, correctIndex, points, channelId }) {
   await pool.query(`DELETE FROM active_quiz`);
 

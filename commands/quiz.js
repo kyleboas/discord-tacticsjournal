@@ -187,6 +187,16 @@ export async function execute(interaction) {
     }
 
     await runDailyQuiz(interaction.client);
+    
+    const msg = await     channel.messages.fetch(channel.lastMessageId);
+    const index = new Date().getDate() % QUESTIONS.length;
+    await setActiveQuizState({
+      messageId: msg.id,
+      questionIndex: index,
+      correctIndex: QUESTIONS[index].answerIndex,
+      points: QUESTIONS[index].points,
+      message: msg
+    });
 
     return interaction.reply({
       content: 'New quiz started. It will close at 8AM EST tomorrow.',
@@ -216,6 +226,8 @@ export async function execute(interaction) {
     todayCorrectIndex = null;
     todayPoints = 0;
     userResponses.clear();
+    
+    await clearActiveQuizInDB();
 
     return interaction.reply({
       content: 'Quiz closed and deleted.',
