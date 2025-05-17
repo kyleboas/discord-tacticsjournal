@@ -10,6 +10,8 @@ import {
   getAverageScores,
   getQuizLeaderboard,
   ensureQuizSchema,
+  ensureStrikeSchema,
+  ensureMajorStrikeSchema
   recordQuizAnswerDetailed
 } from './db.js';
 import { isValidTeam } from './teams.js';
