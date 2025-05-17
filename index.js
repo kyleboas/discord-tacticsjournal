@@ -11,7 +11,7 @@ import {
   getQuizLeaderboard,
   ensureQuizSchema,
   ensureStrikeSchema,
-  ensureMajorStrikeSchema
+  ensureMajorStrikeSchema,
   recordQuizAnswerDetailed
 } from './db.js';
 import { isValidTeam } from './teams.js';
