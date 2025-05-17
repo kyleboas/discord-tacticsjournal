@@ -10,6 +10,8 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 const userStrikes = new Collection();
 const STRIKE_RESET_MS = 7 * 24 * 60 * 60 * 1000;
 
+const DIRECT_TARGETING_ALLOWLIST = new Set(['the', 'this', 'that', 'it', 'game', 'thing', 'shit']);
+
 export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.93,
   INSULT: 0.95,
@@ -84,7 +86,7 @@ export const TRIGGER_PATTERNS = {
   ],
   
   DIRECT_TARGETING: [
-    /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+\s+(@?[a-zA-Z][a-zA-Z0-9_]{2,})\b/i
+    /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+\s+(@?[a-zA-Z][a-zA-Z0-9_]{1,})\b/gi
   ]
 };
 
@@ -375,10 +377,19 @@ export function setupModeration(client) {
         }
       }
 
-      // Check for trigger patterns (slurs, etc.) - these are added directly to violations
       for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
-        if (patterns.some(p => p.test(normalizedText))) {
-          validViolations.push(category);
+        for (const pattern of patterns) {
+          const match = normalizedText.match(pattern);
+
+          if (match) {
+            if (category === 'DIRECT_TARGETING') {
+              const target = match[1]?.toLowerCase();
+              if (target && DIRECT_TARGETING_ALLOWLIST.has(target)) continue;
+            }
+
+            validViolations.push(category);
+            break;
+          }
         }
       }
     }
