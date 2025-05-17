@@ -176,7 +176,7 @@ export async function runDailyQuiz(client) {
 }
 
 export function setupQuizScheduler(client) {
-  cron.schedule('1 2 * * *', async () => {
+  cron.schedule('0 12 * * *', async () => {
     if (todayMessageId) {
       try {
         const channel = await client.channels.fetch(quizChannelId);
@@ -194,7 +194,7 @@ export function setupQuizScheduler(client) {
     }
 
     await runDailyQuiz(client);
-  }, { timezone: 'America/New_York' });
+  }, );
 
   client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isButton()) return;
