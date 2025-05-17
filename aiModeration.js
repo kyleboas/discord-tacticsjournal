@@ -302,8 +302,13 @@ async function incrementStrikes(user) {
 function getTimeoutDuration(strikeCount) {
   if (strikeCount === 1) return 30 * 1000;
   if (strikeCount === 2) return 60 * 1000;
-  if (strikeCount === 3) return 5 * 60 * 1000;
-  return 10 * 60 * 1000; // escalated timeout
+  return (strikeCount - 2) * 10 * 60 * 1000;
+}
+
+function getTimeoutDuration(strikeCount) {
+  if (strikeCount === 1) return 30 * 1000; // 30 sec
+  if (strikeCount === 2) return 60 * 1000; // 1 min
+  return (strikeCount - 2) * 10 * 60 * 1000; // 10 min * (strikeCount - 2)
 }
 
 export function setupModeration(client) {
