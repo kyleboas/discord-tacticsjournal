@@ -1,13 +1,14 @@
 // aiModeration.js
 import fetch from 'node-fetch';
 import { Collection, EmbedBuilder } from 'discord.js';
+import { incrementStrike } from './db.js';
 
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
 const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '1098742662040920074', '1325150809104842752', '1273974012774711397', '1371507335372996760'];
 const MOD_LOG_CHANNEL = '1099892476627669012';
 
 const userStrikes = new Collection();
-const STRIKE_RESET_MS = 7 * 24 * 60 * 60 * 1000; // 7 day reset window
+const STRIKE_RESET_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.93,
@@ -176,7 +177,7 @@ async function handleViolation(message, violations, content) {
   try {
     await message.delete();
 
-    const strikeCount = incrementStrikes(message.author.id);
+    const strikeCount = await incrementStrikes(message.author);
     const timeoutMs = getTimeoutDuration(strikeCount);
     const durationDisplay = formatDuration(timeoutMs);
 
@@ -269,16 +270,8 @@ export function normalizeText(text) {
     .toLowerCase();
 }
 
-function incrementStrikes(userId) {
-  const now = Date.now();
-  const current = userStrikes.get(userId) || { count: 0, last: now };
-  const recent = now - current.last < STRIKE_RESET_MS;
-  const updated = {
-    count: recent ? current.count + 1 : 1,
-    last: now
-  };
-  userStrikes.set(userId, updated);
-  return updated.count;
+async function incrementStrikes(user) {
+  return await incrementStrike(user.id, user.username || user.tag || 'unknown');
 }
 
 function getTimeoutDuration(strikeCount) {

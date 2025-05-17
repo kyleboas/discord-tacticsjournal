@@ -222,3 +222,32 @@ export async function getQuizLeaderboard(userId) {
     userRankInfo
   };
 }
+
+
+export async function ensureStrikeSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS strikes (
+      user_id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      count INTEGER DEFAULT 1,
+      last_strike_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
+export async function getStrikeCount(userId) {
+  const res = await pool.query('SELECT count FROM strikes WHERE user_id = $1', [userId]);
+  return res.rows.length ? res.rows[0].count : 0;
+}
+
+export async function incrementStrike(userId, username) {
+  const now = new Date();
+  const res = await pool.query(`
+    INSERT INTO strikes (user_id, username, count, last_strike_at)
+    VALUES ($1, $2, 1, $3)
+    ON CONFLICT (user_id)
+    DO UPDATE SET count = strikes.count + 1, last_strike_at = $3, username = $2
+    RETURNING count
+  `, [userId, username, now]);
+  return res.rows[0].count;
+}
