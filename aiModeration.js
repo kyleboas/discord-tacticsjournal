@@ -13,7 +13,7 @@ const STRIKE_RESET_MS = 7 * 24 * 60 * 60 * 1000;
 const DIRECT_TARGETING_ALLOWLIST = new Set(['the', 'this', 'that', 'all', 'with', 'was', 'it', 'game', 'thing', 'shit']);
 
 export const ATTRIBUTE_THRESHOLDS = {
-  TOXICITY: 0.94,
+  TOXICITY: 0.95,
   INSULT: 0.95,
   PROFANITY: 0.95,
   THREAT: 0.60,
