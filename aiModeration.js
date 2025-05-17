@@ -305,12 +305,6 @@ function getTimeoutDuration(strikeCount) {
   return (strikeCount - 2) * 10 * 60 * 1000;
 }
 
-function getTimeoutDuration(strikeCount) {
-  if (strikeCount === 1) return 30 * 1000; // 30 sec
-  if (strikeCount === 2) return 60 * 1000; // 1 min
-  return (strikeCount - 2) * 10 * 60 * 1000; // 10 min * (strikeCount - 2)
-}
-
 export function setupModeration(client) {
   client.on('messageCreate', async (message) => {
     if (!ENABLE_AI_MOD) return;
