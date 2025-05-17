@@ -71,12 +71,19 @@ for (const file of commandFiles) {
 
 client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
-  const commandData = client.commands.map(cmd => cmd.data.toJSON());
+
   await ensureQuizSchema();
-setupQuizScheduler(client);
+  await ensureStrikeSchema();
+  await ensureMajorStrikeSchema();
+
+  setupQuizScheduler(client);
+
+  const commandData = client.commands.map(cmd => cmd.data.toJSON());
   await client.application.commands.set(commandData);
   console.log('Slash commands synced');
 });
+
+
 // Cache for lazy loading commands
 const commandCache = new Collection();
 

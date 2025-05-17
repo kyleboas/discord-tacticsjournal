@@ -252,6 +252,16 @@ export async function incrementStrike(userId, username) {
   return res.rows[0].count;
 }
 
+export async function ensureMajorStrikeSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS major_strikes (
+      user_id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      count INTEGER DEFAULT 1,
+      last_strike_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
 
 export async function incrementMajorStrike(userId, username) {
   const now = new Date();
