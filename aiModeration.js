@@ -86,6 +86,7 @@ export const TRIGGER_PATTERNS = {
   ],
   
   DIRECT_TARGETING: [
+    /\bp[\W_]*l[\W_]*a[\W_]*t[\W_]*y[\W_]*p[\W_]*u[\W_]*s\b/i
   ]
 };
 
