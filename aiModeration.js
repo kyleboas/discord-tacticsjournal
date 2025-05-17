@@ -25,7 +25,7 @@ const ATTRIBUTE_EXPLANATIONS = {
   THREAT: 'May be interpreted as threatening someone.',
   IDENTITY_ATTACK: 'Attacks based on race, gender, or other identity.',
   SEVERE_TOXICITY: 'Extremely harmful or abusive language.',
-  DIRECT_TARGETING: 'Direct verbal attack or harm directed at another person.'
+  DIRECT_TARGETING: 'Direct verbal attack or harm directed at another person.',
   SELF_HARM: 'Encourages or references self-harm or suicide.',
   LGTBQ_SLUR: 'Contains anti-LGBTQ+ slurs or hate speech.',
   ABLEIST_SLUR: 'Uses language offensive toward disabled individuals.',
