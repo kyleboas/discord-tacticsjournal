@@ -84,7 +84,7 @@ export const TRIGGER_PATTERNS = {
   ],
   
   DIRECT_TARGETING: [
-   /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+[\s._-]*(@?[a-zA-Z0-9_]{2,})\b/i
+    /\bf+[\s._-]*[uuv]+[\s._-]*[c(kq)]+[\s._-]*k+\s+(@?[a-zA-Z][a-zA-Z0-9_]{2,})\b/i
   ]
 };
 
