@@ -194,7 +194,7 @@ export function setupQuizScheduler(client) {
     }
 
     await runDailyQuiz(client);
-  }, 
+  });
 
   client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isButton()) return;
