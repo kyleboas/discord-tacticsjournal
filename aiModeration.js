@@ -1,7 +1,7 @@
 // aiModeration.js
 import fetch from 'node-fetch';
 import { Collection, EmbedBuilder } from 'discord.js';
-import { incrementStrike, incrementMajorStrike } from './db.js';
+import { incrementStrike, incrementMajorStrike } from './db.js'; 
 
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
 const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '1098742662040920074', '1325150809104842752', '1273974012774711397', '1371507335372996760'];
