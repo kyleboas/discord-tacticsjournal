@@ -182,15 +182,6 @@ function setCachedResult(content, result) {
   });
 }
 
-// Suppress profanity-only violation if it's a repeated single word (e.g., "fuck fuck fuck")
-if (
-  validViolations.length === 1 &&
-  validViolations[0] === 'PROFANITY' &&
-  isSingleWordRepeated(normalizeText(content))
-) {
-  return; // skip moderation
-}
-
 async function handleViolation(message, violations, content) {
   try {
     await message.delete();
@@ -331,6 +322,14 @@ export function setupModeration(client) {
     
     const content = message.content?.trim();
     if (!content) return;
+    
+    if (
+      validViolations.length === 1 &&
+      validViolations[0] === 'PROFANITY' &&
+      isSingleWordRepeated(normalizeText(content))
+    ) {
+      return; // skip moderation
+    }
     
     // Sample rate - only process some messages to reduce API costs
     if (Math.random() > MOD_SAMPLE_RATE) return;
