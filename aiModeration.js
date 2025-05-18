@@ -109,6 +109,13 @@ export const EVASION_ATTRIBUTE_PATTERNS = [
   { attribute: 'THREAT', pattern: /\bi\s*am\s+g[o0]nna\s+(kill|hurt|fuck|wreck|beat|destroy|harm)\b/i }
 ];
 
+export function isSingleWordRepeated(text) {
+  const words = text.trim().split(/\s+/);
+  if (words.length < 2) return false;
+  const first = words[0];
+  return words.every(word => word === first);
+}
+
 function formatDuration(ms) {
   const seconds = Math.round(ms / 1000);
   if (seconds < 60) return `${seconds} second`;
@@ -173,6 +180,15 @@ function setCachedResult(content, result) {
     result,
     timestamp: Date.now()
   });
+}
+
+// Suppress profanity-only violation if it's a repeated single word (e.g., "fuck fuck fuck")
+if (
+  validViolations.length === 1 &&
+  validViolations[0] === 'PROFANITY' &&
+  isSingleWordRepeated(normalizeText(content))
+) {
+  return; // skip moderation
 }
 
 async function handleViolation(message, violations, content) {

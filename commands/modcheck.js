@@ -20,6 +20,14 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
   .setDMPermission(false);
 
+// Helper: returns true if the message is just one repeated word (e.g., "fuck fuck fuck")
+function isSingleWordRepeated(text) {
+  const words = text.trim().split(/\s+/);
+  if (words.length < 2) return false;
+  const first = words[0];
+  return words.every(word => word === first);
+}
+
 export async function execute(interaction) {
   const memberRoles = interaction.member.roles;
   if (!memberRoles.cache.has(MODERATOR_ROLE_ID)) {
@@ -35,12 +43,10 @@ export async function execute(interaction) {
   const patternMatches = new Set();
   const validViolations = new Set();
 
-  // Only store pattern matches initially, don't add to validViolations yet
   for (const { attribute, pattern } of EVASION_ATTRIBUTE_PATTERNS) {
     if (pattern.test(normalized)) patternMatches.add(attribute);
   }
 
-  // Trigger patterns (slurs, etc.) are added directly to validViolations
   for (const [category, patterns] of Object.entries(TRIGGER_PATTERNS)) {
     if (patterns.some(p => p.test(normalized))) validViolations.add(category);
   }
@@ -65,7 +71,7 @@ export async function execute(interaction) {
     if (data.attributeScores) {
       const entries = Object.entries(data.attributeScores);
       const scores = {};
-      
+
       perspectiveResult = entries
         .map(([key, val]) => {
           const score = val.summaryScore.value;
@@ -75,10 +81,9 @@ export async function execute(interaction) {
           return `${key}: ${Math.round(score * 100)}%${hit ? ' ⚠️' : ''}`;
         })
         .join('\n');
-      
-      // Only add pattern matches to violations if they also meet score thresholds
+
       for (const attribute of patternMatches) {
-        if (scores[attribute] !== undefined && 
+        if (scores[attribute] !== undefined &&
             scores[attribute] >= (ATTRIBUTE_THRESHOLDS[attribute] || 0.85)) {
           validViolations.add(attribute);
           validViolations.add('EVASION_ATTEMPT');
@@ -92,8 +97,17 @@ export async function execute(interaction) {
   }
 
   if (validViolations.size || reasons.length > 0) {
-    moderationTriggered = true;
-    reasons.push(...validViolations);
+    // suppress profanity-only violation if repeated single word
+    if (
+      new Set([...validViolations, ...reasons]).size === 1 &&
+      [...validViolations, ...reasons].includes('PROFANITY') &&
+      isSingleWordRepeated(normalized)
+    ) {
+      // skip setting moderationTriggered
+    } else {
+      moderationTriggered = true;
+      reasons.push(...validViolations);
+    }
   }
 
   await interaction.reply({
