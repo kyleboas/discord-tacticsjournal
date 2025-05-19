@@ -323,14 +323,6 @@ export function setupModeration(client) {
     const content = message.content?.trim();
     if (!content) return;
     
-    if (
-      validViolations.length === 1 &&
-      validViolations[0] === 'PROFANITY' &&
-      isSingleWordRepeated(normalizeText(content))
-    ) {
-      return; // skip moderation
-    }
-    
     // Sample rate - only process some messages to reduce API costs
     if (Math.random() > MOD_SAMPLE_RATE) return;
     
@@ -380,6 +372,14 @@ export function setupModeration(client) {
     let normalizedText = '';
     const patternMatches = [];
     const validViolations = [];
+    
+    if (
+      validViolations.length === 1 &&
+      validViolations[0] === 'PROFANITY' &&
+      isSingleWordRepeated(normalizeText(content))
+    ) {
+      return; // skip moderation
+    }
 
     if (content) {
       normalizedText = normalizeText(content);
