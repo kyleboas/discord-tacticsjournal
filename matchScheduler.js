@@ -44,7 +44,7 @@ export function setupMatchReminderScheduler(client) {
             description: [
               ...group.matches.map(line => `${line}`),
               '',
-              `Starts in <t:${group.timestamp}:R>.`
+              `Starts <t:${group.timestamp}:R>.`
             ].join('\n')
           }]
         });
