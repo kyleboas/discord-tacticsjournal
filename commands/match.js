@@ -1,5 +1,10 @@
 import { SlashCommandBuilder, ChannelType, PermissionsBitField } from 'discord.js';
-import { addMatchReminder, getMatchReminders, setReminderChannel } from '../db.js';
+import {
+  addMatchReminder,
+  getMatchReminders,
+  setReminderChannel,
+  getReminderChannel
+} from '../db.js';
 
 export default {
   data: new SlashCommandBuilder()
