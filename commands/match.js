@@ -13,7 +13,20 @@ export default {
     .addSubcommand(cmd => cmd
       .setName('set')
       .setDescription('Set a new match reminder')
-      .addStringOption(opt => opt.setName('day').setDescription('Day of the week').setRequired(true))
+      .addStringOption(opt =>
+        opt.setName('day')
+          .setDescription('Day of the week')
+          .setRequired(true)
+          .addChoices(
+            { name: 'Sunday', value: 'sunday' },
+            { name: 'Monday', value: 'monday' },
+            { name: 'Tuesday', value: 'tuesday' },
+            { name: 'Wednesday', value: 'wednesday' },
+            { name: 'Thursday', value: 'thursday' },
+            { name: 'Friday', value: 'friday' },
+            { name: 'Saturday', value: 'saturday' }
+          )
+      )
       .addStringOption(opt => opt.setName('time').setDescription('Time in UTC (HH:mm)').setRequired(true))
       .addStringOption(opt => opt.setName('home').setDescription('Home team').setRequired(true))
       .addStringOption(opt => opt.setName('away').setDescription('Away team').setRequired(true)))
