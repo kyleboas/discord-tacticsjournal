@@ -27,6 +27,7 @@ import {
   todayPoints,
   userResponses
 } from './quiz/quizScheduler.js';
+import { setupMatchReminderScheduler } from './matchScheduler.js';
 
 config();
 
@@ -79,6 +80,21 @@ client.once('ready', async () => {
   await ensureMajorStrikeSchema();
 
   setupQuizScheduler(client);
+  setupMatchReminderScheduler(client);
+
+  const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+  for (const file of commandFiles) {
+    const commandModule = await import(`./commands/${file}`);
+    const command = commandModule.default || commandModule;
+
+    if (!command?.data?.name) {
+      console.warn(`[WARN] Skipping ${file}: missing 'data.name'`);
+      continue;
+    }
+
+    client.commands.set(command.data.name, command);
+    commandCache.set(command.data.name, command);
+  }
 
   const commandData = client.commands.map(cmd => cmd.data.toJSON());
   await client.application.commands.set(commandData);

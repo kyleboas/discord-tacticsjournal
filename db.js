@@ -91,7 +91,6 @@ export async function ensureSchema() {
       user_id TEXT NOT NULL,
       username TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      
     );
   `);
 
@@ -105,11 +104,28 @@ export async function ensureSchema() {
       UNIQUE(player_name, user_id)
     );
   `);
-  
+
   await pool.query(`
     ALTER TABLE watchlist
     ADD COLUMN IF NOT EXISTS message_id TEXT,
     ADD COLUMN IF NOT EXISTS channel_id TEXT;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS match_reminders (
+      id SERIAL PRIMARY KEY,
+      home TEXT NOT NULL,
+      away TEXT NOT NULL,
+      match_time TIMESTAMP NOT NULL,
+      channel_id TEXT NOT NULL
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS guild_settings (
+      guild_id TEXT PRIMARY KEY,
+      match_channel_id TEXT
+    );
   `);
 }
 
@@ -273,4 +289,30 @@ export async function ensureMajorStrikeSchema() {
       last_strike_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+}
+
+
+export async function addMatchReminder(home, away, matchTime, channelId) {
+  await pool.query(
+    `INSERT INTO match_reminders (home, away, match_time, channel_id) VALUES ($1, $2, $3, $4)`,
+    [home, away, matchTime, channelId]
+  );
+}
+
+export async function getMatchReminders() {
+  const res = await pool.query(`SELECT * FROM match_reminders WHERE match_time > NOW() ORDER BY match_time`);
+  return res.rows;
+}
+
+export async function setReminderChannel(guildId, channelId) {
+  await pool.query(`
+    INSERT INTO guild_settings (guild_id, match_channel_id)
+    VALUES ($1, $2)
+    ON CONFLICT (guild_id) DO UPDATE SET match_channel_id = $2
+  `, [guildId, channelId]);
+}
+
+export async function getReminderChannel(guildId) {
+  const res = await pool.query(`SELECT match_channel_id FROM guild_settings WHERE guild_id = $1`, [guildId]);
+  return res.rows[0]?.match_channel_id || null;
 }
