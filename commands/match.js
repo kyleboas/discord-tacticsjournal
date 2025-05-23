@@ -87,16 +87,27 @@ function getNextWeekdayDate(weekday, timeStr) {
 
   const [hh, mm] = timeStr.split(':').map(Number);
   const now = new Date();
-  const target = new Date(now);
-  target.setUTCHours(hh, mm, 0, 0);
+
+  // Create match time in EST (UTC-5 standard / UTC-4 daylight)
+  const estOffset = now.getTimezoneOffset() === 240 ? 5 : 4; // crude DST detection
+  const utcHour = hh + estOffset;
+
+  const target = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    utcHour,
+    mm,
+    0
+  ));
 
   if (weekday.toLowerCase() === 'today') {
-    if (target < now) target.setUTCDate(now.getUTCDate() + 7);
+    if (target < now) target.setUTCDate(target.getUTCDate() + 7);
     return target;
   }
 
-  const day = dayMap[weekday.toLowerCase()];
-  const diff = (day - now.getUTCDay() + 7) % 7 || 7;
+  const targetDay = dayMap[weekday.toLowerCase()];
+  const diff = (targetDay - now.getUTCDay() + 7) % 7 || 7;
   target.setUTCDate(now.getUTCDate() + diff);
   return target;
 }
