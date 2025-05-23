@@ -1,18 +1,18 @@
 import { getMatchReminders } from './db.js';
 
+const sentReminders = new Set();
+
 export function setupMatchReminderScheduler(client) {
   setInterval(async () => {
     const now = new Date();
     const matches = await getMatchReminders();
 
-    // Filter matches within 59-61 minutes from now
     const matchesIn60 = matches.filter(match => {
       const matchTime = new Date(match.match_time);
       const diffMinutes = (matchTime - now) / 1000 / 60;
       return diffMinutes > 59 && diffMinutes < 61;
     });
 
-    // Group by channelId + timestamp
     const grouped = {};
 
     for (const match of matchesIn60) {
@@ -33,6 +33,9 @@ export function setupMatchReminderScheduler(client) {
 
     for (const key in grouped) {
       const group = grouped[key];
+
+      if (sentReminders.has(key)) continue;
+      sentReminders.add(key);
 
       try {
         const channel = await client.channels.fetch(group.channel_id);
