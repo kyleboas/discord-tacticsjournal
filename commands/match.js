@@ -18,6 +18,7 @@ export default {
           .setDescription('Day of the week')
           .setRequired(true)
           .addChoices(
+            { name: 'Today', value: 'today' },
             { name: 'Sunday', value: 'sunday' },
             { name: 'Monday', value: 'monday' },
             { name: 'Tuesday', value: 'tuesday' },
@@ -83,10 +84,16 @@ function getNextWeekdayDate(weekday, timeStr) {
     sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
     thursday: 4, friday: 5, saturday: 6
   };
+
   const [hh, mm] = timeStr.split(':').map(Number);
   const now = new Date();
   const target = new Date(now);
   target.setUTCHours(hh, mm, 0, 0);
+
+  if (weekday.toLowerCase() === 'today') {
+    if (target < now) target.setUTCDate(now.getUTCDate() + 7);
+    return target;
+  }
 
   const day = dayMap[weekday.toLowerCase()];
   const diff = (day - now.getUTCDay() + 7) % 7 || 7;
