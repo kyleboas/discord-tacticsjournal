@@ -1,34 +1,55 @@
-// matchScheduler.js
 import { getMatchReminders } from './db.js';
 
 export function setupMatchReminderScheduler(client) {
   setInterval(async () => {
     const now = new Date();
-    const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
-
-    // Get matches from DB
     const matches = await getMatchReminders();
 
-    for (const match of matches) {
+    // Filter matches within 59-61 minutes from now
+    const matchesIn60 = matches.filter(match => {
       const matchTime = new Date(match.match_time);
       const diffMinutes = (matchTime - now) / 1000 / 60;
+      return diffMinutes > 59 && diffMinutes < 61;
+    });
 
-      if (diffMinutes > 59 && diffMinutes < 61) {
-        const timestamp = Math.floor(matchTime.getTime() / 1000);
+    // Group by channelId + timestamp
+    const grouped = {};
 
-        try {
-          const channel = await client.channels.fetch(match.channel_id);
-          if (!channel) continue;
+    for (const match of matchesIn60) {
+      const matchTime = new Date(match.match_time);
+      const timestamp = Math.floor(matchTime.getTime() / 1000);
+      const key = `${match.channel_id}_${timestamp}`;
 
-          await channel.send({
-            embeds: [{
-              title: '⚽️ Match Reminder',
-              description: `${match.home} vs ${match.away} in <t:${timestamp}:R>.`
-            }]
-          });
-        } catch (err) {
-          console.error(`Failed to send reminder to channel ${match.channel_id}`, err);
-        }
+      if (!grouped[key]) {
+        grouped[key] = {
+          channel_id: match.channel_id,
+          timestamp,
+          matches: []
+        };
+      }
+
+      grouped[key].matches.push(`${match.home} vs ${match.away}`);
+    }
+
+    for (const key in grouped) {
+      const group = grouped[key];
+
+      try {
+        const channel = await client.channels.fetch(group.channel_id);
+        if (!channel) continue;
+
+        await channel.send({
+          embeds: [{
+            title: '⚽️ Match Reminder',
+            description: [
+              ...group.matches.map(line => `${line}`),
+              '',
+              `Starts in <t:${group.timestamp}:R>.`
+            ].join('\n')
+          }]
+        });
+      } catch (err) {
+        console.error(`Failed to send grouped reminder to channel ${group.channel_id}`, err);
       }
     }
   }, 60 * 1000);
