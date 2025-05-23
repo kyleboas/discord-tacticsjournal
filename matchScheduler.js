@@ -43,7 +43,7 @@ export function setupMatchReminderScheduler(client) {
 
         await channel.send({
           embeds: [{
-            title: '⚽️ Match Reminder',
+            title: '⚽️ Interesting Match Reminder',
             description: [
               ...group.matches.map(line => `${line}`),
               '',
