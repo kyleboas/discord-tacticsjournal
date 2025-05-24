@@ -1,58 +1,72 @@
 import { getMatchReminders } from './db.js';
 
-const sentReminders = new Set();
+const sentReminderKeys = new Set();     // 60 min reminder
+const sentKickoffKeys = new Set();      // match start
 
 export function setupMatchReminderScheduler(client) {
   setInterval(async () => {
     const now = new Date();
     const matches = await getMatchReminders();
 
-    const matchesIn60 = matches.filter(match => {
-      const matchTime = new Date(match.match_time);
-      const diffMinutes = (matchTime - now) / 1000 / 60;
-      return diffMinutes > 59 && diffMinutes < 61;
-    });
+    const grouped60 = {};
+    const groupedKickoff = {};
 
-    const grouped = {};
-
-    for (const match of matchesIn60) {
+    for (const match of matches) {
       const matchTime = new Date(match.match_time);
       const timestamp = Math.floor(matchTime.getTime() / 1000);
+      const diffMinutes = (matchTime - now) / 1000 / 60;
       const key = `${match.channel_id}_${timestamp}`;
 
-      if (!grouped[key]) {
-        grouped[key] = {
-          channel_id: match.channel_id,
-          timestamp,
-          matches: []
-        };
+      if (diffMinutes > 59 && diffMinutes < 61 && !sentReminderKeys.has(key)) {
+        if (!grouped60[key]) {
+          grouped60[key] = { channel_id: match.channel_id, timestamp, matches: [] };
+        }
+        grouped60[key].matches.push(`${match.home} vs ${match.away}`);
       }
 
-      grouped[key].matches.push(`${match.home} vs ${match.away}`);
+      if (diffMinutes > -1 && diffMinutes < 1 && !sentKickoffKeys.has(key)) {
+        if (!groupedKickoff[key]) {
+          groupedKickoff[key] = { channel_id: match.channel_id, timestamp, matches: [] };
+        }
+        groupedKickoff[key].matches.push(`${match.home} vs ${match.away}`);
+      }
     }
 
-    for (const key in grouped) {
-      const group = grouped[key];
-
-      if (sentReminders.has(key)) continue;
-      sentReminders.add(key);
-
+    for (const key in grouped60) {
+      const group = grouped60[key];
+      sentReminderKeys.add(key);
       try {
         const channel = await client.channels.fetch(group.channel_id);
         if (!channel) continue;
-
         await channel.send({
           embeds: [{
-            title: '⚽️ Interesting Match Reminder',
+            title: '⚽️ Match Reminder',
             description: [
-              ...group.matches.map(line => `${line}`),
+              ...group.matches,
               '',
               `Starts <t:${group.timestamp}:R>.`
             ].join('\n')
           }]
         });
       } catch (err) {
-        console.error(`Failed to send grouped reminder to channel ${group.channel_id}`, err);
+        console.error(`Failed to send 60 min reminder to channel ${group.channel_id}`, err);
+      }
+    }
+
+    for (const key in groupedKickoff) {
+      const group = groupedKickoff[key];
+      sentKickoffKeys.add(key);
+      try {
+        const channel = await client.channels.fetch(group.channel_id);
+        if (!channel) continue;
+        await channel.send({
+          embeds: [{
+            title: '⚽️ Kickoff!',
+            description: group.matches.join('\n')
+          }]
+        });
+      } catch (err) {
+        console.error(`Failed to send kickoff alert to channel ${group.channel_id}`, err);
       }
     }
   }, 60 * 1000);
