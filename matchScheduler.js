@@ -24,7 +24,7 @@ export function setupMatchReminderScheduler(client) {
         grouped60[key].matches.push(`${match.home} vs ${match.away}`);
       }
 
-      if (diffMinutes > -1 && diffMinutes < 1 && !sentKickoffKeys.has(key)) {
+      if (diffMinutes > 4 && diffMinutes < 6 && !sentKickoffKeys.has(key)) {
         if (!groupedKickoff[key]) {
           groupedKickoff[key] = { channel_id: match.channel_id, timestamp, matches: [] };
         }
