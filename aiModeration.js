@@ -45,10 +45,15 @@ export const TRIGGER_PATTERNS = {
     /\btr[a4]n{1,2}([i1l][e3]|y|[e3]r)s?\b/i
   ],
   ABLEIST_SLUR: [
-    /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d[\W_]*e?[\W_]*d?\b/i,
-    /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
-    /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
-  ], 
+  // Matches "retard", "retards", "retarded", "r3tard", etc. with obfuscations
+  /\br[\W_]*[e3][\W_]*t[\W_]*a[\W_]*r[\W_]*d(?:[\W_]*e[\W_]*d|[\W_]*s)?\b/i,
+
+  // Matches "tard" standalone with obfuscations
+  /\bt[\W_]*a[\W_]*r[\W_]*d\b/i,
+
+  // Matches "gimp" with obfuscations
+  /\bg[\W_]*i[\W_]*m[\W_]*p\b/i
+  ],
   RACIAL_SLUR: [
     // n-word variants
     /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
