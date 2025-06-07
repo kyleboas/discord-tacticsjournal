@@ -105,6 +105,35 @@ client.once('ready', async () => {
 // Cache for lazy loading commands
 const commandCache = new Collection();
 
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  const xLinkRegex = /https?:\/\/(?:www\.)?x\.com\//gi;
+  if (!xLinkRegex.test(message.content)) return;
+
+  const fixedContent = message.content.replace(xLinkRegex, 'https://fixupx.com/');
+
+  try {
+    await message.delete();
+
+    const webhooks = await message.channel.fetchWebhooks();
+    let webhook = webhooks.find(wh => wh.name === 'FixupBot');
+
+    if (!webhook) {
+      webhook = await message.channel.createWebhook({ name: 'FixupBot' });
+    }
+
+    await webhook.send({
+      content: fixedContent,
+      username: message.author.username,
+      avatarURL: message.author.displayAvatarURL(),
+      allowedMentions: { parse: [] }
+    });
+  } catch (error) {
+    console.error('Webhook send failed:', error);
+  }
+});
+
 // Lazy load commands only when needed
 client.on('interactionCreate', async interaction => {
   if (interaction.isChatInputCommand()) {
