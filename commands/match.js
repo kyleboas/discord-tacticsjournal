@@ -61,7 +61,10 @@ export default {
       if (!channelId) return interaction.reply('Please set the reminder channel first using `/match channel`.');
 
       await addMatchReminder(home, away, targetDate, channelId);
-      return interaction.reply(`Match reminder set: **${home} vs ${away}** on ${targetDate.toUTCString()}`);
+      return interaction.reply({
+      content: `Match reminder set: **${home} vs ${away}** on ${targetDate.toUTCString()}`,
+      ephemeral: true
+    });
     }
 
     if (sub === 'list') {
