@@ -9,7 +9,7 @@ const MOD_LOG_CHANNEL = '1099892476627669012';
 
 const userStrikes = new Collection();
 const STRIKE_RESET_MS = 3 * 24 * 60 * 60 * 1000;
-
+ 
 const DIRECT_TARGETING_ALLOWLIST = new Set(['the', 'this', 'that', 'all', 'with', 'was', 'it', 'game', 'thing', 'shit']);
 
 export const ATTRIBUTE_THRESHOLDS = {
