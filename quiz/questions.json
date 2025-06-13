@@ -1,398 +1,321 @@
 [
   {
-    "question": "What is the primary tactical goal of a 'false 9' in football?",
+    "question": "Who captained Italy to World Cup victory in 1982?",
     "options": [
-      "Act as a traditional target man",
-      "Stretch the play wide",
-      "Drop deep to create space for wingers",
-      "Man-mark the opposition center back"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What is a key characteristic of a high pressing system?",
-    "options": [
-      "Defending deep with compact lines",
-      "Dropping midfielders into defense",
-      "Forcing turnovers high up the pitch",
-      "Prioritizing long ball clearances"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What role does a 'regista' play in midfield?",
-    "options": [
-      "Box-to-box runner",
-      "Deep-lying playmaker",
-      "Defensive enforcer",
-      "Attacking midfielder"
+      "Paolo Rossi",
+      "Dino Zoff",
+      "Franco Baresi",
+      "Marco Tardelli"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Which defensive strategy involves defending space rather than individual players?",
+    "question": "Which club won the first ever European Cup in 1956?",
     "options": [
-      "Zonal marking",
-      "Man-marking",
-      "Sweeper system",
-      "Counter-press"
+      "Real Madrid",
+      "AC Milan",
+      "Benfica",
+      "Reims"
     ],
     "answerIndex": 0,
     "points": 10
   },
   {
-    "question": "What does 'gegenpressing' involve?",
+    "question": "What was the 'Miracle of Bern'?",
     "options": [
-      "Switching flanks during possession",
-      "Sitting deep and absorbing pressure",
-      "Pressing immediately after losing possession",
-      "Man-marking the opposition’s striker"
+      "West Germany defeating Hungary in the 1954 World Cup final",
+      "East Germany beating West Germany in 1974",
+      "Bern hosting the first ever Champions League final",
+      "Switzerland reaching the World Cup semi-final in 1954"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which player was nicknamed 'The Black Panther'?",
+    "options": [
+      "Pelé",
+      "Didier Drogba",
+      "Eusébio",
+      "George Weah"
     ],
     "answerIndex": 2,
     "points": 10
   },
   {
-    "question": "In a 3-5-2 formation, what is the typical role of the wide midfielders?",
+    "question": "Which country hosted the first ever FIFA World Cup?",
     "options": [
-      "Central playmakers",
-      "Second strikers",
-      "Wing-backs",
-      "Target men"
+      "Argentina",
+      "France",
+      "Brazil",
+      "Uruguay"
     ],
-    "answerIndex": 2,
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "What formation is often credited to the Hungarian 'Mighty Magyars' team of the 1950s?",
+    "options": [
+      "4-2-3-1",
+      "WM",
+      "4-4-2",
+      "4-3-3"
+    ],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Who scored the 'Hand of God' goal?",
+    "options": [
+      "Diego Maradona",
+      "Zico",
+      "Rivelino",
+      "Hugo Sánchez"
+    ],
+    "answerIndex": 0,
     "points": 5
   },
   {
-    "question": "Which tactical term refers to overloading one side of the pitch to create space on the opposite side?",
+    "question": "Which Dutch manager is credited with popularizing 'Total Football'?",
     "options": [
-      "Switch of play",
-      "Press trap",
-      "Underlap",
-      "Positional play"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "What is the purpose of a 'double pivot' in midfield?",
-    "options": [
-      "To provide two attackers in the box",
-      "To support wingers defensively",
-      "To distribute and shield the defense",
-      "To create a false sense of width"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "Which coach developed the concept of 'Total Football'?",
-    "options": [
-      "Rinus Michels",
+      "Guus Hiddink",
       "Johan Cruyff",
-      "Pep Guardiola",
-      "Marcelo Bielsa"
-    ],
-    "answerIndex": 0,
-    "points": 30
-  },
-  {
-    "question": "What defines an inverted full-back?",
-    "options": [
-      "A full-back who plays on the opposite side of their dominant foot",
-      "A full-back who cuts inside to join the midfield",
-      "A full-back who overlaps wide wingers",
-      "A full-back who only defends in a low block"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "Which pressing trap is used to bait opponents into one side of the field?",
-    "options": [
-      "Zonal pressing",
-      "Wide press trap",
-      "Midfield overload",
-      "Man-to-man press"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "What does an 'underlap' refer to in attacking play?",
-    "options": [
-      "A defender overlapping on the outside",
-      "A midfielder running behind the striker",
-      "A full-back running inside the winger",
-      "A winger switching flanks"
+      "Rinus Michels",
+      "Louis van Gaal"
     ],
     "answerIndex": 2,
-    "points": 20
+    "points": 10
   },
   {
-    "question": "Which player role focuses on disrupting opponent’s play and recovering possession?",
+    "question": "Who was the first African player to win the Ballon d'Or?",
     "options": [
-      "Trequartista",
-      "Box-to-box midfielder",
-      "Ball-winning midfielder",
-      "Libero"
+      "George Weah",
+      "Samuel Eto'o",
+      "Roger Milla",
+      "Didier Drogba"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which country won the most Copa América titles by 2000?",
+    "options": [
+      "Argentina",
+      "Brazil",
+      "Uruguay",
+      "Chile"
     ],
     "answerIndex": 2,
     "points": 15
   },
   {
-    "question": "What is 'verticality' in football tactics?",
+    "question": "Who was England’s manager during their 1966 World Cup win?",
     "options": [
-      "Maintaining a low defensive block",
-      "Direct, progressive ball movement forward",
-      "Switching flanks repeatedly",
-      "Retaining possession with short passes"
-    ],
-    "answerIndex": 1,
-    "points": 20
-  },
-  {
-    "question": "What tactical role requires a striker to constantly press and chase defenders?",
-    "options": [
-      "Poacher",
-      "Target man",
-      "Pressing forward",
-      "Deep-lying forward"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "Which coach is best known for popularizing 'vertical tiki-taka'?",
-    "options": [
-      "Luis Enrique",
-      "Ernesto Valverde",
-      "Diego Simeone",
-      "Pep Guardiola"
+      "Alf Ramsey",
+      "Bobby Robson",
+      "Ron Greenwood",
+      "Don Revie"
     ],
     "answerIndex": 0,
     "points": 10
   },
   {
-    "question":"Which manager won the UEFA Champions League with two different clubs between 2000 and 2025?",
-    "options":[
-      "Pep Guardiola",
-      "José Mourinho",
-      "Carlo Ancelotti",
-      "Zinedine Zidane"
-    ],
-    "answerIndex":2,
-    "points":20
-  },
-  {
-    "question":"Which national team won the most major international tournaments between 2000 and 2025?",
-    "options":[
-      "Germany",
-      "France",
-      "Brazil",
-      "Spain"
-    ],
-    "answerIndex":3,
-    "points":30
-  },
-  {
-    "question":"Which coach led Leicester City to a shocking Premier League title win in 2015-2016?",
-    "options":[
-      "Brendan Rodgers",
-      "Claudio Ranieri",
-      "Nigel Pearson",
-      "Sam Allardyce"
-    ],
-    "answerIndex":1,
-    "points":15
-  },
-  {
-    "question":"Who scored the decisive goal in the 2014 World Cup final?",
-    "options":[
-      "Thomas Muller",
-      "Mario Gotze",
-      "Mesut Ozil",
-      "Andre Schucrrle"
-    ],
-    "answerIndex":1,
-    "points":25
-  },
-  {
-    "question":"Which country won Euro 2004 in one of the biggest upsets in football history?",
-    "options":[
-      "Portugal",
-      "Italy",
-      "Greece",
-      "Czech Republic"
-    ],
-    "answerIndex":2,
-    "points":30
-  },
-  {
-    "question":"Which team was the first to win the Club World Cup three times in a row (2016-2018)?",
-    "options":[
-      "Barcelona",
-      "Liverpool",
-      "Bayern Munich",
-      "Real Madrid"
-    ],
-    "answerIndex":3,
-    "points":30
-  },
-  {
-    "question":"Who scored a hat-trick in the 2022 World Cup final?",
-    "options":[
-      "Lionel Messi",
-      "Kylian Mbappe",
-      "Olivier Giroud",
-      "Karim Benzema"
-    ],
-    "answerIndex":1,
-    "points":20
-  },
-  {
-    "question":"Who won the Ballon d'Or in 2018, breaking Messi and Ronaldo's streak?",
-    "options":[
-      "Luka Modric",
-      "Neymar",
-      "Kylian Mbappe",
-      "Mohamed Salah"
-    ],
-    "answerIndex":0,
-    "points":10
-  },
-  {
-    "question":"Which team made a dramatic comeback from 3-0 down to win the 2005 UCL Final?",
-    "options":[
-      "Chelsea",
-      "Liverpool",
-      "AC Milan",
-      "Barcelona"
-    ],
-    "answerIndex":1,
-    "points":30
-  },
-  {
-    "question": "Which country used a 3-4-2-1 to great effect during Euro 2020?",
+    "question": "Which club was known for its 'catenaccio' defensive style?",
     "options": [
-      "Italy",
-      "England",
-      "Germany",
-      "Denmark"
-    ],
-    "answerIndex": 3,
-    "points": 30
-  },
-  {
-    "question": "Which manager is associated with the concept of 'Juego de Posición' (positional play)?",
-    "options": [
-      "Diego Simeone",
-      "Marcelo Bielsa",
-      "Pep Guardiola",
-      "José Mourinho"
-    ],
-    "answerIndex": 2,
-    "points": 20
-  },
-  {
-    "question": "Which system emphasizes creating numerical superiority in every zone of the pitch?",
-    "options": [
-      "Vertical tiki-taka",
-      "Man-to-man marking",
-      "Positional play",
-      "Low block"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What was significant about France’s setup in the 2018 World Cup final?",
-    "options": [
-      "They played with no striker",
-      "They used a compact 4-4-2 to counter",
-      "They sat deep and countered with pace",
-      "They played 3 at the back"
-    ],
-    "answerIndex": 2,
-    "points": 35
-  },
-  {
-    "question": "Which team used a back three and inverted wing-backs to dominate the Bundesliga under Julian Nagelsmann?",
-    "options": [
-      "RB Leipzig",
-      "Borussia Dortmund",
-      "Bayern Munich",
-      "Hoffenheim"
-    ],
-    "answerIndex": 3,
-    "points": 20
-  },
-  {
-    "question": "Which club was famous for employing a highly fluid 3-1-4-2 under Gian Piero Gasperini?",
-    "options": [
+      "Inter Milan",
+      "Juventus",
       "Napoli",
-      "Atalanta",
-      "Torino",
-      "Sassuolo"
+      "AC Milan"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "What year did the Bosman ruling change football transfers in Europe?",
+    "options": [
+      "1995",
+      "1987",
+      "2001",
+      "1999"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which legendary goalkeeper captained the Soviet Union in the 1960s?",
+    "options": [
+      "Lev Yashin",
+      "Rinat Dasayev",
+      "Igor Akinfeev",
+      "Anatoliy Demyanenko"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which club won the first English Premier League title in 1992-93?",
+    "options": [
+      "Arsenal",
+      "Manchester United",
+      "Blackburn Rovers",
+      "Leeds United"
     ],
     "answerIndex": 1,
-    "points": 20
+    "points": 5
   },
   {
-    "question": "Which midfielder was central to Spain’s Euro 2012 dominance with a false 9 system?",
+    "question": "Which World Cup final ended in a penalty shootout for the first time?",
     "options": [
-      "Xavi",
-      "David Silva",
-      "Andrés Iniesta",
-      "Cesc Fàbregas"
-    ],
-    "answerIndex": 3,
-    "points": 20
-  },
-  {
-    "question": "What made Italy's approach unique during Euro 2020?",
-    "options": [
-      "Defensive-first mentality",
-      "Sweeper system",
-      "Flexible midfield rotation and attacking full-backs",
-      "Strict zonal man-marking"
-    ],
-    "answerIndex": 2,
-    "points": 30
-  },
-  {
-    "question": "Which of these best describes a ‘third man run’ in football?",
-    "options": [
-      "A winger switching flanks",
-      "A late run by a player receiving a pass after two teammates combine",
-      "A center-back pushing forward",
-      "A striker running offside to distract defenders"
-    ],
-    "answerIndex": 1,
-    "points": 20
-  },
-  {
-    "question": "What tactic is used to neutralize a high press through central overloads?",
-    "options": [
-      "Inverted full-backs",
-      "Double pivot with third man support",
-      "Target man hold-up",
-      "Deep block"
+      "1986",
+      "1994",
+      "1990",
+      "1998"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Who was the tactical mastermind behind Chile’s aggressive 3-4-1-2 at Copa América 2016?",
+    "question": "What major rule change was introduced to football in 1992?",
     "options": [
-      "Tite",
-      "Jorge Sampaoli",
-      "Marcelo Bielsa",
-      "Juan Antonio Pizzi"
+      "The golden goal rule",
+      "Ban on back-passes to goalkeepers",
+      "VAR implementation",
+      "Offside rule modified"
+    ],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Which player famously scored a hat trick in a World Cup final?",
+    "options": [
+      "Pelé",
+      "Zidane",
+      "Geoff Hurst",
+      "Müller"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "What country did Zinedine Zidane score two headers against in the 1998 World Cup final?",
+    "options": [
+      "Brazil",
+      "Germany",
+      "Netherlands",
+      "Italy"
+    ],
+    "answerIndex": 0,
+    "points": 5
+  },
+  {
+    "question": "Which club did Johan Cruyff both play for and manage, winning the European Cup in both roles?",
+    "options": [
+      "Ajax",
+      "Barcelona",
+      "Feyenoord",
+      "PSV"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which African country reached the World Cup quarterfinals in 1990?",
+    "options": [
+      "Ghana",
+      "Nigeria",
+      "Senegal",
+      "Cameroon"
     ],
     "answerIndex": 3,
-    "points": 30
+    "points": 10
+  },
+  {
+    "question": "What was the outcome of the 2005 Champions League final between Liverpool and AC Milan?",
+    "options": [
+      "AC Milan won 3-1",
+      "Liverpool won 4-3",
+      "Liverpool won on penalties after a 3-3 draw",
+      "Match abandoned due to riots"
+    ],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Which German striker was top scorer at the 1970 World Cup?",
+    "options": [
+      "Franz Beckenbauer",
+      "Karl-Heinz Rummenigge",
+      "Gerd Müller",
+      "Uwe Seeler"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "What club did Diego Maradona join after leaving Barcelona in 1984?",
+    "options": [
+      "Boca Juniors",
+      "Napoli",
+      "Sevilla",
+      "River Plate"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which team knocked Brazil out of the 1982 World Cup?",
+    "options": [
+      "Italy",
+      "Argentina",
+      "France",
+      "West Germany"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "What was the famous tactical innovation of Helenio Herrera's Inter Milan?",
+    "options": [
+      "High pressing",
+      "False fullbacks",
+      "Catenaccio with a sweeper",
+      "Inverted wingers"
+    ],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Which World Cup saw the introduction of yellow and red cards?",
+    "options": [
+      "1966",
+      "1970",
+      "1974",
+      "1962"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which club did George Best famously play for?",
+    "options": [
+      "Liverpool",
+      "Manchester City",
+      "Manchester United",
+      "Celtic"
+    ],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Which team won the UEFA Cup three times in a row in the 2010s?",
+    "options": [
+      "Chelsea",
+      "Sevilla",
+      "Atletico Madrid",
+      "Shakhtar Donetsk"
+    ],
+    "answerIndex": 1,
+    "points": 10
   }
 ]
