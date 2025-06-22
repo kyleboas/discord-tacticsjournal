@@ -106,14 +106,16 @@ client.once('ready', async () => {
 const commandCache = new Collection();
 
 client.on('messageCreate', async (message) => {
-  if (message.author.bot) return; 
+  if (message.author.bot) return;
 
   const xLinkRegex = /https?:\/\/(?:www\.)?x\.com\//gi;
   if (!xLinkRegex.test(message.content)) return;
 
-  // Check for media in embeds
+  // Wait briefly for embeds to resolve
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   const hasMedia = message.embeds.some(embed =>
-    embed.image || embed.video || embed.thumbnail
+    Boolean(embed.image || embed.thumbnail || embed.video)
   );
 
   if (!hasMedia) return;
