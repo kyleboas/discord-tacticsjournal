@@ -111,12 +111,6 @@ client.on('messageCreate', async (message) => {
   const xLinkRegex = /https?:\/\/(?:www\.)?x\.com\//gi;
   if (!xLinkRegex.test(message.content)) return;
 
-  // Wait for embeds to load
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  const hasVideoEmbed = message.embeds.some(embed => embed.video);
-  if (!hasVideoEmbed) return;
-
   const fixedContent = message.content.replace(xLinkRegex, 'https://fixupx.com/');
 
   try {
