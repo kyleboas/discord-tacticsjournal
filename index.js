@@ -111,6 +111,13 @@ client.on('messageCreate', async (message) => {
   const xLinkRegex = /https?:\/\/(?:www\.)?x\.com\//gi;
   if (!xLinkRegex.test(message.content)) return;
 
+  // Check for media in embeds
+  const hasMedia = message.embeds.some(embed =>
+    embed.image || embed.video || embed.thumbnail
+  );
+
+  if (!hasMedia) return;
+
   const fixedContent = message.content.replace(xLinkRegex, 'https://fixupx.com/');
 
   try {
