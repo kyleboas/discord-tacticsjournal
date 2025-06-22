@@ -111,6 +111,15 @@ client.on('messageCreate', async (message) => {
   const xLinkRegex = /https?:\/\/(?:www\.)?x\.com\//gi;
   if (!xLinkRegex.test(message.content)) return;
 
+  // Give Discord time to load embeds
+  await new Promise(res => setTimeout(res, 1500));
+
+  const hasMedia = message.embeds.some(embed =>
+    embed.image || embed.video || embed.thumbnail
+  );
+
+  if (!hasMedia) return;
+
   const fixedContent = message.content.replace(xLinkRegex, 'https://fixupx.com/');
 
   try {
