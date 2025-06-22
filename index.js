@@ -111,11 +111,11 @@ client.on('messageCreate', async (message) => {
   const xLinkRegex = /https?:\/\/(?:www\.)?x\.com\//gi;
   if (!xLinkRegex.test(message.content)) return;
 
-  // Wait briefly for embeds to resolve
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Give Discord time to load embeds
+  await new Promise(res => setTimeout(res, 1500));
 
   const hasMedia = message.embeds.some(embed =>
-    Boolean(embed.image || embed.thumbnail || embed.video)
+    embed.image || embed.video || embed.thumbnail
   );
 
   if (!hasMedia) return;
