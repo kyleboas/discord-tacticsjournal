@@ -9,7 +9,7 @@ export function setupMatchReminderScheduler(client) {
     const matches = await getMatchReminders();
 
     const grouped60 = {};
-    const groupedKickoff = {};
+    const groupedKickoff = {}; 
 
     for (const match of matches) {
       const matchTime = new Date(match.match_time);
