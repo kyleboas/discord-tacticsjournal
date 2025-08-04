@@ -1,6 +1,7 @@
 // db.js
 import pkg from 'pg';
 const { Pool } = pkg;
+import { getISOWeek } from 'date-fns';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -180,17 +181,17 @@ export async function getActiveQuizFromDB() {
   return res.rows[0] || null;
 }
 
-
 export async function recordQuizAnswerDetailed({ userId, username, selectedIndex, messageId, isCorrect, points }) {
   const now = new Date();
   const date = now.toISOString().split('T')[0];
+  const isoWeek = `${now.getUTCFullYear()}-W${getISOWeek(now).toString().padStart(2, '0')}`;
 
   await pool.query(`
-    INSERT INTO qotd_attempts (date, time, message_id, user_id, username, selected_index, points)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    INSERT INTO qotd_attempts (date, time, message_id, user_id, username, selected_index, points, week)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT (user_id, message_id)
-    DO UPDATE SET time = $2, selected_index = $6, points = $7, username = $5
-  `, [date, now, messageId, userId, username, selectedIndex, isCorrect ? points : 0]);
+    DO UPDATE SET time = $2, selected_index = $6, points = $7, username = $5, week = $8
+  `, [date, now, messageId, userId, username, selectedIndex, isCorrect ? points : 0, isoWeek]);
 
   if (isCorrect) {
     await pool.query(`
@@ -239,6 +240,51 @@ export async function getQuizLeaderboard(userId) {
   };
 }
 
+export async function getWeeklyLeaderboard(userId) {
+  const now = new Date();
+  const isoWeek = `${now.getUTCFullYear()}-W${getISOWeek(now).toString().padStart(2, '0')}`;
+
+  const topRes = await pool.query(`
+    SELECT username, SUM(points) AS total_points, user_id
+    FROM qotd_attempts
+    WHERE week = $1
+    GROUP BY user_id, username
+    ORDER BY total_points DESC
+    LIMIT 10
+  `, [isoWeek]);
+
+  const top10 = topRes.rows;
+
+  const isInTop10 = top10.some(row => row.user_id === userId);
+
+  let userRankInfo = null;
+
+  if (!isInTop10) {
+    const rankRes = await pool.query(`
+      SELECT username, total_points, rank FROM (
+        SELECT user_id, username, SUM(points) AS total_points,
+               RANK() OVER (ORDER BY SUM(points) DESC) AS rank
+        FROM qotd_attempts
+        WHERE week = $1
+        GROUP BY user_id, username
+      ) ranked
+      WHERE user_id = $2
+    `, [isoWeek, userId]);
+
+    if (rankRes.rows.length > 0) {
+      userRankInfo = rankRes.rows[0];
+    }
+  }
+
+  return { top10, userRankInfo };
+}
+
+export async function ensureWeeklyLeaderboardSchema() {
+  await pool.query(`
+    ALTER TABLE qotd_attempts
+    ADD COLUMN IF NOT EXISTS week TEXT;
+  `);
+}
 
 export async function ensureStrikeSchema() {
   await pool.query(`

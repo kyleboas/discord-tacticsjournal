@@ -236,20 +236,26 @@ export async function execute(interaction) {
   }
 
   if (subcommand === 'leaderboard') {
-    const { top10, userRankInfo } = await getQuizLeaderboard(interaction.user.id);
+    const type = interaction.options.getString('type') || 'all-time';
+
+    const { top10, userRankInfo } = type === 'weekly'
+      ? await getWeeklyLeaderboard(interaction.user.id)
+      : await getQuizLeaderboard(interaction.user.id);
 
     if (!top10.length) {
       return interaction.reply({
-        content: 'No leaderboard data yet.',
+        content: `No ${type} leaderboard data yet.`,
         flags: MessageFlags.Ephemeral
       });
     }
+
+    const title = type === 'weekly' ? '📆 Weekly Leaderboard' : '🏆 All-Time Leaderboard';
 
     const leaderboardMsg = top10
       .map((user, index) => `**${index + 1}.** ${user.username} - ${user.total_points} pts`)
       .join('\n');
 
-    let reply = `**Question of the Day Leaderboard:**\n${leaderboardMsg}`;
+    let reply = `**${title}**\n${leaderboardMsg}`;
 
     if (userRankInfo) {
       reply += `\n\nYou are ranked **#${userRankInfo.rank}** with **${userRankInfo.total_points}** points.`;

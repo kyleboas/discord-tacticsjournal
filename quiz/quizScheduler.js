@@ -10,11 +10,13 @@ import {
   Events,
   MessageFlags
 } from 'discord.js';
-import { recordQuizAnswerDetailed, getActiveQuizFromDB, setActiveQuizInDB  } from '../db.js';
+import { recordQuizAnswerDetailed, getActiveQuizFromDB, setActiveQuizInDB, getWeeklyLeaderboard  } from '../db.js';
+
 
 const CHANNEL_ID = '1372225536406978640';
 const ROLE_ID = '1372372259812933642';
 const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
+const { top10 } = await   getWeeklyLeaderboard(client.user.id); // dummy userId
 let todayMessageId = null;
 let previousMessageId = null;
 let todayQuestionIndex = null;
@@ -78,6 +80,23 @@ export async function runTestQuiz(client) {
   todayMessageId = msg.id;
   previousMessageId = msg.id;
   quizMessage = msg;
+  
+  if (top10.length) {
+    const leaderboardText = top10
+      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
+      .join('\n');
+
+    const leaderboardEmbed = new EmbedBuilder()
+      .setTitle('📆 Weekly Leaderboard')
+      .setDescription(leaderboardText)
+      .setColor(0x2ecc71)
+      .setTimestamp();
+
+    await channel.send({
+      embeds: [leaderboardEmbed],
+      allowedMentions: { parse: [] } // ensures no pings
+    });
+  }
   
   // Set a timeout to close the quiz after 60 seconds
   testQuizTimeout = setTimeout(async () => {
@@ -173,6 +192,23 @@ export async function runDailyQuiz(client) {
   todayMessageId = msg.id;
   previousMessageId = msg.id;
   quizMessage = msg;
+  
+  if (top10.length) {
+    const leaderboardText = top10
+      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
+      .join('\n');
+
+    const leaderboardEmbed = new EmbedBuilder()
+      .setTitle('📆 Weekly Leaderboard')
+      .setDescription(leaderboardText)
+      .setColor(0x2ecc71)
+      .setTimestamp();
+
+    await channel.send({
+      embeds: [leaderboardEmbed],
+      allowedMentions: { parse: [] } // ensures no pings
+    });
+  }
 }
 
 export function setupQuizScheduler(client) {
