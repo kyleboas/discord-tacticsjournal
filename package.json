@@ -10,6 +10,7 @@
     "fs": "^0.0.1-security",
     "pg": "^8.11.1",
     "string-similarity": "^4.0.4",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "date-fns": "^3.3.1"
   }
 }
