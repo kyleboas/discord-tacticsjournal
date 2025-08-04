@@ -9,7 +9,7 @@ import {
   setPlayerScore,
   getAverageScores,
   getQuizLeaderboard,
-  ensureWeekColumnExists
+  ensureWeekColumnExists,
   ensureQuizSchema,
   ensureStrikeSchema, 
   ensureMajorStrikeSchema,
