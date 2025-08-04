@@ -9,7 +9,7 @@ import {
   setPlayerScore,
   getAverageScores,
   getQuizLeaderboard,
-  ensureWeekColumnExists,
+  ensureWeeklyLeaderboardSchema,
   ensureQuizSchema,
   ensureStrikeSchema, 
   ensureMajorStrikeSchema,
@@ -76,7 +76,7 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
 
-  await ensureWeekColumnExists();
+  await ensureWeeklyLeaderboardSchema();
   await ensureQuizSchema();
   await ensureStrikeSchema();
   await ensureMajorStrikeSchema();
