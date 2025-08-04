@@ -5,7 +5,9 @@ import {
 } from 'discord.js';
 import {
   getQuizLeaderboard,
-  recordQuizAnswerDetailed
+  getWeeklyLeaderboard,
+  recordQuizAnswerDetailed,
+  clearActiveQuizInDB
 } from '../db.js';
 import {
   runDailyQuiz,
@@ -48,7 +50,16 @@ export const data = new SlashCommandBuilder()
     sub.setName('close').setDescription('Manually close the active quiz')
   )
   .addSubcommand(sub =>
-    sub.setName('leaderboard').setDescription('View the quiz leaderboard')
+    sub.setName('leaderboard')
+      .setDescription('View the quiz leaderboard')
+      .addStringOption(opt =>
+        opt.setName('type')
+          .setDescription('Leaderboard type')
+          .addChoices(
+            { name: 'All-Time', value: 'all-time' },
+            { name: 'Weekly', value: 'weekly' }
+          )
+      )
   );
 
 export async function execute(interaction) {
@@ -94,7 +105,6 @@ export async function execute(interaction) {
         });
       }
 
-      // Get the first non-empty line of the embed description
       const lines = embed.description?.split('\n') || [];
       const questionText = lines.find(line => line.trim());
 
@@ -188,7 +198,7 @@ export async function execute(interaction) {
 
     await runDailyQuiz(interaction.client);
     
-    const msg = await     channel.messages.fetch(channel.lastMessageId);
+    const msg = await channel.messages.fetch(channel.lastMessageId);
     const index = new Date().getDate() % QUESTIONS.length;
     await setActiveQuizState({
       messageId: msg.id,
@@ -220,7 +230,6 @@ export async function execute(interaction) {
       console.warn('Could not delete quiz message:', err.message);
     }
 
-    // Reset quiz state
     todayMessageId = null;
     todayQuestionIndex = null;
     todayCorrectIndex = null;
