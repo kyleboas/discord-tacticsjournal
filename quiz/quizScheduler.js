@@ -10,13 +10,16 @@ import {
   Events,
   MessageFlags
 } from 'discord.js';
-import { recordQuizAnswerDetailed, getActiveQuizFromDB, setActiveQuizInDB, getWeeklyLeaderboard  } from '../db.js';
-
+import {
+  recordQuizAnswerDetailed,
+  getActiveQuizFromDB,
+  setActiveQuizInDB,
+  getWeeklyLeaderboard
+} from '../db.js';
 
 const CHANNEL_ID = '1372225536406978640';
 const ROLE_ID = '1372372259812933642';
 const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
-const { top10 } = await   getWeeklyLeaderboard(client.user.id); // dummy userId
 let todayMessageId = null;
 let previousMessageId = null;
 let todayQuestionIndex = null;
@@ -28,10 +31,7 @@ let quizMessage = null;
 let quizChannelId = CHANNEL_ID;
 
 export async function runTestQuiz(client) {
-  // Clear any existing test quiz timeout
-  if (testQuizTimeout) {
-    clearTimeout(testQuizTimeout);
-  }
+  if (testQuizTimeout) clearTimeout(testQuizTimeout);
 
   const questionIndex = Math.floor(Math.random() * QUESTIONS.length);
   const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
@@ -53,10 +53,7 @@ export async function runTestQuiz(client) {
 
   const row = new ActionRowBuilder().addComponents(
     options.map((_, i) =>
-      new ButtonBuilder()
-        .setCustomId(`quiz:${i}`)
-        .setLabel(labels[i])
-        .setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId(`quiz:${i}`).setLabel(labels[i]).setStyle(ButtonStyle.Primary)
     )
   );
 
@@ -80,46 +77,26 @@ export async function runTestQuiz(client) {
   todayMessageId = msg.id;
   previousMessageId = msg.id;
   quizMessage = msg;
-  
-  if (top10.length) {
-    const leaderboardText = top10
-      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
-      .join('\n');
 
-    const leaderboardEmbed = new EmbedBuilder()
-      .setTitle('📆 Weekly Leaderboard')
-      .setDescription(leaderboardText)
-      .setColor(0x2ecc71)
-      .setTimestamp();
-
-    await channel.send({
-      embeds: [leaderboardEmbed],
-      allowedMentions: { parse: [] } // ensures no pings
-    });
-  }
-  
-  // Set a timeout to close the quiz after 60 seconds
   testQuizTimeout = setTimeout(async () => {
     try {
       const quizMsg = await channel.messages.fetch(todayMessageId);
       await quizMsg.delete();
-      
-      // Reset quiz state
+
       todayMessageId = null;
       todayQuestionIndex = null;
       todayCorrectIndex = null;
       todayPoints = 0;
       userResponses.clear();
-      
-      // Notify that the test quiz has ended
+
       await channel.send({
-        content: "The test quiz has ended. Thanks for participating!",
+        content: 'The test quiz has ended. Thanks for participating!',
         flags: MessageFlags.Ephemeral
       });
     } catch (err) {
       console.warn('Error closing test quiz:', err.message);
     }
-  }, 60000); // 60 seconds
+  }, 60000);
 }
 
 export async function setActiveQuizState({ messageId, questionIndex, correctIndex, points, message }) {
@@ -129,7 +106,6 @@ export async function setActiveQuizState({ messageId, questionIndex, correctInde
   todayPoints = points;
   quizMessage = message;
 
-  // Persist to DB
   await setActiveQuizInDB({
     messageId,
     questionIndex,
@@ -151,24 +127,18 @@ export async function runDailyQuiz(client) {
   const labels = ['A', 'B', 'C', 'D'];
   const questionText = options.map((opt, i) => `${labels[i]}) ${opt}`).join('\n');
 
-  // Calculate time until 8AM EST tomorrow
   const now = new Date();
   const closesAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
   const nextUnix = Math.floor(closesAt.getTime() / 1000);
-  
+
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
-    .setDescription(
-      `${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe next question will be posted <t:${nextUnix}:R>.`
-    )
+    .setDescription(`${question}\n\n${questionText}\n\n**Points:** ${points}\n\nThe next question will be posted <t:${nextUnix}:R>.`)
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
     options.map((_, i) =>
-      new ButtonBuilder()
-        .setCustomId(`quiz:${i}`)
-        .setLabel(labels[i])
-        .setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId(`quiz:${i}`).setLabel(labels[i]).setStyle(ButtonStyle.Primary)
     )
   );
 
@@ -192,7 +162,9 @@ export async function runDailyQuiz(client) {
   todayMessageId = msg.id;
   previousMessageId = msg.id;
   quizMessage = msg;
-  
+
+  const { top10 } = await getWeeklyLeaderboard('bot-weekly');
+
   if (top10.length) {
     const leaderboardText = top10
       .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
@@ -206,7 +178,7 @@ export async function runDailyQuiz(client) {
 
     await channel.send({
       embeds: [leaderboardEmbed],
-      allowedMentions: { parse: [] } // ensures no pings
+      allowedMentions: { parse: [] }
     });
   }
 }
