@@ -9,8 +9,9 @@ import {
   setPlayerScore,
   getAverageScores,
   getQuizLeaderboard,
+  ensureWeekColumnExists
   ensureQuizSchema,
-  ensureStrikeSchema,
+  ensureStrikeSchema, 
   ensureMajorStrikeSchema,
   recordQuizAnswerDetailed
 } from './db.js';
@@ -75,6 +76,7 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
   console.log(`Bot is online as ${client.user.tag}`);
 
+  await ensureWeekColumnExists();
   await ensureQuizSchema();
   await ensureStrikeSchema();
   await ensureMajorStrikeSchema();
