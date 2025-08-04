@@ -1,86 +1,229 @@
 [
   {
-    "question": "Who captained Italy to World Cup victory in 1982?",
+    "question": "Which player is the all-time leading scorer in the FIFA World Cup?",
     "options": [
-      "Paolo Rossi",
-      "Dino Zoff",
-      "Franco Baresi",
-      "Marco Tardelli"
+      "Pelé",
+      "Miroslav Klose",
+      "Ronaldo (Brazil)",
+      "Gerd Müller"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Which club won the first ever European Cup in 1956?",
+    "question": "Which team was famously known as 'The Invincibles' for completing a Premier League season without a single loss?",
     "options": [
-      "Real Madrid",
-      "AC Milan",
-      "Benfica",
-      "Reims"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "What was the 'Miracle of Bern'?",
-    "options": [
-      "West Germany defeating Hungary in the 1954 World Cup final",
-      "East Germany beating West Germany in 1974",
-      "Bern hosting the first ever Champions League final",
-      "Switzerland reaching the World Cup semi-final in 1954"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Which player was nicknamed 'The Black Panther'?",
-    "options": [
-      "Pelé",
-      "Didier Drogba",
-      "Eusébio",
-      "George Weah"
+      "Manchester United",
+      "Chelsea",
+      "Arsenal",
+      "Liverpool"
     ],
     "answerIndex": 2,
     "points": 10
   },
   {
-    "question": "Which country hosted the first ever FIFA World Cup?",
+    "question": "The 'Golden Goal' rule, which ended a match as soon as a goal was scored in extra time, was famously used in the final of which major tournament?",
     "options": [
-      "Argentina",
-      "France",
-      "Brazil",
-      "Uruguay"
-    ],
-    "answerIndex": 3,
-    "points": 10
-  },
-  {
-    "question": "What formation is often credited to the Hungarian 'Mighty Magyars' team of the 1950s?",
-    "options": [
-      "4-2-3-1",
-      "WM",
-      "4-4-2",
-      "4-3-3"
+      "1998 World Cup",
+      "Euro 2000",
+      "1994 World Cup",
+      "Euro 1996"
     ],
     "answerIndex": 1,
     "points": 15
   },
   {
-    "question": "Who scored the 'Hand of God' goal?",
+    "question": "Which Italian defender was nicknamed 'The Wall' for his strong defensive play?",
     "options": [
-      "Diego Maradona",
-      "Zico",
-      "Rivelino",
-      "Hugo Sánchez"
+      "Fabio Cannavaro",
+      "Paolo Maldini",
+      "Franco Baresi",
+      "Alessandro Nesta"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "What was the name of the football stadium that hosted the 'Maracanazo,' the decisive match of the 1950 World Cup?",
+    "options": [
+      "Estádio do Pacaembu",
+      "Estádio do Morumbi",
+      "Estádio do Maracanã",
+      "Estádio Nacional"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which country won the first ever European Championship in 1960?",
+    "options": [
+      "Spain",
+      "Soviet Union",
+      "West Germany",
+      "France"
+    ],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Which player holds the record for the most goals scored in a single calendar year?",
+    "options": [
+      "Lionel Messi",
+      "Pelé",
+      "Cristiano Ronaldo",
+      "Gerd Müller"
     ],
     "answerIndex": 0,
     "points": 5
   },
   {
-    "question": "Which Dutch manager is credited with popularizing 'Total Football'?",
+    "question": "Who was the first player to win the Ballon d'Or five times?",
     "options": [
-      "Guus Hiddink",
       "Johan Cruyff",
+      "Michel Platini",
+      "Alfredo Di Stéfano",
+      "Lionel Messi"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "Which club did George Best, Denis Law, and Bobby Charlton play for together in the 1960s?",
+    "options": [
+      "Liverpool",
+      "Celtic",
+      "Manchester United",
+      "Leeds United"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "What was the nickname of the Brazilian national team that won the 1970 World Cup, often considered one of the greatest teams of all time?",
+    "options": [
+      "The 'Seleção'",
+      "The 'Auriverde'",
+      "The 'Canarinho'",
+      "The 'Joga Bonito'"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which German player was the first to score a goal in three different World Cup finals?",
+    "options": [
+      "Gerd Müller",
+      "Franz Beckenbauer",
+      "Uwe Seeler",
+      "Lothar Matthäus"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "The 'Dream Team' managed by Johan Cruyff, which won four consecutive La Liga titles and the European Cup, played for which club?",
+    "options": [
+      "Ajax",
+      "Barcelona",
+      "AC Milan",
+      "Bayern Munich"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "In what year was the first UEFA Champions League final held under its current name, replacing the European Cup?",
+    "options": [
+      "1992",
+      "1990",
+      "1994",
+      "1989"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which player is the only one to have won the UEFA Champions League with three different clubs?",
+    "options": [
+      "Clarence Seedorf",
+      "Zlatan Ibrahimović",
+      "Samuel Eto'o",
+      "Cristiano Ronaldo"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which country won the 1974 World Cup, hosted in their own country?",
+    "options": [
+      "Brazil",
+      "Italy",
+      "West Germany",
+      "Netherlands"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "What famous football match is known as the 'Game of the Century,' a semi-final between Italy and West Germany?",
+    "options": [
+      "1970 World Cup Semi-Final",
+      "1982 World Cup Semi-Final",
+      "1990 World Cup Final",
+      "1966 World Cup Final"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which goalkeeper was the captain of the West German team that won the 1990 World Cup?",
+    "options": [
+      "Harald Schumacher",
+      "Bodo Illgner",
+      "Oliver Kahn",
+      "Sepp Maier"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Who scored the winning goal for France in the 1998 World Cup final?",
+    "options": [
+      "Zinedine Zidane",
+      "Thierry Henry",
+      "Emmanuel Petit",
+      "Lilian Thuram"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which English club was the first to win the European Cup?",
+    "options": [
+      "Manchester United",
+      "Liverpool",
+      "Nottingham Forest",
+      "Aston Villa"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which country's national team is nicknamed 'La Celeste'?",
+    "options": [
+      "Argentina",
+      "Uruguay",
+      "Chile",
+      "Colombia"
+    ],
+    "answerIndex": 1,
+    "points": 5
+  },
+  {
+    "question": "Who was the manager of the Netherlands national team that popularized 'Total Football'?",
+    "options": [
+      "Johan Cruyff",
+      "Guus Hiddink",
       "Rinus Michels",
       "Louis van Gaal"
     ],
@@ -88,234 +231,47 @@
     "points": 10
   },
   {
-    "question": "Who was the first African player to win the Ballon d'Or?",
+    "question": "Which club won the first ever FIFA Club World Cup in 2000?",
     "options": [
-      "George Weah",
-      "Samuel Eto'o",
-      "Roger Milla",
-      "Didier Drogba"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which country won the most Copa América titles by 2000?",
-    "options": [
-      "Argentina",
-      "Brazil",
-      "Uruguay",
-      "Chile"
-    ],
-    "answerIndex": 2,
-    "points": 15
-  },
-  {
-    "question": "Who was England’s manager during their 1966 World Cup win?",
-    "options": [
-      "Alf Ramsey",
-      "Bobby Robson",
-      "Ron Greenwood",
-      "Don Revie"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which club was known for its 'catenaccio' defensive style?",
-    "options": [
-      "Inter Milan",
-      "Juventus",
-      "Napoli",
-      "AC Milan"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "What year did the Bosman ruling change football transfers in Europe?",
-    "options": [
-      "1995",
-      "1987",
-      "2001",
-      "1999"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Which legendary goalkeeper captained the Soviet Union in the 1960s?",
-    "options": [
-      "Lev Yashin",
-      "Rinat Dasayev",
-      "Igor Akinfeev",
-      "Anatoliy Demyanenko"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which club won the first English Premier League title in 1992-93?",
-    "options": [
-      "Arsenal",
+      "Real Madrid",
+      "Corinthians",
       "Manchester United",
-      "Blackburn Rovers",
-      "Leeds United"
-    ],
-    "answerIndex": 1,
-    "points": 5
-  },
-  {
-    "question": "Which World Cup final ended in a penalty shootout for the first time?",
-    "options": [
-      "1986",
-      "1994",
-      "1990",
-      "1998"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "What major rule change was introduced to football in 1992?",
-    "options": [
-      "The golden goal rule",
-      "Ban on back-passes to goalkeepers",
-      "VAR implementation",
-      "Offside rule modified"
+      "Vasco da Gama"
     ],
     "answerIndex": 1,
     "points": 15
   },
   {
-    "question": "Which player famously scored a hat trick in a World Cup final?",
+    "question": "Which player is known for scoring the 'Goal of the Century' against England in the 1986 World Cup?",
     "options": [
+      "Gary Lineker",
       "Pelé",
-      "Zidane",
-      "Geoff Hurst",
-      "Müller"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What country did Zinedine Zidane score two headers against in the 1998 World Cup final?",
-    "options": [
-      "Brazil",
-      "Germany",
-      "Netherlands",
-      "Italy"
-    ],
-    "answerIndex": 0,
-    "points": 5
-  },
-  {
-    "question": "Which club did Johan Cruyff both play for and manage, winning the European Cup in both roles?",
-    "options": [
-      "Ajax",
-      "Barcelona",
-      "Feyenoord",
-      "PSV"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Which African country reached the World Cup quarterfinals in 1990?",
-    "options": [
-      "Ghana",
-      "Nigeria",
-      "Senegal",
-      "Cameroon"
-    ],
-    "answerIndex": 3,
-    "points": 10
-  },
-  {
-    "question": "What was the outcome of the 2005 Champions League final between Liverpool and AC Milan?",
-    "options": [
-      "AC Milan won 3-1",
-      "Liverpool won 4-3",
-      "Liverpool won on penalties after a 3-3 draw",
-      "Match abandoned due to riots"
+      "Diego Maradona",
+      "Michel Platini"
     ],
     "answerIndex": 2,
     "points": 5
   },
   {
-    "question": "Which German striker was top scorer at the 1970 World Cup?",
+    "question": "The 'Busby Babes' was the nickname given to the young Manchester United team of the 1950s managed by whom?",
     "options": [
-      "Franz Beckenbauer",
-      "Karl-Heinz Rummenigge",
-      "Gerd Müller",
-      "Uwe Seeler"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What club did Diego Maradona join after leaving Barcelona in 1984?",
-    "options": [
-      "Boca Juniors",
-      "Napoli",
-      "Sevilla",
-      "River Plate"
+      "Alex Ferguson",
+      "Matt Busby",
+      "Ron Atkinson",
+      "Tommy Docherty"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Which team knocked Brazil out of the 1982 World Cup?",
+    "question": "Which city hosted the 1986 World Cup final?",
     "options": [
-      "Italy",
-      "Argentina",
-      "France",
-      "West Germany"
+      "Mexico City",
+      "Madrid",
+      "Rome",
+      "London"
     ],
     "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "What was the famous tactical innovation of Helenio Herrera's Inter Milan?",
-    "options": [
-      "High pressing",
-      "False fullbacks",
-      "Catenaccio with a sweeper",
-      "Inverted wingers"
-    ],
-    "answerIndex": 2,
-    "points": 15
-  },
-  {
-    "question": "Which World Cup saw the introduction of yellow and red cards?",
-    "options": [
-      "1966",
-      "1970",
-      "1974",
-      "1962"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "Which club did George Best famously play for?",
-    "options": [
-      "Liverpool",
-      "Manchester City",
-      "Manchester United",
-      "Celtic"
-    ],
-    "answerIndex": 2,
-    "points": 5
-  },
-  {
-    "question": "Which team won the UEFA Cup three times in a row in the 2010s?",
-    "options": [
-      "Chelsea",
-      "Sevilla",
-      "Atletico Madrid",
-      "Shakhtar Donetsk"
-    ],
-    "answerIndex": 1,
     "points": 10
   }
 ]
