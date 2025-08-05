@@ -304,14 +304,32 @@ export async function getStrikeCount(userId) {
 
 export async function incrementStrike(userId, username) {
   const now = new Date();
-  const res = await pool.query(`
-    INSERT INTO strikes (user_id, username, count, last_strike_at)
-    VALUES ($1, $2, 1, $3)
-    ON CONFLICT (user_id)
-    DO UPDATE SET count = strikes.count + 1, last_strike_at = $3, username = $2
-    RETURNING count
-  `, [userId, username, now]);
-  return res.rows[0].count;
+
+  const { rows } = await pool.query(`
+    SELECT count, last_strike_at FROM strikes WHERE user_id = $1
+  `, [userId]);
+
+  let count = 1;
+
+  if (rows.length > 0) {
+    const lastStrikeTime = new Date(rows[0].last_strike_at);
+    const timeDiff = now - lastStrikeTime;
+
+    if (timeDiff <= 24 * 60 * 60 * 1000) {
+      count = rows[0].count + 1;
+    }
+
+    await pool.query(`
+      UPDATE strikes SET count = $1, last_strike_at = $2, username = $3 WHERE user_id = $4
+    `, [count, now, username, userId]);
+  } else {
+    await pool.query(`
+      INSERT INTO strikes (user_id, username, count, last_strike_at)
+      VALUES ($1, $2, $3, $4)
+    `, [userId, username, count, now]);
+  }
+
+  return count;
 }
 
 export async function incrementMajorStrike(userId, username) {
