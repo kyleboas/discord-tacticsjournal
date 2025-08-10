@@ -2,9 +2,7 @@ import {
   SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
   StringSelectMenuBuilder, EmbedBuilder
 } from 'discord.js';
-import { fetchFixtures } from '../providers/footballApi.js';
-import { upsertFixturesCache, listCachedFixtures, starMatch } from '../db.js';
-import { fetchFixtures } from '../providers/footballApi.js';
+import { fetchFixtures } from '../providers/footballApi.js';  
 
 function chunk(arr, size){const o=[];for(let i=0;i<arr.length;i+=size)o.push(arr.slice(i,i+size));return o;}
 const toTs = d => Math.floor(new Date(d).getTime()/1000);

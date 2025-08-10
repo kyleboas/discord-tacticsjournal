@@ -91,7 +91,9 @@ export async function ensureSchema() {
       name TEXT NOT NULL,
       user_id TEXT NOT NULL,
       username TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      message_id TEXT,
+      channel_id TEXT
     );
   `);
 
@@ -104,12 +106,6 @@ export async function ensureSchema() {
       score NUMERIC(3,1) CHECK (score >= 1.0 AND score <= 10.0),
       UNIQUE(player_name, user_id)
     );
-  `);
-
-  await pool.query(`
-    ALTER TABLE watchlist
-    ADD COLUMN IF NOT EXISTS message_id TEXT,
-    ADD COLUMN IF NOT EXISTS channel_id TEXT;
   `);
 
   await pool.query(`
@@ -126,6 +122,36 @@ export async function ensureSchema() {
     CREATE TABLE IF NOT EXISTS guild_settings (
       guild_id TEXT PRIMARY KEY,
       match_channel_id TEXT
+    );
+  `);
+
+  /* NEW: starred matches */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS starred_matches (
+      id SERIAL PRIMARY KEY,
+      match_id TEXT NOT NULL,
+      match_time TIMESTAMPTZ NOT NULL,
+      home TEXT NOT NULL,
+      away TEXT NOT NULL,
+      league TEXT,
+      source TEXT,
+      channel_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (match_id, channel_id)
+    );
+  `);
+
+  /* NEW: fixtures cache */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS fixtures_cache (
+      match_id TEXT PRIMARY KEY,
+      match_time TIMESTAMPTZ NOT NULL,
+      home TEXT NOT NULL,
+      away TEXT NOT NULL,
+      league TEXT,
+      source TEXT,
+      cached_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
 }
@@ -362,32 +388,6 @@ export async function addMatchReminder(home, away, matchTime, channelId) {
     [home, away, matchTime, channelId]
   );
 }
-
--- starred matches per channel (one curated slate per channel)
-CREATE TABLE IF NOT EXISTS starred_matches (
-  id SERIAL PRIMARY KEY,
-  match_id TEXT NOT NULL,
-  match_time TIMESTAMPTZ NOT NULL,
-  home TEXT NOT NULL,
-  away TEXT NOT NULL,
-  league TEXT,
-  source TEXT,
-  channel_id TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (match_id, channel_id)
-);
-
--- cache of fixtures so listing/pagination is fast and API is not hammered
-CREATE TABLE IF NOT EXISTS fixtures_cache (
-  match_id TEXT PRIMARY KEY,
-  match_time TIMESTAMPTZ NOT NULL,
-  home TEXT NOT NULL,
-  away TEXT NOT NULL,
-  league TEXT,
-  source TEXT,
-  cached_at TIMESTAMPTZ DEFAULT NOW()
-);
 
 export async function upsertFixturesCache(rows) {
   if (!rows?.length) return;
