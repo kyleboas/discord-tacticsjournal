@@ -6,7 +6,7 @@ import {
   ButtonStyle,
   StringSelectMenuBuilder,
   EmbedBuilder
-} from 'discord.js';
+} from 'discord.js'; 
 
 import { fetchFixtures } from '../providers/footballApi.js'; // single-day fetch (we'll loop days)
 import { upsertFixturesCache, listCachedFixtures, starMatch } from '../db.js';
