@@ -363,6 +363,91 @@ export async function addMatchReminder(home, away, matchTime, channelId) {
   );
 }
 
+-- starred matches per channel (one curated slate per channel)
+CREATE TABLE IF NOT EXISTS starred_matches (
+  id SERIAL PRIMARY KEY,
+  match_id TEXT NOT NULL,
+  match_time TIMESTAMPTZ NOT NULL,
+  home TEXT NOT NULL,
+  away TEXT NOT NULL,
+  league TEXT,
+  source TEXT,
+  channel_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (match_id, channel_id)
+);
+
+-- cache of fixtures so listing/pagination is fast and API is not hammered
+CREATE TABLE IF NOT EXISTS fixtures_cache (
+  match_id TEXT PRIMARY KEY,
+  match_time TIMESTAMPTZ NOT NULL,
+  home TEXT NOT NULL,
+  away TEXT NOT NULL,
+  league TEXT,
+  source TEXT,
+  cached_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+export async function upsertFixturesCache(rows) {
+  if (!rows?.length) return;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const r of rows) {
+      await client.query(
+        `INSERT INTO fixtures_cache (match_id, match_time, home, away, league, source)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (match_id)
+         DO UPDATE SET match_time=EXCLUDED.match_time, home=EXCLUDED.home, away=EXCLUDED.away,
+                       league=EXCLUDED.league, source=EXCLUDED.source, cached_at=NOW()`,
+        [r.match_id, r.match_time, r.home, r.away, r.league || null, r.source || null]
+      );
+    }
+    await client.query('COMMIT');
+  } finally {
+    client.release();
+  }
+}
+
+export async function listCachedFixtures({ dateISO }) {
+  const { rows } = await pool.query(
+    `SELECT * FROM fixtures_cache
+     WHERE match_time >= $1::date AND match_time < ($1::date + INTERVAL '1 day')
+     ORDER BY match_time ASC`,
+    [dateISO]
+  );
+  return rows;
+}
+
+export async function starMatch({ match_id, channel_id, user_id }) {
+  const { rows } = await pool.query(`SELECT * FROM fixtures_cache WHERE match_id=$1`, [match_id]);
+  if (!rows.length) throw new Error('Match not found in cache');
+  const m = rows[0];
+  await pool.query(
+    `INSERT INTO starred_matches (match_id, match_time, home, away, league, source, channel_id, user_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+     ON CONFLICT (match_id, channel_id) DO NOTHING`,
+    [m.match_id, m.match_time, m.home, m.away, m.league, m.source, channel_id, user_id]
+  );
+  return m;
+}
+
+export async function unstarMatch({ match_id, channel_id }) {
+  await pool.query(`DELETE FROM starred_matches WHERE match_id=$1 AND channel_id=$2`, [match_id, channel_id]);
+}
+
+export async function getStarredMatchesWindow({ fromISO, toISO }) {
+  const { rows } = await pool.query(
+    `SELECT * FROM starred_matches
+     WHERE match_time >= $1 AND match_time <= $2
+     ORDER BY match_time ASC`,
+    [fromISO, toISO]
+  );
+  return rows;
+}
+
+
 export async function getMatchReminders() {
   const res = await pool.query(`SELECT * FROM match_reminders WHERE match_time > NOW() ORDER BY match_time`);
   return res.rows;
