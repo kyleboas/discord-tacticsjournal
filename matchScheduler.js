@@ -223,11 +223,11 @@ async function dispatchImminentReminders(client) {
       if (!channel) continue;
       await channel.send({
         embeds: [{
-          title: '⚽️ Match Reminder (60 min)',
+          title: '⚽️ Match Reminder',
           description: [
             ...group.lines,
             '',
-            `Starts <t:${group.timestamp}:R>.`
+            `Kickoff <t:${group.timestamp}:R>.`
           ].join('\n')
         }]
       });
@@ -243,7 +243,7 @@ async function dispatchImminentReminders(client) {
       if (!channel) continue;
       await channel.send({
         embeds: [{
-          title: '⚽️ Kickoff in 5!',
+          title: '⚽️ Kickoff!',
           description: group.lines.join('\n')
         }]
       });
