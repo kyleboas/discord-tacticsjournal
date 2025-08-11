@@ -142,7 +142,7 @@ export async function ensureSchema() {
     );
   `);
 
-  /* NEW: fixtures cache */
+  /* NEW: fixtures cache (+ IDs if available) */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS fixtures_cache (
       match_id TEXT PRIMARY KEY,
@@ -154,6 +154,22 @@ export async function ensureSchema() {
       cached_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+  /* Add optional team ID columns if they don't exist */
+  await pool.query(`ALTER TABLE fixtures_cache ADD COLUMN IF NOT EXISTS home_id INTEGER;`);
+  await pool.query(`ALTER TABLE fixtures_cache ADD COLUMN IF NOT EXISTS away_id INTEGER;`);
+
+  /* NEW: team subscriptions (per channel) */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS team_subscriptions (
+      channel_id TEXT NOT NULL,
+      team_id    INTEGER NOT NULL,
+      team_name  TEXT NOT NULL,
+      source     TEXT DEFAULT 'football-data',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (channel_id, team_id)
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_team_subs_channel ON team_subscriptions(channel_id);`);
 }
 
 export async function ensureQuizSchema() {
@@ -211,6 +227,10 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
   const now = new Date();
   const date = now.toISOString().split('T')[0];
   const isoWeek = `${now.getUTCFullYear()}-W${getISOWeek(now).toString().padStart(2, '0')}`;
+
+  await pool.query(`
+    ALTER TABLE IF NOT EXISTS qotd_attempts ADD COLUMN IF NOT EXISTS week TEXT;
+  `);
 
   await pool.query(`
     INSERT INTO qotd_attempts (date, time, message_id, user_id, username, selected_index, points, week)
@@ -381,7 +401,6 @@ export async function ensureMajorStrikeSchema() {
   `);
 }
 
-
 export async function addMatchReminder(home, away, matchTime, channelId) {
   await pool.query(
     `INSERT INTO match_reminders (home, away, match_time, channel_id) VALUES ($1, $2, $3, $4)`,
@@ -389,6 +408,7 @@ export async function addMatchReminder(home, away, matchTime, channelId) {
   );
 }
 
+/* UPDATED: include optional IDs */
 export async function upsertFixturesCache(rows) {
   if (!rows?.length) return;
   const client = await pool.connect();
@@ -396,12 +416,23 @@ export async function upsertFixturesCache(rows) {
     await client.query('BEGIN');
     for (const r of rows) {
       await client.query(
-        `INSERT INTO fixtures_cache (match_id, match_time, home, away, league, source)
-         VALUES ($1,$2,$3,$4,$5,$6)
+        `INSERT INTO fixtures_cache (match_id, match_time, home, away, league, source, home_id, away_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
          ON CONFLICT (match_id)
          DO UPDATE SET match_time=EXCLUDED.match_time, home=EXCLUDED.home, away=EXCLUDED.away,
-                       league=EXCLUDED.league, source=EXCLUDED.source, cached_at=NOW()`,
-        [r.match_id, r.match_time, r.home, r.away, r.league || null, r.source || null]
+                       league=EXCLUDED.league, source=EXCLUDED.source, cached_at=NOW(),
+                       home_id=COALESCE(EXCLUDED.home_id, fixtures_cache.home_id),
+                       away_id=COALESCE(EXCLUDED.away_id, fixtures_cache.away_id)`,
+        [
+          r.match_id,
+          r.match_time,
+          r.home,
+          r.away,
+          r.league || null,
+          r.source || null,
+          r.home_id ?? null,
+          r.away_id ?? null
+        ]
       );
     }
     await client.query('COMMIT');
@@ -447,7 +478,6 @@ export async function getStarredMatchesWindow({ fromISO, toISO }) {
   return rows;
 }
 
-
 export async function getMatchReminders() {
   const res = await pool.query(`SELECT * FROM match_reminders WHERE match_time > NOW() ORDER BY match_time`);
   return res.rows;
@@ -464,4 +494,45 @@ export async function setReminderChannel(guildId, channelId) {
 export async function getReminderChannel(guildId) {
   const res = await pool.query(`SELECT match_channel_id FROM guild_settings WHERE guild_id = $1`, [guildId]);
   return res.rows[0]?.match_channel_id || null;
+}
+
+/* --- NEW: team subscriptions API --- */
+
+export async function subscribeTeams(channel_id, teams /* [{id, name}] */) {
+  if (!teams?.length) return 0;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    let added = 0;
+    for (const t of teams) {
+      await client.query(
+        `INSERT INTO team_subscriptions (channel_id, team_id, team_name)
+         VALUES ($1,$2,$3)
+         ON CONFLICT (channel_id, team_id) DO NOTHING`,
+        [channel_id, t.id, t.name]
+      );
+      added++;
+    }
+    await client.query('COMMIT');
+    return added;
+  } finally {
+    client.release();
+  }
+}
+
+export async function listSubscribedTeams(channel_id) {
+  const { rows } = await pool.query(
+    `SELECT team_id, team_name FROM team_subscriptions WHERE channel_id = $1 ORDER BY team_name`,
+    [channel_id]
+  );
+  return rows; // [{team_id, team_name}]
+}
+
+export async function unsubscribeTeams(channel_id, team_ids /* number[] */) {
+  if (!team_ids?.length) return 0;
+  const { rowCount } = await pool.query(
+    `DELETE FROM team_subscriptions WHERE channel_id = $1 AND team_id = ANY($2::int[])`,
+    [channel_id, team_ids]
+  );
+  return rowCount;
 }
