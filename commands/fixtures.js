@@ -5,15 +5,16 @@ import {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
-  EmbedBuilder
-} from 'discord.js'; 
+  EmbedBuilder,
+  ComponentType
+} from 'discord.js';
 
 import { fetchFixtures } from '../providers/footballApi.js'; // single-day fetch (we'll loop days)
 import { upsertFixturesCache, listCachedFixtures, starMatch } from '../db.js';
 
 function chunk(arr, size) {
   const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(0 + i, i + size));
   return out;
 }
 const toTs = d => Math.floor(new Date(d).getTime() / 1000);
@@ -27,7 +28,10 @@ function addDaysISO(dateISO, d) {
 export const data = new SlashCommandBuilder()
   .setName('fixtures')
   .setDescription('Browse fixtures for a date range, filter, and star in bulk')
-  .addStringOption(o => o.setName('date').setDescription('Start date YYYY-MM-DD').setRequired(true))
+  .addStringOption(o =>
+    o.setName('date')
+      .setDescription('Start date YYYY-MM-DD (optional; defaults to today)')
+  )
   .addIntegerOption(o =>
     o.setName('days')
       .setDescription('Number of days starting from date (default 7, max 14)')
@@ -52,7 +56,21 @@ export async function execute(interaction) {
     if (!interaction.deferred && !interaction.replied) return;
   }
 
-  const startISO = interaction.options.getString('date');
+  // Default date: today (UTC) if user did not provide one
+  const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const inputDate = interaction.options.getString('date');
+  let startISO = inputDate || todayISO;
+
+  // Basic validation/normalization for user-supplied date
+  if (inputDate) {
+    const isYMD = /^\d{4}-\d{2}-\d{2}$/.test(inputDate);
+    const d = new Date(inputDate + 'T00:00:00Z');
+    if (!isYMD || Number.isNaN(d.getTime())) {
+      return interaction.editReply('❌ Invalid date. Use `YYYY-MM-DD` (e.g., `2025-08-11`).');
+    }
+    startISO = d.toISOString().slice(0, 10);
+  }
+
   const days = interaction.options.getInteger('days') ?? 7; // default 7
   const league = interaction.options.getString('league') || undefined; // football-data competitions (e.g., PL,CL)
   const teamFilter = (interaction.options.getString('team') || '').toLowerCase();
@@ -91,7 +109,7 @@ export async function execute(interaction) {
 
   if (!fixtures.length) {
     return interaction.editReply(
-      `No fixtures found from ${startISO} for ${days} day(s)` +
+      `No fixtures found from **${startISO}** for **${days}** day(s)` +
       `${league ? ` • league: ${league}` : ''}` +
       `${teamFilter ? ` • team:${teamFilter}` : ''}.`
     );
@@ -116,8 +134,10 @@ export async function execute(interaction) {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
-                `${league ? ` • ${league}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}`)
+      .setTitle(
+        `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
+        `${league ? ` • ${league}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}`
+      )
       .setDescription(lines.join('\n').trim())
       .setFooter({ text: `Page ${idx + 1}/${pages.length} • ${fixtures.length} total` });
 
@@ -188,9 +208,33 @@ export async function execute(interaction) {
       const disabledRows = msg.components.map(r => {
         const row = ActionRowBuilder.from(r.toJSON());
         row.components = row.components.map(c => {
-          const b = ButtonBuilder.from(c);
-          b.setDisabled(true);
-          return b;
+          const j = c.toJSON ? c.toJSON() : c;
+          // Button
+          if (j.type === ComponentType.Button) {
+            const b = ButtonBuilder.from(j);
+            b.setDisabled(true);
+            return b;
+          }
+          // String select (and treat other selects similarly by trying builder)
+          if (j.type === ComponentType.StringSelect) {
+            const s = StringSelectMenuBuilder.from(j);
+            s.setDisabled(true);
+            return s;
+          }
+          // Fallback: try to disable if supported, otherwise return as-is
+          try {
+            const b = ButtonBuilder.from(j);
+            b.setDisabled(true);
+            return b;
+          } catch {
+            try {
+              const s = StringSelectMenuBuilder.from(j);
+              s.setDisabled(true);
+              return s;
+            } catch {
+              return c;
+            }
+          }
         });
         return row;
       });
