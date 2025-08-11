@@ -8,7 +8,7 @@ import {
   EmbedBuilder,
   ComponentType,
   MessageFlags
-} from 'discord.js';
+} from 'discord.js'; 
 
 import {
   fetchFixtures,           // per-date (optionally per-league)
