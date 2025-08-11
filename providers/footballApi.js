@@ -36,7 +36,7 @@ function batchCompetitionCodes(codes, maxLen = 90) {
   return out;
 }
 
-function cleanTeamName(name) {
+export function cleanTeamName(name) {
   if (!name) return name;
   return name
     .replace(/\bFC\b/gi, '')
@@ -50,8 +50,9 @@ function cleanTeamName(name) {
     .replace(/\bRCD\b/gi, '')
     .replace(/\bCA\b/gi, '')
     .replace(/\bAFC\b/gi, '')
-    .replace(/\s{2,}/g, ' ') // clean up double spaces
+    .replace(/\s{2,}/g, ' ')
     .trim();
+}im();
 } 
 
 function mapMatch(m) {

@@ -13,7 +13,8 @@ import {
 import {
   fetchFixtures,
   fetchTeamsForLeague,
-  fetchTeamFixtures
+  fetchTeamFixtures,
+  cleanTeamName          // <-- use provider cleaner everywhere
 } from '../providers/footballApi.js';
 
 import {
@@ -100,7 +101,7 @@ async function handleFollow(interaction) {
   const guildId = interaction.guildId;
   const leagueInput = interaction.options.getString('league', true);
 
-    let teams;
+  let teams;
   try {
     teams = await fetchTeamsForLeague({ league: leagueInput });
   } catch (e) {
@@ -117,22 +118,28 @@ async function handleFollow(interaction) {
     .setPlaceholder(`Select teams to follow from ${leagueInput}`)
     .setMinValues(1)
     .setMaxValues(Math.min(25, teams.length))
-    .addOptions(teams.map(t => ({ label: t.name, value: String(t.id) })));
+    .addOptions(teams.map(t => ({
+      label: cleanTeamName(t.name),           // cleaned label
+      value: String(t.id)
+    })));
 
   const row = new ActionRowBuilder().addComponents(select);
   const current = await listGuildSubscribedTeams(guildId);
-    const embed = new EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setTitle(`Follow teams • ${leagueInput}`)
     .setDescription(
       `Season used for team list: **${seasonUsed}**\n` +
       `Pick one or more teams to follow in this channel.\n` +
       `Currently followed: **${current.length}**`
     );
-    
+
   await interaction.editReply({ embeds: [embed], components: [row] });
 
   const msg = await interaction.fetchReply();
-  const collector = msg.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 2 * 60 * 1000 });
+  const collector = msg.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 2 * 60 * 1000
+  });
 
   collector.on('collect', async i => {
     if (i.user.id !== interaction.user.id) {
@@ -141,12 +148,18 @@ async function handleFollow(interaction) {
 
     const chosenIds = i.values.map(v => Number(v));
     const byId = new Map(teams.map(t => [t.id, t]));
-    const chosen = chosenIds.map(id => ({ id, name: byId.get(id)?.name || String(id) }));
+    const chosen = chosenIds.map(id => ({
+      id,
+      name: cleanTeamName(byId.get(id)?.name || String(id))   // save cleaned name
+    }));
 
     const added = await subscribeGuildTeams(guildId, chosen);
     const nowList = await listGuildSubscribedTeams(guildId);
 
-    await i.reply({ content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total in this server.`, flags: MessageFlags.Ephemeral });
+    await i.reply({
+      content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total in this server.`,
+      flags: MessageFlags.Ephemeral
+    });
 
     const updated = EmbedBuilder.from(embed)
       .setDescription(`Pick one or more teams to follow.\nCurrently followed: **${nowList.length}**`);
@@ -155,7 +168,9 @@ async function handleFollow(interaction) {
 
   collector.on('end', async () => {
     try {
-      const disabledRow = new ActionRowBuilder().addComponents(StringSelectMenuBuilder.from(select).setDisabled(true));
+      const disabledRow = new ActionRowBuilder().addComponents(
+        StringSelectMenuBuilder.from(select).setDisabled(true)
+      );
       await interaction.editReply({ components: [disabledRow] }).catch(() => {});
     } catch {}
   });
@@ -170,7 +185,7 @@ async function handleFollowed(interaction) {
     return interaction.editReply('No teams are followed in this server yet. Use `/fixtures follow league:PL` to start.');
   }
 
-  const names = list.map(t => `• ${t.team_name} (${t.team_id})`).join('\n');
+  const names = list.map(t => `• ${cleanTeamName(t.team_name)} (${t.team_id})`).join('\n'); // cleaned display
   const embed = new EmbedBuilder()
     .setTitle(`Followed teams (${list.length})`)
     .setDescription(names);
@@ -192,13 +207,19 @@ async function handleUnfollow(interaction) {
     .setPlaceholder('Select teams to unfollow')
     .setMinValues(1)
     .setMaxValues(Math.min(25, list.length))
-    .addOptions(list.map(t => ({ label: t.team_name, value: String(t.team_id) })));
+    .addOptions(list.map(t => ({
+      label: cleanTeamName(t.team_name),               // cleaned label
+      value: String(t.team_id)
+    })));
 
   const row = new ActionRowBuilder().addComponents(select);
   await interaction.editReply({ content: 'Choose teams to unfollow:', components: [row] });
 
   const msg = await interaction.fetchReply();
-  const collector = msg.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 2 * 60 * 1000 });
+  const collector = msg.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 2 * 60 * 1000
+  });
 
   collector.on('collect', async i => {
     if (i.user.id !== interaction.user.id) {
@@ -209,14 +230,17 @@ async function handleUnfollow(interaction) {
     const removed = await unsubscribeGuildTeams(guildId, ids);
     await i.reply({ content: `🗑️ Removed **${removed}** team(s) from this server’s follow list.`, flags: MessageFlags.Ephemeral });
 
-    // disable after action
-    const disabledRow = new ActionRowBuilder().addComponents(StringSelectMenuBuilder.from(select).setDisabled(true));
+    const disabledRow = new ActionRowBuilder().addComponents(
+      StringSelectMenuBuilder.from(select).setDisabled(true)
+    );
     await interaction.editReply({ components: [disabledRow] }).catch(() => {});
   });
 
   collector.on('end', async () => {
     try {
-      const disabledRow = new ActionRowBuilder().addComponents(StringSelectMenuBuilder.from(select).setDisabled(true));
+      const disabledRow = new ActionRowBuilder().addComponents(
+        StringSelectMenuBuilder.from(select).setDisabled(true)
+      );
       await interaction.editReply({ components: [disabledRow] }).catch(() => {});
     } catch {}
   });
@@ -251,12 +275,15 @@ async function handleBrowse(interaction) {
   const FOLLOW = await listGuildSubscribedTeams(guildId); // [{team_id, team_name}]
   const hasFollowList = FOLLOW.length > 0;
   const followIds = new Set(FOLLOW.map(x => String(x.team_id)));
-  const followNameLower = FOLLOW.map(x => (x.team_name || '').toLowerCase());
+  const followNameLower = FOLLOW.map(x => cleanTeamName(x.team_name || '').toLowerCase()); // cleaned for fallback matching
 
-  const matchesTeamFilter = (f) =>
-    !teamFilter ||
-    (f.home || '').toLowerCase().includes(teamFilter) ||
-    (f.away || '').toLowerCase().includes(teamFilter);
+  // filter using CLEANED names
+  const matchesTeamFilter = (f) => {
+    if (!teamFilter) return true;
+    const h = cleanTeamName(f.home || '').toLowerCase();
+    const a = cleanTeamName(f.away || '').toLowerCase();
+    return h.includes(teamFilter) || a.includes(teamFilter);
+  };
 
   const endISO = addDaysISO(startISO, days - 1);
 
@@ -309,8 +336,10 @@ async function handleBrowse(interaction) {
     fixtures = fixtures.filter(f =>
       (f.home_id && followIds.has(String(f.home_id))) ||
       (f.away_id && followIds.has(String(f.away_id))) ||
+      // fallback by cleaned names
       followNameLower.some(t =>
-        (f.home || '').toLowerCase().includes(t) || (f.away || '').toLowerCase().includes(t)
+        cleanTeamName(f.home || '').toLowerCase().includes(t) ||
+        cleanTeamName(f.away || '').toLowerCase().includes(t)
       )
     );
   }
@@ -343,11 +372,14 @@ async function handleBrowse(interaction) {
         currentDay = dISO;
         lines.push(`\n__**${currentDay}**__`);
       }
-      lines.push(`• ${m.home} vs ${m.away} -- <t:${toTs(m.match_time)}:t>`);
+      lines.push(`• ${cleanTeamName(m.home)} vs ${cleanTeamName(m.away)} -- <t:${toTs(m.match_time)}:t>`);
     }
 
     const followBadge = hasFollowList ? ` • following:${FOLLOW.length}` : '';
-    const title = `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}${leagueForTitle ? ` • ${leagueForTitle}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}${followBadge}`;
+    const title =
+      `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
+      `${leagueForTitle ? ` • ${leagueForTitle}` : ''}` +
+      `${teamFilter ? ` • team:${teamFilter}` : ''}${followBadge}`;
 
     const embed = new EmbedBuilder()
       .setTitle(title)
@@ -360,7 +392,7 @@ async function handleBrowse(interaction) {
       .setMinValues(1)
       .setMaxValues(Math.min(25, page.length))
       .addOptions(page.map(m => ({
-        label: `${m.home} vs ${m.away}`,
+        label: `${cleanTeamName(m.home)} vs ${cleanTeamName(m.away)}`,  // cleaned label
         value: m.match_id,
         description: new Date(m.match_time).toLocaleString('en-US', {
           month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
