@@ -52,7 +52,7 @@ function cleanTeamName(name) {
     .replace(/\bAFC\b/gi, '')
     .replace(/\s{2,}/g, ' ') // clean up double spaces
     .trim();
-}
+} 
 
 function mapMatch(m) {
   return {
