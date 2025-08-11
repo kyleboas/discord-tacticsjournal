@@ -6,15 +6,17 @@ import {
   ButtonStyle,
   StringSelectMenuBuilder,
   EmbedBuilder,
-  ComponentType
+  ComponentType,
+  MessageFlags
 } from 'discord.js';
+import fs from 'fs';
 
 import { fetchFixtures } from '../providers/footballApi.js'; // single-day fetch (we'll loop days)
 import { upsertFixturesCache, listCachedFixtures, starMatch } from '../db.js';
 
 function chunk(arr, size) {
   const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(0 + i, i + size));
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
   return out;
 }
 const toTs = d => Math.floor(new Date(d).getTime() / 1000);
@@ -24,6 +26,20 @@ function addDaysISO(dateISO, d) {
   base.setUTCDate(base.getUTCDate() + d);
   return base.toISOString().slice(0, 10); // YYYY-MM-DD
 }
+
+function loadTeamsToFollow() {
+  try {
+    const raw = fs.readFileSync('./teams.json', 'utf8');
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr.filter(Boolean).map(s => String(s).toLowerCase());
+  } catch (e) {
+    // If file missing or invalid, just follow none.
+    return [];
+  }
+}
+
+const TEAMS_TO_FOLLOW = loadTeamsToFollow();
 
 export const data = new SlashCommandBuilder()
   .setName('fixtures')
@@ -44,13 +60,13 @@ export const data = new SlashCommandBuilder()
   )
   .addStringOption(o =>
     o.setName('team')
-      .setDescription('Filter by team substring')
+      .setDescription('Filter by team substring (optional; applied after teams.json)')
   );
 
 export async function execute(interaction) {
-  // Acknowledge within 3s
+  // Acknowledge quickly; use flags instead of deprecated `ephemeral`
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   } catch (err) {
     console.error('fixtures.deferReply failed:', err);
     if (!interaction.deferred && !interaction.replied) return;
@@ -72,15 +88,30 @@ export async function execute(interaction) {
   }
 
   const days = interaction.options.getInteger('days') ?? 7; // default 7
-  const league = interaction.options.getString('league') || undefined; // football-data competitions (e.g., PL,CL)
+  const league = interaction.options.getString('league') || undefined; // e.g., PL,CL
   const teamFilter = (interaction.options.getString('team') || '').toLowerCase();
 
-  // 1) Fetch & cache best-effort for each day in the window (reduces API errors if one day fails)
+  const hasFollowList = TEAMS_TO_FOLLOW.length > 0;
+
+  // Helper: does fixture involve a followed team?
+  const involvesFollowedTeam = (f) =>
+    !hasFollowList || TEAMS_TO_FOLLOW.some(t =>
+      f.home?.toLowerCase().includes(t) || f.away?.toLowerCase().includes(t)
+    );
+
+  // Helper: does fixture match teamFilter?
+  const matchesTeamFilter = (f) =>
+    !teamFilter || f.home?.toLowerCase().includes(teamFilter) || f.away?.toLowerCase().includes(teamFilter);
+
+  // 1) Fetch & cache best-effort for each day
+  // We only upsert fixtures that match our teams.json and (optionally) teamFilter
   for (let d = 0; d < days; d++) {
     const dateISO = addDaysISO(startISO, d);
     try {
       const rows = await fetchFixtures({ dateISO, leagueId: league });
-      await upsertFixturesCache(rows);
+      // Only store rows we actually care about
+      const pruned = rows.filter(r => involvesFollowedTeam(r) && matchesTeamFilter(r));
+      if (pruned.length) await upsertFixturesCache(pruned);
     } catch (e) {
       console.warn(`fetchFixtures failed for ${dateISO} (using cache):`, e?.message || e);
     }
@@ -90,27 +121,35 @@ export async function execute(interaction) {
   const all = [];
   for (let d = 0; d < days; d++) {
     const dateISO = addDaysISO(startISO, d);
-    /* listCachedFixtures reads by single day; re-use it for each day */
     const rows = await listCachedFixtures({ dateISO });
     all.push(...rows);
   }
 
-  // 3) Apply filters (league/team)
+  // 3) Apply filters (league/team + teams.json) to the aggregate from cache as a safeguard
   let fixtures = all;
-  if (league) fixtures = fixtures.filter(f => (f.league || '').toLowerCase().includes(league.toLowerCase()));
+
+  if (league) {
+    fixtures = fixtures.filter(f => (f.league || '').toLowerCase().includes(league.toLowerCase()));
+  }
+
+  // Auto-filter by teams.json (if any)
+  if (hasFollowList) {
+    fixtures = fixtures.filter(involvesFollowedTeam);
+  }
+
+  // Optional extra narrowing via /fixtures team:
   if (teamFilter) {
-    fixtures = fixtures.filter(f =>
-      f.home.toLowerCase().includes(teamFilter) || f.away.toLowerCase().includes(teamFilter)
-    );
+    fixtures = fixtures.filter(matchesTeamFilter);
   }
 
   // 4) Sort (by match_time asc), then paginate
   fixtures.sort((a, b) => new Date(a.match_time) - new Date(b.match_time));
 
   if (!fixtures.length) {
+    const followBadge = hasFollowList ? ` • following:${TEAMS_TO_FOLLOW.length} team(s)` : '';
     return interaction.editReply(
       `No fixtures found from **${startISO}** for **${days}** day(s)` +
-      `${league ? ` • league: ${league}` : ''}` +
+      `${league ? ` • league:${league}` : ''}${followBadge}` +
       `${teamFilter ? ` • team:${teamFilter}` : ''}.`
     );
   }
@@ -133,11 +172,13 @@ export async function execute(interaction) {
       lines.push(`• ${m.home} vs ${m.away} -- <t:${toTs(m.match_time)}:t>`);
     }
 
+    const followBadge = hasFollowList ? ` • following:${TEAMS_TO_FOLLOW.length}` : '';
+    const title =
+      `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
+      `${league ? ` • ${league}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}${followBadge}`;
+
     const embed = new EmbedBuilder()
-      .setTitle(
-        `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
-        `${league ? ` • ${league}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}`
-      )
+      .setTitle(title)
       .setDescription(lines.join('\n').trim())
       .setFooter({ text: `Page ${idx + 1}/${pages.length} • ${fixtures.length} total` });
 
@@ -171,7 +212,7 @@ export async function execute(interaction) {
 
   collector.on('collect', async i => {
     if (i.user.id !== interaction.user.id) {
-      return i.reply({ content: 'This menu isn’t for you.', ephemeral: true });
+      return i.reply({ content: 'This menu isn’t for you.', flags: MessageFlags.Ephemeral });
     }
 
     if (i.customId === 'fixtures:prev') {
@@ -194,11 +235,11 @@ export async function execute(interaction) {
         try {
           await starMatch({ match_id, channel_id, user_id });
           ok++;
-        } catch (_) {
+        } catch {
           // ignore duplicates or cache misses
         }
       }
-      return i.reply({ content: `⭐ Starred ${ok} match(es) for this channel.`, ephemeral: true });
+      return i.reply({ content: `⭐ Starred ${ok} match(es) for this channel.`, flags: MessageFlags.Ephemeral });
     }
   });
 
@@ -239,6 +280,6 @@ export async function execute(interaction) {
         return row;
       });
       await interaction.editReply({ components: disabledRows }).catch(() => {});
-    } catch (_) {}
+    } catch {}
   });
 }
