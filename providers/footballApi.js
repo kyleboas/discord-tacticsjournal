@@ -36,15 +36,33 @@ function batchCompetitionCodes(codes, maxLen = 90) {
   return out;
 }
 
+function cleanTeamName(name) {
+  if (!name) return name;
+  return name
+    .replace(/\bFC\b/gi, '')
+    .replace(/\bBC\b/gi, '')
+    .replace(/\bCFC\b/gi, '')
+    .replace(/\bSCO\b/gi, '')
+    .replace(/\bOSC\b/gi, '')
+    .replace(/\bOGC\b/gi, '')
+    .replace(/\bUD\b/gi, '')
+    .replace(/\bCF\b/gi, '')
+    .replace(/\bRCD\b/gi, '')
+    .replace(/\bCA\b/gi, '')
+    .replace(/\bAFC\b/gi, '')
+    .replace(/\s{2,}/g, ' ') // clean up double spaces
+    .trim();
+}
+
 function mapMatch(m) {
   return {
     match_id: String(m.id),
-    match_time: m.utcDate,        // ISO from FD
-    home: m.homeTeam?.name || 'TBD',
-    away: m.awayTeam?.name || 'TBD',
+    match_time: m.utcDate,
+    home: cleanTeamName(m.homeTeam?.name) || 'TBD',
+    away: cleanTeamName(m.awayTeam?.name) || 'TBD',
     home_id: m.homeTeam?.id ?? null,
     away_id: m.awayTeam?.id ?? null,
-    league: m.competition?.code || null,  // store code (PL, CL, …)
+    league: m.competition?.code || null,
     league_name: m.competition?.name || null,
     source: 'football-data.org'
   };
