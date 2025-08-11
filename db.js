@@ -161,16 +161,16 @@ export async function ensureSchema() {
   /* NEW: guild-scoped team follows */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS guild_team_follows (
-      guild_id  TEXT NOT NULL,
-      team_id   INTEGER NOT NULL,
+      guild_id TEXT NOT NULL,
+      team_id  INTEGER NOT NULL,
       team_name TEXT NOT NULL,
-      source    TEXT DEFAULT 'football-data',
+      source TEXT DEFAULT 'football-data',
       created_at TIMESTAMPTZ DEFAULT NOW(),
       PRIMARY KEY (guild_id, team_id)
     );
   `);
 
-  /* NEW: reminders for followed-vs-followed matches (server-wide) */
+  /* NEW: guild-scoped match reminders (followed vs followed) */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS guild_match_reminders (
       guild_id   TEXT NOT NULL,
@@ -179,23 +179,15 @@ export async function ensureSchema() {
       match_time TIMESTAMPTZ NOT NULL,
       home       TEXT NOT NULL,
       away       TEXT NOT NULL,
-      home_id    INTEGER,
-      away_id    INTEGER,
-      league     TEXT,
-      source     TEXT DEFAULT 'football-data',
-      sent_60    BOOLEAN DEFAULT FALSE,
-      sent_5     BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW(),
-      PRIMARY KEY (guild_id, channel_id, match_id)
+      PRIMARY KEY (guild_id, match_id)
     );
   `);
 
-  /* Optional helpful indexes */
+  /* Helpful indexes */
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_fixtures_cache_time ON fixtures_cache(match_time);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_team_follows_guild ON guild_team_follows(guild_id);`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_gmr_time ON guild_match_reminders(match_time);`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_gmr_guild ON guild_match_reminders(guild_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_match_reminders_time ON guild_match_reminders(match_time);`);
 }
 
 export async function ensureQuizSchema() {
@@ -557,84 +549,47 @@ export async function unsubscribeGuildTeams(guild_id, team_ids /* number[] */) {
   return rowCount;
 }
 
-// ---------------- NEW: followed‑vs‑followed reminders storage ----------------
+// ---------------- NEW: guild match reminders API ----------------
 
 /**
- * Insert or update a reminder row for a guild/channel/match.
+ * Upsert a followed-vs-followed match reminder for a guild.
+ * Unique per (guild_id, match_id). Channel can be updated if needed.
  */
-export async function upsertGuildMatchReminder({
-  guild_id,
-  channel_id,
-  match_id,
-  match_time,
-  home,
-  away,
-  home_id = null,
-  away_id = null,
-  league = null,
-  source = 'football-data'
-}) {
-  const { rows } = await pool.query(
-    `INSERT INTO guild_match_reminders
-      (guild_id, channel_id, match_id, match_time, home, away, home_id, away_id, league, source, updated_at)
-     VALUES
-      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
-     ON CONFLICT (guild_id, channel_id, match_id)
-     DO UPDATE SET
-       match_time = EXCLUDED.match_time,
-       home       = EXCLUDED.home,
-       away       = EXCLUDED.away,
-       home_id    = COALESCE(EXCLUDED.home_id, guild_match_reminders.home_id),
-       away_id    = COALESCE(EXCLUDED.away_id, guild_match_reminders.away_id),
-       league     = COALESCE(EXCLUDED.league, guild_match_reminders.league),
-       source     = COALESCE(EXCLUDED.source, guild_match_reminders.source),
-       updated_at = NOW()
-     RETURNING *`,
-    [guild_id, channel_id, match_id, match_time, home, away, home_id, away_id, league, source]
+export async function upsertGuildMatchReminder({ guild_id, channel_id, match_id, match_time, home, away }) {
+  await pool.query(
+    `INSERT INTO guild_match_reminders (guild_id, channel_id, match_id, match_time, home, away)
+     VALUES ($1,$2,$3,$4,$5,$6)
+     ON CONFLICT (guild_id, match_id)
+     DO UPDATE SET channel_id = EXCLUDED.channel_id,
+                   match_time = EXCLUDED.match_time,
+                   home = EXCLUDED.home,
+                   away = EXCLUDED.away`,
+    [guild_id, channel_id, match_id, match_time, home, away]
   );
-  return rows[0];
 }
 
 /**
- * Get reminders in a time window (inclusive).
- * Optionally filter out ones already marked sent at a given stage.
+ * Delete old reminders so the table doesn't grow forever.
+ * Keeps anything with kickoff >= now() - 1 day.
  */
-export async function getUpcomingRemindersWindow({ fromISO, toISO, stage /* '60' | '5' | undefined */ }) {
-  const whereSent =
-    stage === '60' ? 'AND sent_60 = FALSE' :
-    stage === '5'  ? 'AND sent_5  = FALSE' :
-    '';
+export async function purgeOldReminders() {
+  await pool.query(
+    `DELETE FROM guild_match_reminders
+     WHERE match_time < (NOW() - INTERVAL '1 day')`
+  );
+}
+
+/**
+ * Get all reminders in a time window (inclusive).
+ * Used by the scheduler to send 60-min and 5-min alerts.
+ */
+export async function getUpcomingRemindersWindow({ fromISO, toISO }) {
   const { rows } = await pool.query(
-    `SELECT * FROM guild_match_reminders
+    `SELECT guild_id, channel_id, match_id, match_time, home, away
+     FROM guild_match_reminders
      WHERE match_time >= $1 AND match_time <= $2
-     ${whereSent}
      ORDER BY match_time ASC`,
     [fromISO, toISO]
   );
   return rows;
-}
-
-/**
- * Mark a reminder as sent for a specific stage ('60' or '5').
- * Safe to call multiple times.
- */
-export async function markReminderSent({ guild_id, channel_id, match_id, stage /* '60' | '5' */ }) {
-  if (stage !== '60' && stage !== '5') return false;
-  const column = stage === '60' ? 'sent_60' : 'sent_5';
-  const res = await pool.query(
-    `UPDATE guild_match_reminders
-     SET ${column} = TRUE, updated_at = NOW()
-     WHERE guild_id = $1 AND channel_id = $2 AND match_id = $3`,
-    [guild_id, channel_id, match_id]
-  );
-  return res.rowCount > 0;
-}
-
-/** Optional: clean up stale reminders older than N days (default 30). */
-export async function purgeOldGuildReminders(days = 30) {
-  await pool.query(
-    `DELETE FROM guild_match_reminders
-     WHERE match_time < (NOW() - ($1 || ' days')::interval)`,
-    [days]
-  );
 }
