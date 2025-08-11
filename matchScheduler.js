@@ -34,78 +34,85 @@ function addDaysISO(dateISO, d) {
   return base.toISOString().slice(0, 10);
 }
 
+/**
+ * NEW: Refresh reminders for a single guild immediately.
+ * Includes ANY match where at least one team is followed.
+ * Returns the number of reminders upserted.
+ */
+export async function refreshRemindersForGuild(guild_id, horizonDays = 14) {
+  const channel_id = await getReminderChannel(guild_id);
+  if (!channel_id) return 0;
+
+  const followed = await listGuildSubscribedTeams(guild_id); // [{team_id, team_name}]
+  if (!followed.length) return 0;
+
+  const followedIds = new Set(followed.map(t => String(t.team_id)));
+
+  const todayISO = toISODate(new Date());
+  const fromISO = todayISO;
+  const toISO = addDaysISO(todayISO, horizonDays);
+
+  // Pull fixtures for each followed team in the window
+  const allMatches = [];
+  for (const t of followed) {
+    try {
+      const rows = await fetchTeamFixtures({
+        teamId: t.team_id,
+        fromISO,
+        toISO
+      });
+      allMatches.push(...rows);
+    } catch (err) {
+      console.warn(`[refreshRemindersForGuild] fetchTeamFixtures failed t=${t.team_id}:`, err?.message || err);
+    }
+  }
+
+  // Keep matches where EITHER side is a followed team (dedupe by match_id)
+  const seen = new Set();
+  let upserts = 0;
+
+  for (const m of allMatches) {
+    if (!m?.match_id) continue;
+    if (seen.has(m.match_id)) continue;
+    seen.add(m.match_id);
+
+    const h = m.home_id ? String(m.home_id) : null;
+    const a = m.away_id ? String(m.away_id) : null;
+
+    if ((h && followedIds.has(h)) || (a && followedIds.has(a))) {
+      try {
+        await upsertGuildMatchReminder({
+          guild_id,
+          channel_id,
+          match_id: m.match_id,
+          match_time: m.match_time,
+          home: cleanTeamName(m.home || 'TBD'),
+          away: cleanTeamName(m.away || 'TBD')
+        });
+        upserts++;
+      } catch (err) {
+        console.warn(`[refreshRemindersForGuild] upsert failed match=${m.match_id} guild=${guild_id}:`, err?.message || err);
+      }
+    }
+  }
+
+  // housekeep old rows (non-blocking)
+  try { await purgeOldReminders(); } catch {}
+
+  return upserts;
+}
+
 // --- Core: refresh reminders every 3 days ---
 // Now: include ANY match where at least one team is followed.
 async function refreshFollowedReminders(client, horizonDays = 14) {
-  const todayISO = toISODate(new Date());
-
-  // traverse all guilds the bot is in
   for (const [, guild] of client.guilds.cache) {
     try {
-      const guild_id = guild.id;
-      const channel_id = await getReminderChannel(guild_id);
-      if (!channel_id) continue; // no reminders channel set
-
-      const followed = await listGuildSubscribedTeams(guild_id); // [{team_id, team_name}]
-      if (!followed.length) continue;
-
-      const followedIds = new Set(followed.map(t => String(t.team_id)));
-
-      const fromISO = todayISO;
-      const toISO = addDaysISO(todayISO, horizonDays);
-
-      // Pull fixtures for each followed team in the window
-      const allMatches = [];
-      for (const t of followed) {
-        try {
-          const rows = await fetchTeamFixtures({
-            teamId: t.team_id,
-            fromISO,
-            toISO
-          });
-          allMatches.push(...rows);
-        } catch (err) {
-          console.warn(`[scheduler] fetchTeamFixtures failed t=${t.team_id}:`, err?.message || err);
-        }
-      }
-
-      // Keep matches where EITHER side is a followed team (dedup by match_id)
-      const selected = [];
-      const seen = new Set(); // match_id dedupe across teams
-      for (const m of allMatches) {
-        if (!m?.match_id) continue;
-        if (seen.has(m.match_id)) continue;
-
-        const h = m.home_id ? String(m.home_id) : null;
-        const a = m.away_id ? String(m.away_id) : null;
-        const involvesFollowed = (h && followedIds.has(h)) || (a && followedIds.has(a));
-        if (!involvesFollowed) continue;
-
-        seen.add(m.match_id);
-        selected.push(m);
-      }
-
-      // Upsert reminders for all selected matches
-      for (const m of selected) {
-        try {
-          await upsertGuildMatchReminder({
-            guild_id,
-            channel_id,
-            match_id: m.match_id,
-            match_time: m.match_time,
-            home: cleanTeamName(m.home || 'TBD'),
-            away: cleanTeamName(m.away || 'TBD')
-          });
-        } catch (err) {
-          console.warn(`[scheduler] upsert reminder failed match=${m.match_id} guild=${guild_id}:`, err?.message || err);
-        }
-      }
+      await refreshRemindersForGuild(guild.id, horizonDays);
     } catch (err) {
       console.warn(`[scheduler] guild refresh failed:`, err?.message || err);
     }
   }
 
-  // housekeeping
   try {
     await purgeOldReminders();
   } catch (e) {

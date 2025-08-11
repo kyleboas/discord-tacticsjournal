@@ -24,8 +24,11 @@ import {
   subscribeGuildTeams,
   listGuildSubscribedTeams,
   unsubscribeGuildTeams,
-  getUpcomingRemindersWindow      // <-- NEW: used by /fixtures upcoming
+  getUpcomingRemindersWindow      // used by /fixtures upcoming
 } from '../db.js';
+
+// ⬇️ NEW: import the immediate refresh helper
+import { refreshRemindersForGuild } from '../matchScheduler.js';
 
 // ---------- utils ----------
 function chunk(arr, size) {
@@ -73,7 +76,7 @@ export const data = new SlashCommandBuilder()
   .addSubcommand(sub =>
     sub
       .setName('upcoming')
-      .setDescription('Show upcoming reminders (only followed vs followed)')
+      .setDescription('Show upcoming reminders (followed teams)')
       .addIntegerOption(o => o
         .setName('days')
         .setDescription('Days ahead (7–14). Default 7')
@@ -110,11 +113,11 @@ export async function execute(interaction) {
   if (sub === 'follow') return handleFollow(interaction);
   if (sub === 'followed') return handleFollowed(interaction);
   if (sub === 'unfollow') return handleUnfollow(interaction);
-  if (sub === 'upcoming') return handleUpcoming(interaction);   // <-- NEW
+  if (sub === 'upcoming') return handleUpcoming(interaction);
   return handleBrowse(interaction);
 }
 
-// ---------- /fixtures upcoming (NEW) ----------
+// ---------- /fixtures upcoming ----------
 async function handleUpcoming(interaction) {
   const guildId = interaction.guildId;
   const days = interaction.options.getInteger('days') ?? 7; // 7–14 enforced by builder
@@ -130,7 +133,7 @@ async function handleUpcoming(interaction) {
   let rows = await getUpcomingRemindersWindow({ fromISO: windowFrom, toISO: windowTo });
   rows = rows.filter(r => r.guild_id === guildId);
 
-  // If user wants a league filter, we’ll enrich from fixtures_cache (league column)
+  // If user wants a league filter, enrich from fixtures_cache (league column)
   const leagueByMatchId = new Map();
   if (leagueFilterRaw) {
     for (let d = 0; d < days; d++) {
@@ -146,13 +149,11 @@ async function handleUpcoming(interaction) {
 
   // Apply filters
   let fixtures = rows.filter(r => {
-    // team filter (cleaned names)
     if (teamFilterRaw) {
       const h = cleanTeamName(r.home || '').toLowerCase();
       const a = cleanTeamName(r.away || '').toLowerCase();
       if (!h.includes(teamFilterRaw) && !a.includes(teamFilterRaw)) return false;
     }
-    // league filter (via cache look-up)
     if (leagueFilterRaw) {
       const lk = leagueByMatchId.get(String(r.match_id)) || '';
       if (!lk.includes(leagueFilterRaw)) return false;
@@ -164,7 +165,7 @@ async function handleUpcoming(interaction) {
 
   if (!fixtures.length) {
     const bits = [];
-    bits.push(`No upcoming followed-vs-followed matches in the next **${days}** day(s).`);
+    bits.push(`No upcoming followed matches in the next **${days}** day(s).`);
     if (teamFilterRaw) bits.push(`team:${teamFilterRaw}`);
     if (leagueFilterRaw) bits.push(`league:${leagueFilterRaw}`);
     return interaction.editReply(bits.join(' '));
@@ -196,7 +197,6 @@ async function handleUpcoming(interaction) {
       .setDescription(lines.join('\n').trim())
       .setFooter({ text: `Page ${idx + 1}/${pages.length} • ${fixtures.length} total` });
 
-    // Only nav buttons (no select/star here--scheduler decides these)
     const nav = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('upcoming:prev').setLabel('Prev').setStyle(ButtonStyle.Secondary).setDisabled(idx === 0),
       new ButtonBuilder().setCustomId('upcoming:next').setLabel('Next').setStyle(ButtonStyle.Secondary).setDisabled(idx === pages.length - 1)
@@ -295,10 +295,20 @@ async function handleFollow(interaction) {
     }));
 
     const added = await subscribeGuildTeams(guildId, chosen);
+
+    // ⬇️ NEW: immediately refresh reminders for this guild (returns count)
+    let upserts = 0;
+    try {
+      upserts = await refreshRemindersForGuild(guildId, 14);
+    } catch (err) {
+      console.warn('[fixtures follow] immediate refresh failed:', err?.message || err);
+    }
+
     const nowList = await listGuildSubscribedTeams(guildId);
 
     await i.reply({
-      content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total in this server.`,
+      content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total.\n` +
+               `🔄 Refreshed reminders for **${upserts}** upcoming match(es).`,
       flags: MessageFlags.Ephemeral
     });
 
