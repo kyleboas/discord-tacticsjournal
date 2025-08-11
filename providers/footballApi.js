@@ -52,8 +52,7 @@ export function cleanTeamName(name) {
     .replace(/\bAFC\b/gi, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
-}im();
-} 
+}
 
 function mapMatch(m) {
   return {
