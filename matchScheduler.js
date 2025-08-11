@@ -46,13 +46,12 @@ function addDaysISO(dateISO, d) {
  * @returns {Promise<number>} count upserted
  */
 export async function refreshRemindersForGuild(guild_id, horizonDays = 14, onlyTeamIds = null) {
-  const channel_id = await getReminderChannel(guild_id);
-  if (!channel_id) return 0;
-
-  let followed = await listGuildSubscribedTeams(guild_id); // [{team_id, team_name}]
+  // Always send reminders to this fixed channel
+  const channel_id = '1098742662040920074';
+  
+  let followed = await listGuildSubscribedTeams(guild_id);
   if (!followed.length) return 0;
 
-  // Optional restriction: refresh only selected teams (reduces API calls / 429 risk)
   if (onlyTeamIds?.length) {
     const set = new Set(onlyTeamIds.map(String));
     followed = followed.filter(t => set.has(String(t.team_id)));
@@ -65,29 +64,24 @@ export async function refreshRemindersForGuild(guild_id, horizonDays = 14, onlyT
   const fromISO = todayISO;
   const toISO = addDaysISO(todayISO, horizonDays);
 
-  // Throttle settings
-  const baseDelayMs = 1100; // ~1req/sec default
+  const baseDelayMs = 1100;
   const maxRetries = 2;
-
   const allMatches = [];
 
   for (const t of followed) {
     let attempt = 0;
     while (true) {
       try {
-        // fetch one team at a time (sequential)
         const rows = await fetchTeamFixtures({
           teamId: t.team_id,
           fromISO,
           toISO
         });
         allMatches.push(...rows);
-        // small delay to avoid hammering API
         await sleep(baseDelayMs);
         break;
       } catch (err) {
         const msg = String(err?.message || '');
-        // detect 429 + parse "Wait NN seconds" if present
         const waitMatch = msg.match(/Wait\s+(\d+)\s+seconds/i);
         const waitSec = waitMatch ? Number(waitMatch[1]) : null;
 
@@ -97,21 +91,19 @@ export async function refreshRemindersForGuild(guild_id, horizonDays = 14, onlyT
             console.warn(`[refreshRemindersForGuild] giving up t=${t.team_id}:`, msg);
             break;
           }
-          const delayMs = (waitSec ? (waitSec + 2) : 10) * 1000; // add small buffer
-          console.warn(`[refreshRemindersForGuild] 429 backoff t=${t.team_id}, waiting ${delayMs}ms (attempt ${attempt}/${maxRetries})`);
+          const delayMs = (waitSec ? (waitSec + 2) : 10) * 1000;
+          console.warn(`[refreshRemindersForGuild] 429 backoff t=${t.team_id}, waiting ${delayMs}ms`);
           await sleep(delayMs);
-          continue; // retry
+          continue;
         }
 
         console.warn(`[refreshRemindersForGuild] fetchTeamFixtures failed t=${t.team_id}:`, msg);
-        // modest delay even on other errors
         await sleep(500);
         break;
       }
     }
   }
 
-  // Keep matches where EITHER side is a followed team (dedupe by match_id)
   const seen = new Set();
   let upserts = 0;
 
@@ -127,7 +119,7 @@ export async function refreshRemindersForGuild(guild_id, horizonDays = 14, onlyT
       try {
         await upsertGuildMatchReminder({
           guild_id,
-          channel_id,
+          channel_id, // fixed channel here
           match_id: m.match_id,
           match_time: m.match_time,
           home: cleanTeamName(m.home || 'TBD'),
@@ -140,9 +132,7 @@ export async function refreshRemindersForGuild(guild_id, horizonDays = 14, onlyT
     }
   }
 
-  // housekeep old rows (non-blocking)
   try { await purgeOldReminders(); } catch {}
-
   return upserts;
 }
 
