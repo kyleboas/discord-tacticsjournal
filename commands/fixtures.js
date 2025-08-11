@@ -11,9 +11,15 @@ import {
 } from 'discord.js';
 import fs from 'fs';
 
+// --- CONFIG for football-data.org ---
+const FD_API_BASE = 'https://api.football-data.org/v4';
+const FD_TOKEN = process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALL_DATA_TOKEN;
+
+// --- Your existing providers/db ---
 import { fetchFixtures } from '../providers/footballApi.js'; // single-day fetch (we'll loop days)
 import { upsertFixturesCache, listCachedFixtures, starMatch } from '../db.js';
 
+// ---------- utils ----------
 function chunk(arr, size) {
   const out = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -27,44 +33,100 @@ function addDaysISO(dateISO, d) {
   return base.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
-function loadTeamsToFollow() {
+function readTeamsJson() {
   try {
     const raw = fs.readFileSync('./teams.json', 'utf8');
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return [];
-    return arr.filter(Boolean).map(s => String(s).toLowerCase());
-  } catch (e) {
-    // If file missing or invalid, just follow none.
+    return arr.filter(Boolean).map(s => String(s));
+  } catch {
     return [];
   }
 }
 
-const TEAMS_TO_FOLLOW = loadTeamsToFollow();
+function writeTeamsJson(names) {
+  const unique = Array.from(
+    new Map(
+      names
+        .filter(Boolean)
+        .map(n => [String(n).toLowerCase(), String(n)])
+    ).values()
+  ).sort((a, b) => a.localeCompare(b));
+  fs.writeFileSync('./teams.json', JSON.stringify(unique, null, 2));
+  return unique;
+}
 
+// Case-insensitive membership
+function includesTeam(list, name) {
+  const lower = new Set(list.map(x => x.toLowerCase()));
+  return lower.has(name.toLowerCase());
+}
+
+// ---------- football-data.org teams fetch ----------
+async function fetchTeamsForLeague(leagueCode) {
+  if (!FD_TOKEN) {
+    throw new Error('Missing FOOTBALL_DATA_API_KEY (or FOOTBALL_DATA_TOKEN) in env.');
+  }
+  const url = `${FD_API_BASE}/competitions/${encodeURIComponent(leagueCode)}/teams`;
+  const res = await fetch(url, { headers: { 'X-Auth-Token': FD_TOKEN } });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`football-data.org ${res.status}: ${text || res.statusText}`);
+  }
+  const json = await res.json();
+  // Normalize to minimal shape we need
+  const teams = Array.isArray(json?.teams) ? json.teams : [];
+  return teams.map(t => ({
+    id: t.id,
+    name: t.name // e.g., "Liverpool FC"
+  }));
+}
+
+// ---------- slash command ----------
 export const data = new SlashCommandBuilder()
   .setName('fixtures')
-  .setDescription('Browse fixtures for a date range, filter, and star in bulk')
-  .addStringOption(o =>
-    o.setName('date')
-      .setDescription('Start date YYYY-MM-DD (optional; defaults to today)')
+  .setDescription('Fixtures tools')
+  // /fixtures browse ...
+  .addSubcommand(sub =>
+    sub
+      .setName('browse')
+      .setDescription('Browse fixtures for a date range, filter, and star in bulk')
+      .addStringOption(o =>
+        o.setName('date')
+          .setDescription('Start date YYYY-MM-DD (optional; defaults to today)')
+      )
+      .addIntegerOption(o =>
+        o.setName('days')
+          .setDescription('Number of days starting from date (default 7, max 14)')
+          .setMinValue(1)
+          .setMaxValue(14)
+      )
+      .addStringOption(o =>
+        o.setName('league')
+          .setDescription('Competition code(s) for football-data.org, e.g. PL or PL,CL')
+      )
+      .addStringOption(o =>
+        o.setName('team')
+          .setDescription('Filter by team substring (optional; applied after teams.json)')
+      )
   )
-  .addIntegerOption(o =>
-    o.setName('days')
-      .setDescription('Number of days starting from date (default 7, max 14)')
-      .setMinValue(1)
-      .setMaxValue(14)
-  )
-  .addStringOption(o =>
-    o.setName('league')
-      .setDescription('Competition code(s) for football-data.org, e.g. PL or PL,CL')
-  )
-  .addStringOption(o =>
-    o.setName('team')
-      .setDescription('Filter by team substring (optional; applied after teams.json)')
+  // /fixtures follow league:PL
+  .addSubcommand(sub =>
+    sub
+      .setName('follow')
+      .setDescription('List teams from a league and choose which to follow')
+      .addStringOption(o =>
+        o.setName('league')
+          .setDescription('Competition code, e.g., PL, BL1, SA')
+          .setRequired(true)
+      )
   );
 
+// ---------- command executor ----------
 export async function execute(interaction) {
-  // Acknowledge quickly; use flags instead of deprecated `ephemeral`
+  const sub = interaction.options.getSubcommand();
+
+  // Always defer quickly (use flags instead of deprecated `ephemeral`)
   try {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   } catch (err) {
@@ -72,6 +134,85 @@ export async function execute(interaction) {
     if (!interaction.deferred && !interaction.replied) return;
   }
 
+  if (sub === 'follow') {
+    return handleFollow(interaction);
+  }
+  // default to browse
+  return handleBrowse(interaction);
+}
+
+// ---------- /fixtures follow ----------
+async function handleFollow(interaction) {
+  const league = interaction.options.getString('league', true).toUpperCase();
+
+  let teams;
+  try {
+    teams = await fetchTeamsForLeague(league);
+  } catch (e) {
+    return interaction.editReply(`❌ Failed to load teams for **${league}**: ${e.message}`);
+  }
+  if (!teams.length) {
+    return interaction.editReply(`No teams returned for **${league}**.`);
+  }
+
+  // Build a multi-select of teams
+  const select = new StringSelectMenuBuilder()
+    .setCustomId('fixtures:follow:select')
+    .setPlaceholder(`Select teams to follow from ${league}`)
+    .setMinValues(1)
+    .setMaxValues(Math.min(25, teams.length))
+    .addOptions(teams.map(t => ({
+      label: t.name,
+      value: t.name
+    })));
+
+  const row = new ActionRowBuilder().addComponents(select);
+  const embed = new EmbedBuilder()
+    .setTitle(`Follow teams • ${league}`)
+    .setDescription(`Pick one or more teams to add to **teams.json**.\nCurrent followed: **${readTeamsJson().length}**`);
+
+  await interaction.editReply({ embeds: [embed], components: [row] });
+
+  // Collector to capture the selection
+  const msg = await interaction.fetchReply();
+  const collector = msg.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 2 * 60 * 1000
+  });
+
+  collector.on('collect', async i => {
+    if (i.user.id !== interaction.user.id) {
+      return i.reply({ content: 'This menu isn’t for you.', flags: MessageFlags.Ephemeral });
+    }
+
+    const chosen = i.values; // array of team names (original case)
+    const current = readTeamsJson();
+    const merged = writeTeamsJson([...current, ...chosen]);
+
+    await i.reply({
+      content: `✅ Added **${chosen.length}** team(s). Now following **${merged.length}** total.`,
+      flags: MessageFlags.Ephemeral
+    });
+
+    // Update the embed to reflect new count
+    const updated = EmbedBuilder.from(embed)
+      .setDescription(`Pick one or more teams to add to **teams.json**.\nCurrent followed: **${merged.length}**`);
+    await interaction.editReply({ embeds: [updated] });
+  });
+
+  collector.on('end', async () => {
+    try {
+      // disable components when time’s up
+      const disabledRow = new ActionRowBuilder().addComponents(
+        StringSelectMenuBuilder.from(select).setDisabled(true)
+      );
+      await interaction.editReply({ components: [disabledRow] }).catch(() => {});
+    } catch {}
+  });
+}
+
+// ---------- /fixtures browse ----------
+async function handleBrowse(interaction) {
   // Default date: today (UTC) if user did not provide one
   const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const inputDate = interaction.options.getString('date');
@@ -91,25 +232,29 @@ export async function execute(interaction) {
   const league = interaction.options.getString('league') || undefined; // e.g., PL,CL
   const teamFilter = (interaction.options.getString('team') || '').toLowerCase();
 
-  const hasFollowList = TEAMS_TO_FOLLOW.length > 0;
+  // Load teams.json fresh each run (reflect changes from /fixtures follow)
+  const FOLLOW = readTeamsJson();
+  const hasFollowList = FOLLOW.length > 0;
+  const followLower = new Set(FOLLOW.map(x => x.toLowerCase()));
 
   // Helper: does fixture involve a followed team?
   const involvesFollowedTeam = (f) =>
-    !hasFollowList || TEAMS_TO_FOLLOW.some(t =>
-      f.home?.toLowerCase().includes(t) || f.away?.toLowerCase().includes(t)
+    !hasFollowList || followLower.has((f.home || '').toLowerCase()) || followLower.has((f.away || '').toLowerCase()) ||
+    // also allow substring match for flexibility
+    Array.from(followLower).some(t =>
+      (f.home || '').toLowerCase().includes(t) || (f.away || '').toLowerCase().includes(t)
     );
 
   // Helper: does fixture match teamFilter?
   const matchesTeamFilter = (f) =>
-    !teamFilter || f.home?.toLowerCase().includes(teamFilter) || f.away?.toLowerCase().includes(teamFilter);
+    !teamFilter || (f.home || '').toLowerCase().includes(teamFilter) || (f.away || '').toLowerCase().includes(teamFilter);
 
   // 1) Fetch & cache best-effort for each day
-  // We only upsert fixtures that match our teams.json and (optionally) teamFilter
+  // We only upsert fixtures that match our follow list and (optionally) teamFilter
   for (let d = 0; d < days; d++) {
     const dateISO = addDaysISO(startISO, d);
     try {
       const rows = await fetchFixtures({ dateISO, leagueId: league });
-      // Only store rows we actually care about
       const pruned = rows.filter(r => involvesFollowedTeam(r) && matchesTeamFilter(r));
       if (pruned.length) await upsertFixturesCache(pruned);
     } catch (e) {
@@ -132,12 +277,10 @@ export async function execute(interaction) {
     fixtures = fixtures.filter(f => (f.league || '').toLowerCase().includes(league.toLowerCase()));
   }
 
-  // Auto-filter by teams.json (if any)
   if (hasFollowList) {
     fixtures = fixtures.filter(involvesFollowedTeam);
   }
 
-  // Optional extra narrowing via /fixtures team:
   if (teamFilter) {
     fixtures = fixtures.filter(matchesTeamFilter);
   }
@@ -146,7 +289,7 @@ export async function execute(interaction) {
   fixtures.sort((a, b) => new Date(a.match_time) - new Date(b.match_time));
 
   if (!fixtures.length) {
-    const followBadge = hasFollowList ? ` • following:${TEAMS_TO_FOLLOW.length} team(s)` : '';
+    const followBadge = hasFollowList ? ` • following:${FOLLOW.length} team(s)` : '';
     return interaction.editReply(
       `No fixtures found from **${startISO}** for **${days}** day(s)` +
       `${league ? ` • league:${league}` : ''}${followBadge}` +
@@ -172,7 +315,7 @@ export async function execute(interaction) {
       lines.push(`• ${m.home} vs ${m.away} -- <t:${toTs(m.match_time)}:t>`);
     }
 
-    const followBadge = hasFollowList ? ` • following:${TEAMS_TO_FOLLOW.length}` : '';
+    const followBadge = hasFollowList ? ` • following:${FOLLOW.length}` : '';
     const title =
       `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
       `${league ? ` • ${league}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}${followBadge}`;
@@ -244,25 +387,21 @@ export async function execute(interaction) {
   });
 
   collector.on('end', async () => {
-    // disable components when time’s up
     try {
       const disabledRows = msg.components.map(r => {
         const row = ActionRowBuilder.from(r.toJSON());
         row.components = row.components.map(c => {
           const j = c.toJSON ? c.toJSON() : c;
-          // Button
           if (j.type === ComponentType.Button) {
             const b = ButtonBuilder.from(j);
             b.setDisabled(true);
             return b;
           }
-          // String select (and treat other selects similarly by trying builder)
           if (j.type === ComponentType.StringSelect) {
             const s = StringSelectMenuBuilder.from(j);
             s.setDisabled(true);
             return s;
           }
-          // Fallback: try to disable if supported, otherwise return as-is
           try {
             const b = ButtonBuilder.from(j);
             b.setDisabled(true);
