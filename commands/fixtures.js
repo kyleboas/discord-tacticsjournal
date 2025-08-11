@@ -41,6 +41,38 @@ function addDaysISO(dateISO, d) {
   return base.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
+// Fetch matches for a single team over a date range (inclusive)
+// Uses football-data.org /teams/{id}/matches?dateFrom&dateTo
+async function fetchMatchesForTeam(teamId, dateFromISO, dateToISO) {
+  if (!FD_TOKEN) {
+    throw new Error('Missing FOOTBALL_DATA_API_KEY (or FOOTBALL_DATA_TOKEN) in env.');
+  }
+  const url = new URL(`${FD_API_BASE}/teams/${encodeURIComponent(teamId)}/matches`);
+  url.searchParams.set('dateFrom', dateFromISO);
+  url.searchParams.set('dateTo', dateToISO);
+
+  const res = await fetch(url, { headers: { 'X-Auth-Token': FD_TOKEN } });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`football-data.org ${res.status}: ${text || res.statusText}`);
+  }
+  const json = await res.json();
+  const matches = Array.isArray(json?.matches) ? json.matches : [];
+
+  // Normalize to your cache row shape
+  // Note: match.id is numeric; we stringify for match_id
+  return matches.map(m => ({
+    match_id: String(m.id),
+    match_time: m.utcDate, // ISO string
+    home: m.homeTeam?.name || 'TBD',
+    away: m.awayTeam?.name || 'TBD',
+    home_id: m.homeTeam?.id ?? null,
+    away_id: m.awayTeam?.id ?? null,
+    league: m.competition?.code || m.competition?.name || null,
+    source: 'football-data'
+  }));
+}
+
 // competitions helpers (FD cap: <= 90 chars for ?competitions=)
 function normalizeCompetitionCodes(str) {
   if (!str) return [];
