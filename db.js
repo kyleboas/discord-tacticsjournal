@@ -78,7 +78,6 @@ export async function getAverageScores() {
     FROM watchlistScores
     GROUP BY player_name
   `);
-  
   return Object.fromEntries(res.rows.map(row => [row.player_name.toLowerCase(), row.avg_score]));
 }
 
@@ -108,14 +107,28 @@ export async function ensureSchema() {
     );
   `);
 
+  // match_reminders now includes match_id and a unique index (match_id, channel_id)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS match_reminders (
       id SERIAL PRIMARY KEY,
+      match_id TEXT,
       home TEXT NOT NULL,
       away TEXT NOT NULL,
       match_time TIMESTAMP NOT NULL,
       channel_id TEXT NOT NULL
     );
+  `);
+  await pool.query(`ALTER TABLE match_reminders ADD COLUMN IF NOT EXISTS match_id TEXT;`);
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes WHERE indexname = 'uniq_match_reminders_match_channel'
+      ) THEN
+        CREATE UNIQUE INDEX uniq_match_reminders_match_channel
+        ON match_reminders (match_id, channel_id);
+      END IF;
+    END$$;
   `);
 
   await pool.query(`
@@ -125,7 +138,7 @@ export async function ensureSchema() {
     );
   `);
 
-  /* NEW: starred matches */
+  /* starred matches */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS starred_matches (
       id SERIAL PRIMARY KEY,
@@ -142,7 +155,7 @@ export async function ensureSchema() {
     );
   `);
 
-  /* NEW: fixtures cache (+ IDs if available) */
+  /* fixtures cache (+ optional team IDs) */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS fixtures_cache (
       match_id TEXT PRIMARY KEY,
@@ -154,17 +167,16 @@ export async function ensureSchema() {
       cached_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
-  /* Add optional team ID columns if they don't exist */
   await pool.query(`ALTER TABLE fixtures_cache ADD COLUMN IF NOT EXISTS home_id INTEGER;`);
   await pool.query(`ALTER TABLE fixtures_cache ADD COLUMN IF NOT EXISTS away_id INTEGER;`);
 
-  /* NEW: team subscriptions (per channel) */
+  /* team subscriptions (per channel) */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS team_subscriptions (
       channel_id TEXT NOT NULL,
       team_id    INTEGER NOT NULL,
       team_name  TEXT NOT NULL,
-      source     TEXT DEFAULT 'football-data',
+      source     TEXT DEFAULT 'api-football',
       created_at TIMESTAMPTZ DEFAULT NOW(),
       PRIMARY KEY (channel_id, team_id)
     );
@@ -210,7 +222,6 @@ export async function clearActiveQuizInDB() {
 
 export async function setActiveQuizInDB({ messageId, questionIndex, correctIndex, points, channelId }) {
   await pool.query(`DELETE FROM active_quiz`);
-
   await pool.query(
     `INSERT INTO active_quiz (message_id, question_index, correct_index, points, channel_id)
      VALUES ($1, $2, $3, $4, $5)`,
@@ -250,7 +261,6 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
 }
 
 export async function getQuizLeaderboard(userId) {
-  // Get top 10
   const topRes = await pool.query(`
     SELECT username, total_points, user_id
     FROM qotd_scores
@@ -259,12 +269,9 @@ export async function getQuizLeaderboard(userId) {
   `);
 
   const top10 = topRes.rows;
-
-  // Check if requester is in top 10
   const isInTop10 = top10.some(row => row.user_id === userId);
 
   let userRankInfo = null;
-
   if (!isInTop10) {
     const rankRes = await pool.query(`
       SELECT username, total_points, rank FROM (
@@ -274,16 +281,10 @@ export async function getQuizLeaderboard(userId) {
       ) ranked
       WHERE user_id = $1
     `, [userId]);
-
-    if (rankRes.rows.length > 0) {
-      userRankInfo = rankRes.rows[0]; // { username, total_points, rank }
-    }
+    if (rankRes.rows.length > 0) userRankInfo = rankRes.rows[0];
   }
 
-  return {
-    top10,
-    userRankInfo
-  };
+  return { top10, userRankInfo };
 }
 
 export async function getWeeklyLeaderboard(userId) {
@@ -300,11 +301,9 @@ export async function getWeeklyLeaderboard(userId) {
   `, [isoWeek]);
 
   const top10 = topRes.rows;
-
   const isInTop10 = top10.some(row => row.user_id === userId);
 
   let userRankInfo = null;
-
   if (!isInTop10) {
     const rankRes = await pool.query(`
       SELECT username, total_points, rank FROM (
@@ -316,10 +315,7 @@ export async function getWeeklyLeaderboard(userId) {
       ) ranked
       WHERE user_id = $2
     `, [isoWeek, userId]);
-
-    if (rankRes.rows.length > 0) {
-      userRankInfo = rankRes.rows[0];
-    }
+    if (rankRes.rows.length > 0) userRankInfo = rankRes.rows[0];
   }
 
   return { top10, userRankInfo };
@@ -350,20 +346,13 @@ export async function getStrikeCount(userId) {
 
 export async function incrementStrike(userId, username) {
   const now = new Date();
-
-  const { rows } = await pool.query(`
-    SELECT count, last_strike_at FROM strikes WHERE user_id = $1
-  `, [userId]);
+  const { rows } = await pool.query(`SELECT count, last_strike_at FROM strikes WHERE user_id = $1`, [userId]);
 
   let count = 1;
-
   if (rows.length > 0) {
     const lastStrikeTime = new Date(rows[0].last_strike_at);
     const timeDiff = now - lastStrikeTime;
-
-    if (timeDiff <= 24 * 60 * 60 * 1000) {
-      count = rows[0].count + 1;
-    }
+    if (timeDiff <= 24 * 60 * 60 * 1000) count = rows[0].count + 1;
 
     await pool.query(`
       UPDATE strikes SET count = $1, last_strike_at = $2, username = $3 WHERE user_id = $4
@@ -374,24 +363,12 @@ export async function incrementStrike(userId, username) {
       VALUES ($1, $2, $3, $4)
     `, [userId, username, count, now]);
   }
-
   return count;
 }
 
 export async function incrementMajorStrike(userId, username) {
   const now = new Date();
   const res = await pool.query(`
-    INSERT INTO major_strikes (user_id, username, count, last_strike_at)
-    VALUES ($1, $2, 1, $3)
-    ON CONFLICT (user_id)
-    DO UPDATE SET count = major_strikes.count + 1, last_strike_at = $3, username = $2
-    RETURNING count
-  `, [userId, username, now]);
-  return res.rows[0].count;
-}
-
-export async function ensureMajorStrikeSchema() {
-  await pool.query(`
     CREATE TABLE IF NOT EXISTS major_strikes (
       user_id TEXT PRIMARY KEY,
       username TEXT NOT NULL,
@@ -399,8 +376,17 @@ export async function ensureMajorStrikeSchema() {
       last_strike_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  const upd = await pool.query(`
+    INSERT INTO major_strikes (user_id, username, count, last_strike_at)
+    VALUES ($1, $2, 1, $3)
+    ON CONFLICT (user_id)
+    DO UPDATE SET count = major_strikes.count + 1, last_strike_at = $3, username = $2
+    RETURNING count
+  `, [userId, username, now]);
+  return upd.rows[0].count;
 }
 
+// Legacy helper (keep if other code uses it)
 export async function addMatchReminder(home, away, matchTime, channelId) {
   await pool.query(
     `INSERT INTO match_reminders (home, away, match_time, channel_id) VALUES ($1, $2, $3, $4)`,
@@ -408,7 +394,17 @@ export async function addMatchReminder(home, away, matchTime, channelId) {
   );
 }
 
-/* UPDATED: include optional IDs */
+// New idempotent upsert: one reminder per (match_id, channel_id)
+export async function upsertMatchReminder({ match_id, home, away, match_time, channel_id }) {
+  if (!match_id) return;
+  await pool.query(`
+    INSERT INTO match_reminders (match_id, home, away, match_time, channel_id)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT (match_id, channel_id) DO NOTHING
+  `, [match_id, home, away, match_time, channel_id]);
+}
+
+/* Cache */
 export async function upsertFixturesCache(rows) {
   if (!rows?.length) return;
   const client = await pool.connect();
@@ -496,8 +492,7 @@ export async function getReminderChannel(guildId) {
   return res.rows[0]?.match_channel_id || null;
 }
 
-/* --- NEW: team subscriptions API --- */
-
+/* team subscriptions API */
 export async function subscribeTeams(channel_id, teams /* [{id, name}] */) {
   if (!teams?.length) return 0;
   const client = await pool.connect();

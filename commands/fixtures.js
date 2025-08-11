@@ -21,7 +21,8 @@ import {
   listCachedFixtures,
   starMatch,
   subscribeTeams,
-  listSubscribedTeams
+  listSubscribedTeams,
+  upsertMatchReminder
 } from '../db.js';
 
 // ---------- utils ----------
@@ -56,11 +57,23 @@ function splitLeagueTokens(tokens) {
   return { ids, alphas };
 }
 
+// Helper: does this fixture feature two followed teams?
+function isFollowedDerby(f, followIds, followNamesLower) {
+  const homeHit = f.home_id && followIds.has(String(f.home_id));
+  const awayHit = f.away_id && followIds.has(String(f.away_id));
+  if (homeHit && awayHit) return true;
+
+  const h = (f.home || '').toLowerCase();
+  const a = (f.away || '').toLowerCase();
+  const nameHitHome = followNamesLower.some(n => h.includes(n));
+  const nameHitAway = followNamesLower.some(n => a.includes(n));
+  return nameHitHome && nameHitAway;
+}
+
 // ---------- slash command ----------
 export const data = new SlashCommandBuilder()
   .setName('fixtures')
   .setDescription('Fixtures tools')
-  // /fixtures browse ...
   .addSubcommand(sub =>
     sub
       .setName('browse')
@@ -84,7 +97,6 @@ export const data = new SlashCommandBuilder()
           .setDescription('Filter by team substring (optional; applied after followed list)')
       )
   )
-  // /fixtures follow league:PL
   .addSubcommand(sub =>
     sub
       .setName('follow')
@@ -100,7 +112,6 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
 
-  // Defer quickly (flags instead of deprecated ephemeral option)
   try {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   } catch (err) {
@@ -118,7 +129,6 @@ async function handleFollow(interaction) {
 
   let teams;
   try {
-    // Provider handles resolving code→id and uses pinned SEASON
     teams = await fetchTeamsForLeague({ league: leagueInput });
   } catch (e) {
     return interaction.editReply(`❌ Failed to load teams for **${leagueInput}**: ${e.message}`);
@@ -127,7 +137,6 @@ async function handleFollow(interaction) {
     return interaction.editReply(`No teams returned for **${leagueInput}**.`);
   }
 
-  // Multi-select (value = API-Football team ID)
   const select = new StringSelectMenuBuilder()
     .setCustomId('fixtures:follow:select')
     .setPlaceholder(`Select teams to follow from ${leagueInput}`)
@@ -186,12 +195,10 @@ async function handleFollow(interaction) {
 
 // ---------- /fixtures browse ----------
 async function handleBrowse(interaction) {
-  // Default date: today (UTC) if user did not provide one
-  const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const todayISO = new Date().toISOString().slice(0, 10);
   const inputDate = interaction.options.getString('date');
   let startISO = inputDate || todayISO;
 
-  // Validate/normalize input date
   if (inputDate) {
     const isYMD = /^\d{4}-\d{2}-\d{2}$/.test(inputDate);
     const d = new Date(inputDate + 'T00:00:00Z');
@@ -205,18 +212,15 @@ async function handleBrowse(interaction) {
   const leagueRaw = interaction.options.getString('league') || '';
   const teamFilter = (interaction.options.getString('team') || '').toLowerCase();
 
-  // leagues: accept codes or ids; pass through to provider as comma string
   const leagueTokens = normalizeLeagueTokens(leagueRaw);
   const leagueForTitle = leagueTokens.length ? leagueTokens.join(',') : undefined;
-  const { ids: leagueIdTokens, alphas: leagueAlphaTokens } = splitLeagueTokens(leagueTokens);
+  const { ids: leagueIdTokens } = splitLeagueTokens(leagueTokens);
 
-  // Load followed teams (per channel) from DB (API-Football team ids)
   const FOLLOW = await listSubscribedTeams(interaction.channelId); // [{team_id, team_name}]
   const hasFollowList = FOLLOW.length > 0;
   const followIds = new Set(FOLLOW.map(x => String(x.team_id)));
   const followNameLower = FOLLOW.map(x => (x.team_name || '').toLowerCase());
 
-  // helpers
   const matchesTeamFilter = (f) =>
     !teamFilter ||
     (f.home || '').toLowerCase().includes(teamFilter) ||
@@ -224,34 +228,56 @@ async function handleBrowse(interaction) {
 
   const endISO = addDaysISO(startISO, days - 1);
 
-  // Prefer per-team range (precise + fewer requests); fallback to per-date
+  // Prefer per-team range when following teams
   if (hasFollowList && followIds.size) {
     for (const teamId of followIds) {
       try {
         let rows = await fetchTeamFixtures({ teamId, fromISO: startISO, toISO: endISO });
 
-        // Optional: reduce by leagues **only if user provided numeric ids** (e.g., "39,2")
-        if (leagueIdTokens.size) {
-          rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
-        }
-        // If user only provided alpha codes like "PL,CL", skip here (codes don't match numeric league ids).
-
+        if (leagueIdTokens.size) rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
         rows = rows.filter(matchesTeamFilter);
 
-        if (rows.length) await upsertFixturesCache(rows);
+        if (rows.length) {
+          await upsertFixturesCache(rows);
+          // Add derby reminders (both teams followed) idempotently
+          for (const r of rows) {
+            if (isFollowedDerby(r, followIds, followNameLower)) {
+              await upsertMatchReminder({
+                match_id: r.match_id,
+                home: r.home,
+                away: r.away,
+                match_time: r.match_time,
+                channel_id: interaction.channelId
+              });
+            }
+          }
+        }
       } catch (e) {
         console.warn(`team ${teamId} fetch failed (using cache):`, e?.message || e);
       }
     }
   } else {
-    // Per-date fetch (optionally league-filtered) once per day in the window.
-    // The provider resolves codes → ids and uses the pinned SEASON internally.
+    // Per-date fetch once per day
     for (let d = 0; d < days; d++) {
       const dateISO = addDaysISO(startISO, d);
       try {
-        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle }); // provider handles code/id
+        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle }); // provider handles codes/ids & season
         const narrowed = rows.filter(matchesTeamFilter);
-        if (narrowed.length) await upsertFixturesCache(narrowed);
+
+        if (narrowed.length) {
+          await upsertFixturesCache(narrowed);
+          for (const r of narrowed) {
+            if (isFollowedDerby(r, followIds, followNameLower)) {
+              await upsertMatchReminder({
+                match_id: r.match_id,
+                home: r.home,
+                away: r.away,
+                match_time: r.match_time,
+                channel_id: interaction.channelId
+              });
+            }
+          }
+        }
       } catch (e) {
         console.warn(`fetchFixtures failed for ${dateISO} (using cache):`, e?.message || e);
       }
@@ -269,19 +295,14 @@ async function handleBrowse(interaction) {
   // Safeguard filters after cache read
   let fixtures = all;
 
-  // If user specified numeric leagues, filter against stored numeric league ids.
   if (leagueIdTokens.size) {
     fixtures = fixtures.filter(f => f.league && leagueIdTokens.has(String(f.league)));
   }
-  // If user specified only alpha codes (e.g., "PL"), we **skip** post-filter here because
-  // cached rows store r.league as numeric id ("39") and r.league_name as full name
-  // ("Premier League") -- direct equality with "pl" would wrongly drop matches.
 
   if (hasFollowList) {
     fixtures = fixtures.filter(f =>
       (f.home_id && followIds.has(String(f.home_id))) ||
       (f.away_id && followIds.has(String(f.away_id))) ||
-      // fallback: name substring in case IDs are missing in cache
       followNameLower.some(t =>
         (f.home || '').toLowerCase().includes(t) || (f.away || '').toLowerCase().includes(t)
       )
@@ -292,7 +313,6 @@ async function handleBrowse(interaction) {
     fixtures = fixtures.filter(matchesTeamFilter);
   }
 
-  // Sort and render
   fixtures.sort((a, b) => new Date(a.match_time) - new Date(b.match_time));
 
   if (!fixtures.length) {
@@ -355,7 +375,6 @@ async function handleBrowse(interaction) {
 
   await render();
 
-  // Collector
   const msg = await interaction.fetchReply();
   const collector = msg.createMessageComponentCollector({ time: 5 * 60 * 1000 });
 
