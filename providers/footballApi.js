@@ -9,10 +9,10 @@ const API_KEY = process.env.FOOTBALL_DATA_TOKEN;
 
 // Lock the season to a single start-year (e.g., 2025 for 2025/26).
 // You can override via env: FOOTBALL_SEASON=2025
-const SEASON = Number(process.env.FOOTBALL_SEASON) || 2025;
+const SEASON = 2025;
 
 // Header key for direct API-Football (not RapidAPI)
-const AUTH_HEADER = 'x-apisports-key';
+const AUTH_HEADER = 'x-apisports-key'; 
 
 if (!API_KEY) {
   console.warn('[api-football] Missing API key. Set FOOTBALL_DATA_TOKEN to your API-Football key.');
