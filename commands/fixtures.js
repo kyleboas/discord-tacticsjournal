@@ -27,7 +27,6 @@ import {
   getUpcomingRemindersWindow      // used by /fixtures upcoming
 } from '../db.js';
 
-// ⬇️ NEW: import the immediate refresh helper
 import { refreshRemindersForGuild } from '../matchScheduler.js';
 
 // ---------- utils ----------
@@ -283,9 +282,13 @@ async function handleFollow(interaction) {
   });
 
   collector.on('collect', async i => {
+    // 🚫 If someone else clicks
     if (i.user.id !== interaction.user.id) {
       return i.reply({ content: 'This menu isn’t for you.', flags: MessageFlags.Ephemeral });
     }
+
+    // ✅ Immediately acknowledge to avoid "Unknown interaction"
+    await i.deferReply({ ephemeral: true });
 
     const chosenIds = i.values.map(v => Number(v));
     const byId = new Map(teams.map(t => [t.id, t]));
@@ -294,26 +297,39 @@ async function handleFollow(interaction) {
       name: cleanTeamName(byId.get(id)?.name || String(id))
     }));
 
-    const added = await subscribeGuildTeams(guildId, chosen);
+    let added = 0;
+    try {
+      added = await subscribeGuildTeams(guildId, chosen);
+    } catch (e) {
+      // edit the deferred reply and bail
+      await i.editReply(`❌ Failed to save selection: ${e.message || e}`);
+      return;
+    }
 
-    // ⬇️ NEW: immediately refresh reminders for this guild (returns count)
+    // 🔄 Immediately refresh ONLY the newly followed teams to minimize API calls / 429s
     let upserts = 0;
     try {
-      upserts = await refreshRemindersForGuild(guildId, 14);
+      upserts = await refreshRemindersForGuild(guildId, 14, chosenIds);
     } catch (err) {
+      // don't fail the UX if refresh struggles; just log & inform
       console.warn('[fixtures follow] immediate refresh failed:', err?.message || err);
     }
 
     const nowList = await listGuildSubscribedTeams(guildId);
 
-    await i.reply({
-      content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total.\n` +
-               `🔄 Refreshed reminders for **${upserts}** upcoming match(es).`,
-      flags: MessageFlags.Ephemeral
-    });
+    // Finish the deferred reply
+    await i.editReply(
+      `✅ Added **${added}** team(s). Now following **${nowList.length}** total.\n` +
+      (upserts ? `🔄 Refreshed reminders for **${upserts}** upcoming match(es).` : `⏳ Reminders will catch up shortly.`)
+    );
 
+    // Update the main message counts
     const updated = EmbedBuilder.from(embed)
-      .setDescription(`Pick one or more teams to follow.\nCurrently followed: **${nowList.length}**`);
+      .setDescription(
+        `Season used for team list: **${seasonUsed}**\n` +
+        `Pick one or more teams to follow in this channel.\n` +
+        `Currently followed: **${nowList.length}**`
+      );
     await interaction.editReply({ embeds: [updated] });
   });
 
