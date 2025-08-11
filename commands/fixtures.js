@@ -100,7 +100,7 @@ async function handleFollow(interaction) {
   const guildId = interaction.guildId;
   const leagueInput = interaction.options.getString('league', true);
 
-  let teams;
+    let teams;
   try {
     teams = await fetchTeamsForLeague({ league: leagueInput });
   } catch (e) {
@@ -109,6 +109,8 @@ async function handleFollow(interaction) {
   if (!teams.length) {
     return interaction.editReply(`No teams returned for **${leagueInput}**.`);
   }
+
+  const seasonUsed = teams.__seasonUsed ?? 'unknown';
 
   const select = new StringSelectMenuBuilder()
     .setCustomId('fixtures:follow:select')
@@ -119,10 +121,14 @@ async function handleFollow(interaction) {
 
   const row = new ActionRowBuilder().addComponents(select);
   const current = await listGuildSubscribedTeams(guildId);
-  const embed = new EmbedBuilder()
+    const embed = new EmbedBuilder()
     .setTitle(`Follow teams • ${leagueInput}`)
-    .setDescription(`Pick one or more teams to follow in this server.\nCurrently followed: **${current.length}**`);
-
+    .setDescription(
+      `Season used for team list: **${seasonUsed}**\n` +
+      `Pick one or more teams to follow in this channel.\n` +
+      `Currently followed: **${current.length}**`
+    );
+    
   await interaction.editReply({ embeds: [embed], components: [row] });
 
   const msg = await interaction.fetchReply();
