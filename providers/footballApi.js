@@ -9,7 +9,7 @@ const API_KEY = process.env.FOOTBALL_DATA_TOKEN;
 
 // Lock the season to a single start-year (e.g., 2025 for 2025/26).
 // You can override this via env: FOOTBALL_SEASON=2025
-const SEASON = Number(process.env.FOOTBALL_SEASON) || 2025;
+const SEASON = 2025;
 
 // Header key for direct API-Football (not RapidAPI)
 const AUTH_HEADER = 'x-apisports-key';
@@ -107,6 +107,21 @@ async function toLeagueIds(list) {
     if (resolved) out.push(resolved);
   }
   return Array.from(new Set(out));
+}
+
+export async function fetchLeagueFixturesRange({ league, fromISO, toISO, season = SEASON }) {
+  if (!API_KEY) throw new Error('FOOTBALL_DATA_TOKEN not set');
+  const lid = isNumeric(league) ? Number(league) : (await resolveLeagueId(String(league)));
+  if (!lid) throw new Error(`Unknown league: ${league}`);
+  const headers = { [AUTH_HEADER]: API_KEY };
+  const url = `${API_BASE}/fixtures?league=${lid}&season=${season}&from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`api-football ${res.status}: ${text || res.statusText}`);
+  }
+  const json = await res.json();
+  return (json?.response || []).map(mapFixture);
 }
 
 /**
