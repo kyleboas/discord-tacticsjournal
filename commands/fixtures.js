@@ -11,18 +11,18 @@ import {
 } from 'discord.js';
 
 import {
-  fetchFixtures,           // per-date (optionally per-league, uses pinned SEASON in provider)
-  fetchTeamsForLeague,     // list teams for /fixtures follow (uses pinned SEASON)
-  fetchTeamFixtures        // per-team range (uses pinned SEASON)
+  fetchFixtures,
+  fetchTeamsForLeague,
+  fetchTeamFixtures
 } from '../providers/footballApi.js';
 
 import {
   upsertFixturesCache,
   listCachedFixtures,
   starMatch,
-  subscribeTeams,
-  listSubscribedTeams,
-  upsertMatchReminder
+  subscribeGuildTeams,
+  listGuildSubscribedTeams,
+  unsubscribeGuildTeams
 } from '../db.js';
 
 // ---------- utils ----------
@@ -36,16 +36,12 @@ const toTs = d => Math.floor(new Date(d).getTime() / 1000);
 function addDaysISO(dateISO, d) {
   const base = new Date(dateISO + 'T00:00:00Z');
   base.setUTCDate(base.getUTCDate() + d);
-  return base.toISOString().slice(0, 10); // YYYY-MM-DD
+  return base.toISOString().slice(0, 10);
 }
 
-// Accept both codes and numeric ids, comma-separated, e.g. "PL,CL" or "39,2"
 function normalizeLeagueTokens(str) {
   if (!str) return [];
-  return String(str)
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
+  return String(str).split(',').map(s => s.trim()).filter(Boolean);
 }
 function splitLeagueTokens(tokens) {
   const ids = new Set();
@@ -57,19 +53,6 @@ function splitLeagueTokens(tokens) {
   return { ids, alphas };
 }
 
-// Helper: does this fixture feature two followed teams?
-function isFollowedDerby(f, followIds, followNamesLower) {
-  const homeHit = f.home_id && followIds.has(String(f.home_id));
-  const awayHit = f.away_id && followIds.has(String(f.away_id));
-  if (homeHit && awayHit) return true;
-
-  const h = (f.home || '').toLowerCase();
-  const a = (f.away || '').toLowerCase();
-  const nameHitHome = followNamesLower.some(n => h.includes(n));
-  const nameHitAway = followNamesLower.some(n => a.includes(n));
-  return nameHitHome && nameHitAway;
-}
-
 // ---------- slash command ----------
 export const data = new SlashCommandBuilder()
   .setName('fixtures')
@@ -78,54 +61,44 @@ export const data = new SlashCommandBuilder()
     sub
       .setName('browse')
       .setDescription('Browse fixtures for a date range, filter, and star in bulk')
-      .addStringOption(o =>
-        o.setName('date')
-          .setDescription('Start date YYYY-MM-DD (optional; defaults to today)')
-      )
-      .addIntegerOption(o =>
-        o.setName('days')
-          .setDescription('Number of days starting from date (default 7, max 14)')
-          .setMinValue(1)
-          .setMaxValue(14)
-      )
-      .addStringOption(o =>
-        o.setName('league')
-          .setDescription('League(s) by code or id, e.g. PL or 39, or PL,CL')
-      )
-      .addStringOption(o =>
-        o.setName('team')
-          .setDescription('Filter by team substring (optional; applied after followed list)')
-      )
+      .addStringOption(o => o.setName('date').setDescription('Start date YYYY-MM-DD (optional; defaults to today)'))
+      .addIntegerOption(o => o.setName('days').setDescription('Number of days (default 7, max 14)').setMinValue(1).setMaxValue(14))
+      .addStringOption(o => o.setName('league').setDescription('League(s) by code or id, e.g. PL or 39, or PL,CL'))
+      .addStringOption(o => o.setName('team').setDescription('Filter by team substring (optional; applied after followed list)'))
   )
   .addSubcommand(sub =>
     sub
       .setName('follow')
-      .setDescription('List teams from a league and choose which to follow (saved per channel)')
-      .addStringOption(o =>
-        o.setName('league')
-          .setDescription('League code or id, e.g., PL or 39')
-          .setRequired(true)
-      )
+      .setDescription('List teams from a league and choose which to follow (server-wide)')
+      .addStringOption(o => o.setName('league').setDescription('League code or id, e.g., PL or 39').setRequired(true))
+  )
+  .addSubcommand(sub =>
+    sub
+      .setName('followed')
+      .setDescription('Show teams followed in this server')
+  )
+  .addSubcommand(sub =>
+    sub
+      .setName('unfollow')
+      .setDescription('Unfollow one or more teams in this server')
   );
 
 // ---------- command executor ----------
 export async function execute(interaction) {
+  // Defer quickly
+  try { await interaction.deferReply({ flags: MessageFlags.Ephemeral }); } catch { /* noop */ }
+
   const sub = interaction.options.getSubcommand();
-
-  try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  } catch (err) {
-    console.error('fixtures.deferReply failed:', err);
-    if (!interaction.deferred && !interaction.replied) return;
-  }
-
   if (sub === 'follow') return handleFollow(interaction);
+  if (sub === 'followed') return handleFollowed(interaction);
+  if (sub === 'unfollow') return handleUnfollow(interaction);
   return handleBrowse(interaction);
 }
 
 // ---------- /fixtures follow ----------
 async function handleFollow(interaction) {
-  const leagueInput = interaction.options.getString('league', true); // code or id
+  const guildId = interaction.guildId;
+  const leagueInput = interaction.options.getString('league', true);
 
   let teams;
   try {
@@ -142,24 +115,18 @@ async function handleFollow(interaction) {
     .setPlaceholder(`Select teams to follow from ${leagueInput}`)
     .setMinValues(1)
     .setMaxValues(Math.min(25, teams.length))
-    .addOptions(teams.map(t => ({
-      label: t.name,
-      value: String(t.id)
-    })));
+    .addOptions(teams.map(t => ({ label: t.name, value: String(t.id) })));
 
   const row = new ActionRowBuilder().addComponents(select);
-  const current = await listSubscribedTeams(interaction.channelId);
+  const current = await listGuildSubscribedTeams(guildId);
   const embed = new EmbedBuilder()
     .setTitle(`Follow teams • ${leagueInput}`)
-    .setDescription(`Pick one or more teams to follow in this channel.\nCurrently followed: **${current.length}**`);
+    .setDescription(`Pick one or more teams to follow in this server.\nCurrently followed: **${current.length}**`);
 
   await interaction.editReply({ embeds: [embed], components: [row] });
 
   const msg = await interaction.fetchReply();
-  const collector = msg.createMessageComponentCollector({
-    componentType: ComponentType.StringSelect,
-    time: 2 * 60 * 1000
-  });
+  const collector = msg.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 2 * 60 * 1000 });
 
   collector.on('collect', async i => {
     if (i.user.id !== interaction.user.id) {
@@ -170,13 +137,10 @@ async function handleFollow(interaction) {
     const byId = new Map(teams.map(t => [t.id, t]));
     const chosen = chosenIds.map(id => ({ id, name: byId.get(id)?.name || String(id) }));
 
-    const added = await subscribeTeams(interaction.channelId, chosen);
-    const nowList = await listSubscribedTeams(interaction.channelId);
+    const added = await subscribeGuildTeams(guildId, chosen);
+    const nowList = await listGuildSubscribedTeams(guildId);
 
-    await i.reply({
-      content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total in this channel.`,
-      flags: MessageFlags.Ephemeral
-    });
+    await i.reply({ content: `✅ Added **${added}** team(s). Now following **${nowList.length}** total in this server.`, flags: MessageFlags.Ephemeral });
 
     const updated = EmbedBuilder.from(embed)
       .setDescription(`Pick one or more teams to follow.\nCurrently followed: **${nowList.length}**`);
@@ -185,9 +149,68 @@ async function handleFollow(interaction) {
 
   collector.on('end', async () => {
     try {
-      const disabledRow = new ActionRowBuilder().addComponents(
-        StringSelectMenuBuilder.from(select).setDisabled(true)
-      );
+      const disabledRow = new ActionRowBuilder().addComponents(StringSelectMenuBuilder.from(select).setDisabled(true));
+      await interaction.editReply({ components: [disabledRow] }).catch(() => {});
+    } catch {}
+  });
+}
+
+// ---------- /fixtures followed ----------
+async function handleFollowed(interaction) {
+  const guildId = interaction.guildId;
+  const list = await listGuildSubscribedTeams(guildId);
+
+  if (!list.length) {
+    return interaction.editReply('No teams are followed in this server yet. Use `/fixtures follow league:PL` to start.');
+  }
+
+  const names = list.map(t => `• ${t.team_name} (${t.team_id})`).join('\n');
+  const embed = new EmbedBuilder()
+    .setTitle(`Followed teams (${list.length})`)
+    .setDescription(names);
+
+  return interaction.editReply({ embeds: [embed] });
+}
+
+// ---------- /fixtures unfollow ----------
+async function handleUnfollow(interaction) {
+  const guildId = interaction.guildId;
+  const list = await listGuildSubscribedTeams(guildId);
+
+  if (!list.length) {
+    return interaction.editReply('No teams to unfollow. Use `/fixtures follow` first.');
+  }
+
+  const select = new StringSelectMenuBuilder()
+    .setCustomId('fixtures:unfollow:select')
+    .setPlaceholder('Select teams to unfollow')
+    .setMinValues(1)
+    .setMaxValues(Math.min(25, list.length))
+    .addOptions(list.map(t => ({ label: t.team_name, value: String(t.team_id) })));
+
+  const row = new ActionRowBuilder().addComponents(select);
+  await interaction.editReply({ content: 'Choose teams to unfollow:', components: [row] });
+
+  const msg = await interaction.fetchReply();
+  const collector = msg.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 2 * 60 * 1000 });
+
+  collector.on('collect', async i => {
+    if (i.user.id !== interaction.user.id) {
+      return i.reply({ content: 'This menu isn’t for you.', flags: MessageFlags.Ephemeral });
+    }
+
+    const ids = i.values.map(v => Number(v));
+    const removed = await unsubscribeGuildTeams(guildId, ids);
+    await i.reply({ content: `🗑️ Removed **${removed}** team(s) from this server’s follow list.`, flags: MessageFlags.Ephemeral });
+
+    // disable after action
+    const disabledRow = new ActionRowBuilder().addComponents(StringSelectMenuBuilder.from(select).setDisabled(true));
+    await interaction.editReply({ components: [disabledRow] }).catch(() => {});
+  });
+
+  collector.on('end', async () => {
+    try {
+      const disabledRow = new ActionRowBuilder().addComponents(StringSelectMenuBuilder.from(select).setDisabled(true));
       await interaction.editReply({ components: [disabledRow] }).catch(() => {});
     } catch {}
   });
@@ -195,6 +218,8 @@ async function handleFollow(interaction) {
 
 // ---------- /fixtures browse ----------
 async function handleBrowse(interaction) {
+  const guildId = interaction.guildId;
+
   const todayISO = new Date().toISOString().slice(0, 10);
   const inputDate = interaction.options.getString('date');
   let startISO = inputDate || todayISO;
@@ -216,7 +241,8 @@ async function handleBrowse(interaction) {
   const leagueForTitle = leagueTokens.length ? leagueTokens.join(',') : undefined;
   const { ids: leagueIdTokens } = splitLeagueTokens(leagueTokens);
 
-  const FOLLOW = await listSubscribedTeams(interaction.channelId); // [{team_id, team_name}]
+  // Load followed teams (server-wide)
+  const FOLLOW = await listGuildSubscribedTeams(guildId); // [{team_id, team_name}]
   const hasFollowList = FOLLOW.length > 0;
   const followIds = new Set(FOLLOW.map(x => String(x.team_id)));
   const followNameLower = FOLLOW.map(x => (x.team_name || '').toLowerCase());
@@ -228,63 +254,37 @@ async function handleBrowse(interaction) {
 
   const endISO = addDaysISO(startISO, days - 1);
 
-  // Prefer per-team range when following teams
+  // Prefer per-team range (fewer requests, precise)
   if (hasFollowList && followIds.size) {
     for (const teamId of followIds) {
       try {
         let rows = await fetchTeamFixtures({ teamId, fromISO: startISO, toISO: endISO });
 
-        if (leagueIdTokens.size) rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
-        rows = rows.filter(matchesTeamFilter);
-
-        if (rows.length) {
-          await upsertFixturesCache(rows);
-          // Add derby reminders (both teams followed) idempotently
-          for (const r of rows) {
-            if (isFollowedDerby(r, followIds, followNameLower)) {
-              await upsertMatchReminder({
-                match_id: r.match_id,
-                home: r.home,
-                away: r.away,
-                match_time: r.match_time,
-                channel_id: interaction.channelId
-              });
-            }
-          }
+        if (leagueIdTokens.size) {
+          rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
         }
+
+        rows = rows.filter(matchesTeamFilter);
+        if (rows.length) await upsertFixturesCache(rows);
       } catch (e) {
         console.warn(`team ${teamId} fetch failed (using cache):`, e?.message || e);
       }
     }
   } else {
-    // Per-date fetch once per day
+    // Fall back to per-date fetch
     for (let d = 0; d < days; d++) {
       const dateISO = addDaysISO(startISO, d);
       try {
-        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle }); // provider handles codes/ids & season
+        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle });
         const narrowed = rows.filter(matchesTeamFilter);
-
-        if (narrowed.length) {
-          await upsertFixturesCache(narrowed);
-          for (const r of narrowed) {
-            if (isFollowedDerby(r, followIds, followNameLower)) {
-              await upsertMatchReminder({
-                match_id: r.match_id,
-                home: r.home,
-                away: r.away,
-                match_time: r.match_time,
-                channel_id: interaction.channelId
-              });
-            }
-          }
-        }
+        if (narrowed.length) await upsertFixturesCache(narrowed);
       } catch (e) {
         console.warn(`fetchFixtures failed for ${dateISO} (using cache):`, e?.message || e);
       }
     }
   }
 
-  // Read back from cache for each day and aggregate
+  // Aggregate from cache
   const all = [];
   for (let d = 0; d < days; d++) {
     const dateISO = addDaysISO(startISO, d);
@@ -292,7 +292,7 @@ async function handleBrowse(interaction) {
     all.push(...rows);
   }
 
-  // Safeguard filters after cache read
+  // Safeguard filters
   let fixtures = all;
 
   if (leagueIdTokens.size) {
@@ -329,7 +329,6 @@ async function handleBrowse(interaction) {
 
   const render = async () => {
     const page = pages[idx];
-
     const lines = [];
     let currentDay = '';
     for (const m of page) {
@@ -342,9 +341,7 @@ async function handleBrowse(interaction) {
     }
 
     const followBadge = hasFollowList ? ` • following:${FOLLOW.length}` : '';
-    const title =
-      `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
-      `${leagueForTitle ? ` • ${leagueForTitle}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}${followBadge}`;
+    const title = `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}${leagueForTitle ? ` • ${leagueForTitle}` : ''}${teamFilter ? ` • team:${teamFilter}` : ''}${followBadge}`;
 
     const embed = new EmbedBuilder()
       .setTitle(title)
@@ -403,9 +400,7 @@ async function handleBrowse(interaction) {
         try {
           await starMatch({ match_id, channel_id, user_id });
           ok++;
-        } catch {
-          // ignore duplicates or cache misses
-        }
+        } catch {}
       }
       return i.reply({ content: `⭐ Starred ${ok} match(es) for this channel.`, flags: MessageFlags.Ephemeral });
     }
@@ -417,29 +412,11 @@ async function handleBrowse(interaction) {
         const row = ActionRowBuilder.from(r.toJSON());
         row.components = row.components.map(c => {
           const j = c.toJSON ? c.toJSON() : c;
-          if (j.type === ComponentType.Button) {
-            const b = ButtonBuilder.from(j);
-            b.setDisabled(true);
-            return b;
-          }
-          if (j.type === ComponentType.StringSelect) {
-            const s = StringSelectMenuBuilder.from(j);
-            s.setDisabled(true);
-            return s;
-          }
-          try {
-            const b = ButtonBuilder.from(j);
-            b.setDisabled(true);
-            return b;
-          } catch {
-            try {
-              const s = StringSelectMenuBuilder.from(j);
-              s.setDisabled(true);
-              return s;
-            } catch {
-              return c;
-            }
-          }
+          if (j.type === ComponentType.Button) return ButtonBuilder.from(j).setDisabled(true);
+          if (j.type === ComponentType.StringSelect) return StringSelectMenuBuilder.from(j).setDisabled(true);
+          try { return ButtonBuilder.from(j).setDisabled(true); } catch {}
+          try { return StringSelectMenuBuilder.from(j).setDisabled(true); } catch {}
+          return c;
         });
         return row;
       });
