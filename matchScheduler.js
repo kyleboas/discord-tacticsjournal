@@ -35,7 +35,8 @@ function addDaysISO(dateISO, d) {
 }
 
 // --- Core: refresh reminders every 3 days ---
-async function refreshFollowedVsFollowedReminders(client, horizonDays = 14) {
+// Now: include ANY match where at least one team is followed.
+async function refreshFollowedReminders(client, horizonDays = 14) {
   const todayISO = toISODate(new Date());
 
   // traverse all guilds the bot is in
@@ -68,25 +69,24 @@ async function refreshFollowedVsFollowedReminders(client, horizonDays = 14) {
         }
       }
 
-      // Keep only matches where BOTH sides are followed in this guild
-      const bothFollowed = [];
-      const seen = new Set(); // match_id dedupe
+      // Keep matches where EITHER side is a followed team (dedup by match_id)
+      const selected = [];
+      const seen = new Set(); // match_id dedupe across teams
       for (const m of allMatches) {
         if (!m?.match_id) continue;
         if (seen.has(m.match_id)) continue;
-        seen.add(m.match_id);
 
         const h = m.home_id ? String(m.home_id) : null;
         const a = m.away_id ? String(m.away_id) : null;
+        const involvesFollowed = (h && followedIds.has(h)) || (a && followedIds.has(a));
+        if (!involvesFollowed) continue;
 
-        // require both IDs to be present and followed
-        if (h && a && followedIds.has(h) && followedIds.has(a)) {
-          bothFollowed.push(m);
-        }
+        seen.add(m.match_id);
+        selected.push(m);
       }
 
-      // Upsert reminders
-      for (const m of bothFollowed) {
+      // Upsert reminders for all selected matches
+      for (const m of selected) {
         try {
           await upsertGuildMatchReminder({
             guild_id,
@@ -139,7 +139,7 @@ async function dispatchImminentReminders(client) {
     const guild_id = match.guild_id;
     const keyBase = `${guild_id}_${match.match_id}_${ts}`;
 
-    // 60‑minute reminder
+    // 60-minute reminder
     if (diffMinutes > 59 && diffMinutes < 61) {
       const key = `${keyBase}_60`;
       if (!sent60.has(key)) {
@@ -152,7 +152,7 @@ async function dispatchImminentReminders(client) {
       }
     }
 
-    // 5‑minute reminder
+    // 5-minute reminder
     if (diffMinutes > 4 && diffMinutes < 6) {
       const key = `${keyBase}_kick`;
       if (!sentKick.has(key)) {
@@ -166,7 +166,7 @@ async function dispatchImminentReminders(client) {
     }
   }
 
-  // send 60‑minute
+  // send 60-minute
   for (const [, group] of grouped60) {
     try {
       const channel = await client.channels.fetch(group.channel_id);
@@ -182,11 +182,11 @@ async function dispatchImminentReminders(client) {
         }]
       });
     } catch (err) {
-      console.error(`Failed to send 60‑min reminder to channel ${group.channel_id}`, err);
+      console.error(`Failed to send 60-min reminder to channel ${group.channel_id}`, err);
     }
   }
 
-  // send 5‑minute
+  // send 5-minute
   for (const [, group] of groupedKick) {
     try {
       const channel = await client.channels.fetch(group.channel_id);
@@ -198,7 +198,7 @@ async function dispatchImminentReminders(client) {
         }]
       });
     } catch (err) {
-      console.error(`Failed to send 5‑min reminder to channel ${group.channel_id}`, err);
+      console.error(`Failed to send 5-min reminder to channel ${group.channel_id}`, err);
     }
   }
 }
@@ -212,9 +212,9 @@ export function setupMatchReminderScheduler(client) {
     );
   }, 60 * 1000);
 
-  // 2) Refresh followed‑vs‑followed matches every 3 days (and once at boot)
+  // 2) Refresh followed matches every 3 days (and once at boot)
   const runRefresh = () =>
-    refreshFollowedVsFollowedReminders(client).catch(err =>
+    refreshFollowedReminders(client).catch(err =>
       console.error('[scheduler] refresh error:', err?.message || err)
     );
 
