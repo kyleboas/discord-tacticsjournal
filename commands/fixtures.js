@@ -10,15 +10,12 @@ import {
   MessageFlags
 } from 'discord.js';
 
-// Node 18+ has global fetch; if not, install node-fetch and import it.
-import fs from 'fs';
+import {
+  fetchFixtures,           // per-date (optionally per-league)
+  fetchTeamsForLeague,     // list teams for /fixtures follow
+  fetchTeamFixtures        // per-team range (for followed teams)
+} from '../providers/footballApi.js';
 
-// --- CONFIG for football-data.org ---
-const FD_API_BASE = 'https://api.football-data.org/v4';
-const FD_TOKEN = process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALL_DATA_TOKEN;
-
-// --- Your existing providers/db ---
-import { fetchFixtures } from '../providers/footballApi.js'; // single-day fetch (we'll loop days)
 import {
   upsertFixturesCache,
   listCachedFixtures,
@@ -41,74 +38,13 @@ function addDaysISO(dateISO, d) {
   return base.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
-// Fetch matches for a single team over a date range (inclusive)
-// Uses football-data.org /teams/{id}/matches?dateFrom&dateTo
-async function fetchMatchesForTeam(teamId, dateFromISO, dateToISO) {
-  if (!FD_TOKEN) {
-    throw new Error('Missing FOOTBALL_DATA_API_KEY (or FOOTBALL_DATA_TOKEN) in env.');
-  }
-  const url = new URL(`${FD_API_BASE}/teams/${encodeURIComponent(teamId)}/matches`);
-  url.searchParams.set('dateFrom', dateFromISO);
-  url.searchParams.set('dateTo', dateToISO);
-
-  const res = await fetch(url, { headers: { 'X-Auth-Token': FD_TOKEN } });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`football-data.org ${res.status}: ${text || res.statusText}`);
-  }
-  const json = await res.json();
-  const matches = Array.isArray(json?.matches) ? json.matches : [];
-
-  // Normalize to your cache row shape
-  // Note: match.id is numeric; we stringify for match_id
-  return matches.map(m => ({
-    match_id: String(m.id),
-    match_time: m.utcDate, // ISO string
-    home: m.homeTeam?.name || 'TBD',
-    away: m.awayTeam?.name || 'TBD',
-    home_id: m.homeTeam?.id ?? null,
-    away_id: m.awayTeam?.id ?? null,
-    league: m.competition?.code || m.competition?.name || null,
-    source: 'football-data'
-  }));
-}
-
-// competitions helpers (FD cap: <= 90 chars for ?competitions=)
-function normalizeCompetitionCodes(str) {
+// Accept both codes and numeric ids, comma-separated, e.g. "PL,CL" or "39,2"
+function normalizeLeagueTokens(str) {
   if (!str) return [];
   return String(str)
     .split(',')
-    .map(s => s.trim().toUpperCase())
-    .filter(s => s && /^[A-Z0-9]+$/.test(s));
-}
-function batchCompetitionCodes(codes, maxLen = 90) {
-  if (!codes.length) return ['']; // empty => no competitions param
-  const batches = [];
-  let cur = '';
-  for (const code of codes) {
-    if (!cur) { cur = code; continue; }
-    const candidate = `${cur},${code}`;
-    if (candidate.length <= maxLen) cur = candidate;
-    else { batches.push(cur); cur = code; }
-  }
-  if (cur) batches.push(cur);
-  return batches;
-}
-
-// ---------- football-data.org teams fetch ----------
-async function fetchTeamsForLeague(leagueCode) {
-  if (!FD_TOKEN) {
-    throw new Error('Missing FOOTBALL_DATA_API_KEY (or FOOTBALL_DATA_TOKEN) in env.');
-  }
-  const url = `${FD_API_BASE}/competitions/${encodeURIComponent(leagueCode)}/teams`;
-  const res = await fetch(url, { headers: { 'X-Auth-Token': FD_TOKEN } });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`football-data.org ${res.status}: ${text || res.statusText}`);
-  }
-  const json = await res.json();
-  const teams = Array.isArray(json?.teams) ? json.teams : [];
-  return teams.map(t => ({ id: t.id, name: t.name })); // e.g., "Liverpool FC"
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
 // ---------- slash command ----------
@@ -132,7 +68,7 @@ export const data = new SlashCommandBuilder()
       )
       .addStringOption(o =>
         o.setName('league')
-          .setDescription('Competition code(s) for football-data.org, e.g. PL or PL,CL')
+          .setDescription('League(s) by code or id, e.g. PL or 39, or PL,CL')
       )
       .addStringOption(o =>
         o.setName('team')
@@ -146,7 +82,7 @@ export const data = new SlashCommandBuilder()
       .setDescription('List teams from a league and choose which to follow (saved per channel)')
       .addStringOption(o =>
         o.setName('league')
-          .setDescription('Competition code, e.g., PL, BL1, SA')
+          .setDescription('League code or id, e.g., PL or 39')
           .setRequired(true)
       )
   );
@@ -155,7 +91,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
   const sub = interaction.options.getSubcommand();
 
-  // Defer quickly (use flags, not deprecated ephemeral)
+  // Defer quickly (flags instead of deprecated ephemeral option)
   try {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   } catch (err) {
@@ -169,22 +105,22 @@ export async function execute(interaction) {
 
 // ---------- /fixtures follow ----------
 async function handleFollow(interaction) {
-  const league = interaction.options.getString('league', true).toUpperCase();
+  const leagueInput = interaction.options.getString('league', true); // code or id
 
   let teams;
   try {
-    teams = await fetchTeamsForLeague(league);
+    teams = await fetchTeamsForLeague({ league: leagueInput });
   } catch (e) {
-    return interaction.editReply(`❌ Failed to load teams for **${league}**: ${e.message}`);
+    return interaction.editReply(`❌ Failed to load teams for **${leagueInput}**: ${e.message}`);
   }
   if (!teams.length) {
-    return interaction.editReply(`No teams returned for **${league}**.`);
+    return interaction.editReply(`No teams returned for **${leagueInput}**.`);
   }
 
-  // Build a multi-select of teams (value = ID to avoid ambiguity)
+  // Multi-select (value = API-Football team ID)
   const select = new StringSelectMenuBuilder()
     .setCustomId('fixtures:follow:select')
-    .setPlaceholder(`Select teams to follow from ${league}`)
+    .setPlaceholder(`Select teams to follow from ${leagueInput}`)
     .setMinValues(1)
     .setMaxValues(Math.min(25, teams.length))
     .addOptions(teams.map(t => ({
@@ -195,12 +131,11 @@ async function handleFollow(interaction) {
   const row = new ActionRowBuilder().addComponents(select);
   const current = await listSubscribedTeams(interaction.channelId);
   const embed = new EmbedBuilder()
-    .setTitle(`Follow teams • ${league}`)
+    .setTitle(`Follow teams • ${leagueInput}`)
     .setDescription(`Pick one or more teams to follow in this channel.\nCurrently followed: **${current.length}**`);
 
   await interaction.editReply({ embeds: [embed], components: [row] });
 
-  // Collector to capture the selection
   const msg = await interaction.fetchReply();
   const collector = msg.createMessageComponentCollector({
     componentType: ComponentType.StringSelect,
@@ -260,65 +195,61 @@ async function handleBrowse(interaction) {
   const leagueRaw = interaction.options.getString('league') || '';
   const teamFilter = (interaction.options.getString('team') || '').toLowerCase();
 
-  // competitions batching
-  const leagueCodes = normalizeCompetitionCodes(leagueRaw); // ['PL','CL',...]
-  const leagueBatches = batchCompetitionCodes(leagueCodes); // ['PL,CL', 'BL1,SA', ...]
-  const leagueForTitle = leagueCodes.length ? leagueCodes.join(',') : undefined;
+  // leagues: accept codes or ids; pass through to provider as comma string
+  const leagueTokens = normalizeLeagueTokens(leagueRaw);
+  const leagueForTitle = leagueTokens.length ? leagueTokens.join(',') : undefined;
 
-  // Load followed teams (per channel) from DB
+  // Load followed teams (per channel) from DB (API-Football team ids)
   const FOLLOW = await listSubscribedTeams(interaction.channelId); // [{team_id, team_name}]
   const hasFollowList = FOLLOW.length > 0;
   const followIds = new Set(FOLLOW.map(x => String(x.team_id)));
-  const followNameLower = FOLLOW.map(x => x.team_name.toLowerCase());
+  const followNameLower = FOLLOW.map(x => (x.team_name || '').toLowerCase());
 
   // helpers
-  const involvesFollowedTeam = (f) => {
-    // prefer exact ID match if present
-    if (f.home_id && followIds.has(String(f.home_id))) return true;
-    if (f.away_id && followIds.has(String(f.away_id))) return true;
-    if (!hasFollowList) return true;
-    // fallback: substring name match
-    const h = (f.home || '').toLowerCase();
-    const a = (f.away || '').toLowerCase();
-    return followNameLower.some(t => h.includes(t) || a.includes(t));
-  };
-
   const matchesTeamFilter = (f) =>
     !teamFilter ||
     (f.home || '').toLowerCase().includes(teamFilter) ||
     (f.away || '').toLowerCase().includes(teamFilter);
 
-  // 1) Fetch & cache best-effort for each day (per competitions batch)
-  for (let d = 0; d < days; d++) {
-    const dateISO = addDaysISO(startISO, d);
-    try {
-      let merged = [];
-      if (!leagueCodes.length) {
-        const rows = await fetchFixtures({ dateISO, leagueId: undefined });
-        merged = rows;
-      } else {
-        for (const batch of leagueBatches) {
-          const rows = await fetchFixtures({ dateISO, leagueId: batch });
-          merged.push(...rows);
+  const endISO = addDaysISO(startISO, days - 1);
+
+  // Prefer per-team range (precise + fewer requests); fallback to per-date
+  if (hasFollowList && followIds.size) {
+    for (const teamId of followIds) {
+      try {
+        let rows = await fetchTeamFixtures({ teamId, fromISO: startISO, toISO: endISO });
+
+        // Optional: reduce by leagues if user provided any (match by id or name)
+        if (leagueTokens.length) {
+          const want = new Set(leagueTokens.map(x => x.toLowerCase()));
+          rows = rows.filter(r =>
+            (r.league && want.has(String(r.league).toLowerCase())) ||
+            (r.league_name && want.has(String(r.league_name).toLowerCase()))
+          );
         }
+
+        rows = rows.filter(matchesTeamFilter);
+
+        if (rows.length) await upsertFixturesCache(rows);
+      } catch (e) {
+        console.warn(`team ${teamId} fetch failed (using cache):`, e?.message || e);
       }
-
-      // upsert only relevant rows; pass through team IDs if provider supplies them
-      const pruned = merged
-        .filter(r => involvesFollowedTeam(r) && matchesTeamFilter(r))
-        .map(r => ({
-          ...r,
-          home_id: r.home_id ?? null,
-          away_id: r.away_id ?? null
-        }));
-
-      if (pruned.length) await upsertFixturesCache(pruned);
-    } catch (e) {
-      console.warn(`fetchFixtures failed for ${dateISO} (using cache):`, e?.message || e);
+    }
+  } else {
+    // Per-date fetch (optionally league-filtered) once per day in the window
+    for (let d = 0; d < days; d++) {
+      const dateISO = addDaysISO(startISO, d);
+      try {
+        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle }); // provider handles tokens
+        const narrowed = rows.filter(matchesTeamFilter);
+        if (narrowed.length) await upsertFixturesCache(narrowed);
+      } catch (e) {
+        console.warn(`fetchFixtures failed for ${dateISO} (using cache):`, e?.message || e);
+      }
     }
   }
 
-  // 2) Read back from cache for each day and aggregate
+  // Read back from cache for each day and aggregate
   const all = [];
   for (let d = 0; d < days; d++) {
     const dateISO = addDaysISO(startISO, d);
@@ -326,23 +257,33 @@ async function handleBrowse(interaction) {
     all.push(...rows);
   }
 
-  // 3) Apply filters as safeguard
+  // Safeguard filters after cache read
   let fixtures = all;
 
-  if (leagueCodes.length) {
-    const compSet = new Set(leagueCodes.map(c => c.toLowerCase()));
-    fixtures = fixtures.filter(f => compSet.has((f.league || '').toLowerCase()));
+  if (leagueTokens.length) {
+    const want = new Set(leagueTokens.map(x => x.toLowerCase()));
+    fixtures = fixtures.filter(f =>
+      (f.league && want.has(String(f.league).toLowerCase())) ||
+      (f.league_name && want.has(String(f.league_name).toLowerCase()))
+    );
   }
 
   if (hasFollowList) {
-    fixtures = fixtures.filter(involvesFollowedTeam);
+    fixtures = fixtures.filter(f =>
+      (f.home_id && followIds.has(String(f.home_id))) ||
+      (f.away_id && followIds.has(String(f.away_id))) ||
+      // fallback: name substring
+      followNameLower.some(t =>
+        (f.home || '').toLowerCase().includes(t) || (f.away || '').toLowerCase().includes(t)
+      )
+    );
   }
 
   if (teamFilter) {
     fixtures = fixtures.filter(matchesTeamFilter);
   }
 
-  // 4) Sort (by match_time asc), then paginate
+  // Sort and render
   fixtures.sort((a, b) => new Date(a.match_time) - new Date(b.match_time));
 
   if (!fixtures.length) {
@@ -405,7 +346,7 @@ async function handleBrowse(interaction) {
 
   await render();
 
-  // 5) Collector for nav/select
+  // Collector
   const msg = await interaction.fetchReply();
   const collector = msg.createMessageComponentCollector({ time: 5 * 60 * 1000 });
 
