@@ -8,12 +8,12 @@ import {
   EmbedBuilder,
   ComponentType,
   MessageFlags
-} from 'discord.js'; 
+} from 'discord.js';
 
 import {
-  fetchFixtures,           // per-date (optionally per-league)
-  fetchTeamsForLeague,     // list teams for /fixtures follow
-  fetchTeamFixtures        // per-team range (for followed teams)
+  fetchFixtures,           // per-date (optionally per-league, uses pinned SEASON in provider)
+  fetchTeamsForLeague,     // list teams for /fixtures follow (uses pinned SEASON)
+  fetchTeamFixtures        // per-team range (uses pinned SEASON)
 } from '../providers/footballApi.js';
 
 import {
@@ -45,6 +45,15 @@ function normalizeLeagueTokens(str) {
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
+}
+function splitLeagueTokens(tokens) {
+  const ids = new Set();
+  const alphas = new Set();
+  for (const t of tokens) {
+    if (/^\d+$/.test(t)) ids.add(t);
+    else alphas.add(t.toLowerCase());
+  }
+  return { ids, alphas };
 }
 
 // ---------- slash command ----------
@@ -109,6 +118,7 @@ async function handleFollow(interaction) {
 
   let teams;
   try {
+    // Provider handles resolving code→id and uses pinned SEASON
     teams = await fetchTeamsForLeague({ league: leagueInput });
   } catch (e) {
     return interaction.editReply(`❌ Failed to load teams for **${leagueInput}**: ${e.message}`);
@@ -198,6 +208,7 @@ async function handleBrowse(interaction) {
   // leagues: accept codes or ids; pass through to provider as comma string
   const leagueTokens = normalizeLeagueTokens(leagueRaw);
   const leagueForTitle = leagueTokens.length ? leagueTokens.join(',') : undefined;
+  const { ids: leagueIdTokens, alphas: leagueAlphaTokens } = splitLeagueTokens(leagueTokens);
 
   // Load followed teams (per channel) from DB (API-Football team ids)
   const FOLLOW = await listSubscribedTeams(interaction.channelId); // [{team_id, team_name}]
@@ -219,14 +230,11 @@ async function handleBrowse(interaction) {
       try {
         let rows = await fetchTeamFixtures({ teamId, fromISO: startISO, toISO: endISO });
 
-        // Optional: reduce by leagues if user provided any (match by id or name)
-        if (leagueTokens.length) {
-          const want = new Set(leagueTokens.map(x => x.toLowerCase()));
-          rows = rows.filter(r =>
-            (r.league && want.has(String(r.league).toLowerCase())) ||
-            (r.league_name && want.has(String(r.league_name).toLowerCase()))
-          );
+        // Optional: reduce by leagues **only if user provided numeric ids** (e.g., "39,2")
+        if (leagueIdTokens.size) {
+          rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
         }
+        // If user only provided alpha codes like "PL,CL", skip here (codes don't match numeric league ids).
 
         rows = rows.filter(matchesTeamFilter);
 
@@ -236,11 +244,12 @@ async function handleBrowse(interaction) {
       }
     }
   } else {
-    // Per-date fetch (optionally league-filtered) once per day in the window
+    // Per-date fetch (optionally league-filtered) once per day in the window.
+    // The provider resolves codes → ids and uses the pinned SEASON internally.
     for (let d = 0; d < days; d++) {
       const dateISO = addDaysISO(startISO, d);
       try {
-        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle }); // provider handles tokens
+        const rows = await fetchFixtures({ dateISO, leagueId: leagueForTitle }); // provider handles code/id
         const narrowed = rows.filter(matchesTeamFilter);
         if (narrowed.length) await upsertFixturesCache(narrowed);
       } catch (e) {
@@ -260,19 +269,19 @@ async function handleBrowse(interaction) {
   // Safeguard filters after cache read
   let fixtures = all;
 
-  if (leagueTokens.length) {
-    const want = new Set(leagueTokens.map(x => x.toLowerCase()));
-    fixtures = fixtures.filter(f =>
-      (f.league && want.has(String(f.league).toLowerCase())) ||
-      (f.league_name && want.has(String(f.league_name).toLowerCase()))
-    );
+  // If user specified numeric leagues, filter against stored numeric league ids.
+  if (leagueIdTokens.size) {
+    fixtures = fixtures.filter(f => f.league && leagueIdTokens.has(String(f.league)));
   }
+  // If user specified only alpha codes (e.g., "PL"), we **skip** post-filter here because
+  // cached rows store r.league as numeric id ("39") and r.league_name as full name
+  // ("Premier League") -- direct equality with "pl" would wrongly drop matches.
 
   if (hasFollowList) {
     fixtures = fixtures.filter(f =>
       (f.home_id && followIds.has(String(f.home_id))) ||
       (f.away_id && followIds.has(String(f.away_id))) ||
-      // fallback: name substring
+      // fallback: name substring in case IDs are missing in cache
       followNameLower.some(t =>
         (f.home || '').toLowerCase().includes(t) || (f.away || '').toLowerCase().includes(t)
       )
