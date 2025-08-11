@@ -14,7 +14,7 @@ import {
   fetchFixtures,
   fetchTeamsForLeague,
   fetchTeamFixtures,
-  cleanTeamName          // <-- use provider cleaner everywhere
+  cleanTeamName
 } from '../providers/footballApi.js';
 
 import {
@@ -23,7 +23,8 @@ import {
   starMatch,
   subscribeGuildTeams,
   listGuildSubscribedTeams,
-  unsubscribeGuildTeams
+  unsubscribeGuildTeams,
+  getUpcomingRemindersWindow      // <-- NEW: used by /fixtures upcoming
 } from '../db.js';
 
 // ---------- utils ----------
@@ -58,6 +59,7 @@ function splitLeagueTokens(tokens) {
 export const data = new SlashCommandBuilder()
   .setName('fixtures')
   .setDescription('Fixtures tools')
+
   .addSubcommand(sub =>
     sub
       .setName('browse')
@@ -67,6 +69,23 @@ export const data = new SlashCommandBuilder()
       .addStringOption(o => o.setName('league').setDescription('League(s) by code or id, e.g. PL or 39, or PL,CL'))
       .addStringOption(o => o.setName('team').setDescription('Filter by team substring (optional; applied after followed list)'))
   )
+
+  .addSubcommand(sub =>
+    sub
+      .setName('upcoming')
+      .setDescription('Show upcoming reminders (only followed vs followed)')
+      .addIntegerOption(o => o
+        .setName('days')
+        .setDescription('Days ahead (7–14). Default 7')
+        .setMinValue(7).setMaxValue(14))
+      .addStringOption(o => o
+        .setName('team')
+        .setDescription('Filter by team name (substring)'))
+      .addStringOption(o => o
+        .setName('league')
+        .setDescription('Filter by league code (e.g., PL, CL, BL1)'))
+  )
+
   .addSubcommand(sub =>
     sub
       .setName('follow')
@@ -86,14 +105,136 @@ export const data = new SlashCommandBuilder()
 
 // ---------- command executor ----------
 export async function execute(interaction) {
-  // Defer quickly
-  try { await interaction.deferReply({ flags: MessageFlags.Ephemeral }); } catch { /* noop */ }
-
+  try { await interaction.deferReply({ flags: MessageFlags.Ephemeral }); } catch {}
   const sub = interaction.options.getSubcommand();
   if (sub === 'follow') return handleFollow(interaction);
   if (sub === 'followed') return handleFollowed(interaction);
   if (sub === 'unfollow') return handleUnfollow(interaction);
+  if (sub === 'upcoming') return handleUpcoming(interaction);   // <-- NEW
   return handleBrowse(interaction);
+}
+
+// ---------- /fixtures upcoming (NEW) ----------
+async function handleUpcoming(interaction) {
+  const guildId = interaction.guildId;
+  const days = interaction.options.getInteger('days') ?? 7; // 7–14 enforced by builder
+  const teamFilterRaw = (interaction.options.getString('team') || '').toLowerCase().trim();
+  const leagueFilterRaw = (interaction.options.getString('league') || '').toLowerCase().trim();
+
+  const startISO = new Date().toISOString().slice(0, 10);
+  const endISO = addDaysISO(startISO, days - 1);
+
+  // Pull all reminders in the window (all guilds), then filter this guild only
+  const windowFrom = `${startISO}T00:00:00.000Z`;
+  const windowTo   = `${endISO}T23:59:59.999Z`;
+  let rows = await getUpcomingRemindersWindow({ fromISO: windowFrom, toISO: windowTo });
+  rows = rows.filter(r => r.guild_id === guildId);
+
+  // If user wants a league filter, we’ll enrich from fixtures_cache (league column)
+  const leagueByMatchId = new Map();
+  if (leagueFilterRaw) {
+    for (let d = 0; d < days; d++) {
+      const dateISO = addDaysISO(startISO, d);
+      const cached = await listCachedFixtures({ dateISO });
+      for (const r of cached) {
+        if (!leagueByMatchId.has(r.match_id)) {
+          leagueByMatchId.set(String(r.match_id), String(r.league || '').toLowerCase());
+        }
+      }
+    }
+  }
+
+  // Apply filters
+  let fixtures = rows.filter(r => {
+    // team filter (cleaned names)
+    if (teamFilterRaw) {
+      const h = cleanTeamName(r.home || '').toLowerCase();
+      const a = cleanTeamName(r.away || '').toLowerCase();
+      if (!h.includes(teamFilterRaw) && !a.includes(teamFilterRaw)) return false;
+    }
+    // league filter (via cache look-up)
+    if (leagueFilterRaw) {
+      const lk = leagueByMatchId.get(String(r.match_id)) || '';
+      if (!lk.includes(leagueFilterRaw)) return false;
+    }
+    return true;
+  });
+
+  fixtures.sort((a, b) => new Date(a.match_time) - new Date(b.match_time));
+
+  if (!fixtures.length) {
+    const bits = [];
+    bits.push(`No upcoming followed-vs-followed matches in the next **${days}** day(s).`);
+    if (teamFilterRaw) bits.push(`team:${teamFilterRaw}`);
+    if (leagueFilterRaw) bits.push(`league:${leagueFilterRaw}`);
+    return interaction.editReply(bits.join(' '));
+  }
+
+  // Render (paged)
+  const pages = chunk(fixtures, 25);
+  let idx = 0;
+
+  const render = async () => {
+    const page = pages[idx];
+    const lines = [];
+    let currentDay = '';
+    for (const m of page) {
+      const dISO = new Date(m.match_time).toISOString().slice(0, 10);
+      if (dISO !== currentDay) {
+        currentDay = dISO;
+        lines.push(`\n__**${currentDay}**__`);
+      }
+      lines.push(`• ${cleanTeamName(m.home)} vs ${cleanTeamName(m.away)} -- <t:${toTs(m.match_time)}:t>`);
+    }
+
+    const filterBadge =
+      `${teamFilterRaw ? ` • team:${teamFilterRaw}` : ''}` +
+      `${leagueFilterRaw ? ` • league:${leagueFilterRaw}` : ''}`;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`Upcoming reminders ${startISO} → ${endISO}${filterBadge}`)
+      .setDescription(lines.join('\n').trim())
+      .setFooter({ text: `Page ${idx + 1}/${pages.length} • ${fixtures.length} total` });
+
+    // Only nav buttons (no select/star here--scheduler decides these)
+    const nav = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('upcoming:prev').setLabel('Prev').setStyle(ButtonStyle.Secondary).setDisabled(idx === 0),
+      new ButtonBuilder().setCustomId('upcoming:next').setLabel('Next').setStyle(ButtonStyle.Secondary).setDisabled(idx === pages.length - 1)
+    );
+
+    await interaction.editReply({ embeds: [embed], components: [nav] });
+  };
+
+  await render();
+
+  const msg = await interaction.fetchReply();
+  const collector = msg.createMessageComponentCollector({ time: 5 * 60 * 1000 });
+
+  collector.on('collect', async i => {
+    if (i.user.id !== interaction.user.id) {
+      return i.reply({ content: 'This menu isn’t for you.', flags: MessageFlags.Ephemeral });
+    }
+    if (i.customId === 'upcoming:prev') {
+      idx = Math.max(0, idx - 1);
+      await i.deferUpdate();
+      return render();
+    }
+    if (i.customId === 'upcoming:next') {
+      idx = Math.min(pages.length - 1, idx + 1);
+      await i.deferUpdate();
+      return render();
+    }
+  });
+
+  collector.on('end', async () => {
+    try {
+      const disabledRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('upcoming:prev').setLabel('Prev').setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('upcoming:next').setLabel('Next').setStyle(ButtonStyle.Secondary).setDisabled(true)
+      );
+      await interaction.editReply({ components: [disabledRow] }).catch(() => {});
+    } catch {}
+  });
 }
 
 // ---------- /fixtures follow ----------
@@ -119,7 +260,7 @@ async function handleFollow(interaction) {
     .setMinValues(1)
     .setMaxValues(Math.min(25, teams.length))
     .addOptions(teams.map(t => ({
-      label: cleanTeamName(t.name),           // cleaned label
+      label: cleanTeamName(t.name),
       value: String(t.id)
     })));
 
@@ -150,7 +291,7 @@ async function handleFollow(interaction) {
     const byId = new Map(teams.map(t => [t.id, t]));
     const chosen = chosenIds.map(id => ({
       id,
-      name: cleanTeamName(byId.get(id)?.name || String(id))   // save cleaned name
+      name: cleanTeamName(byId.get(id)?.name || String(id))
     }));
 
     const added = await subscribeGuildTeams(guildId, chosen);
@@ -185,7 +326,7 @@ async function handleFollowed(interaction) {
     return interaction.editReply('No teams are followed in this server yet. Use `/fixtures follow league:PL` to start.');
   }
 
-  const names = list.map(t => `• ${cleanTeamName(t.team_name)} (${t.team_id})`).join('\n'); // cleaned display
+  const names = list.map(t => `• ${cleanTeamName(t.team_name)} (${t.team_id})`).join('\n');
   const embed = new EmbedBuilder()
     .setTitle(`Followed teams (${list.length})`)
     .setDescription(names);
@@ -208,7 +349,7 @@ async function handleUnfollow(interaction) {
     .setMinValues(1)
     .setMaxValues(Math.min(25, list.length))
     .addOptions(list.map(t => ({
-      label: cleanTeamName(t.team_name),               // cleaned label
+      label: cleanTeamName(t.team_name),
       value: String(t.team_id)
     })));
 
@@ -275,9 +416,8 @@ async function handleBrowse(interaction) {
   const FOLLOW = await listGuildSubscribedTeams(guildId); // [{team_id, team_name}]
   const hasFollowList = FOLLOW.length > 0;
   const followIds = new Set(FOLLOW.map(x => String(x.team_id)));
-  const followNameLower = FOLLOW.map(x => cleanTeamName(x.team_name || '').toLowerCase()); // cleaned for fallback matching
+  const followNameLower = FOLLOW.map(x => cleanTeamName(x.team_name || '').toLowerCase());
 
-  // filter using CLEANED names
   const matchesTeamFilter = (f) => {
     if (!teamFilter) return true;
     const h = cleanTeamName(f.home || '').toLowerCase();
@@ -287,7 +427,6 @@ async function handleBrowse(interaction) {
 
   const endISO = addDaysISO(startISO, days - 1);
 
-  // Prefer per-team range (fewer requests, precise)
   if (hasFollowList && followIds.size) {
     for (const teamId of followIds) {
       try {
@@ -304,7 +443,6 @@ async function handleBrowse(interaction) {
       }
     }
   } else {
-    // Fall back to per-date fetch
     for (let d = 0; d < days; d++) {
       const dateISO = addDaysISO(startISO, d);
       try {
@@ -317,7 +455,6 @@ async function handleBrowse(interaction) {
     }
   }
 
-  // Aggregate from cache
   const all = [];
   for (let d = 0; d < days; d++) {
     const dateISO = addDaysISO(startISO, d);
@@ -325,18 +462,17 @@ async function handleBrowse(interaction) {
     all.push(...rows);
   }
 
-  // Safeguard filters
   let fixtures = all;
 
   if (leagueIdTokens.size) {
     fixtures = fixtures.filter(f => f.league && leagueIdTokens.has(String(f.league)));
   }
 
-  if (hasFollowList) {
+  if (FOLLOW.length) {
+    const followIds = new Set(FOLLOW.map(x => String(x.team_id)));
     fixtures = fixtures.filter(f =>
       (f.home_id && followIds.has(String(f.home_id))) ||
       (f.away_id && followIds.has(String(f.away_id))) ||
-      // fallback by cleaned names
       followNameLower.some(t =>
         cleanTeamName(f.home || '').toLowerCase().includes(t) ||
         cleanTeamName(f.away || '').toLowerCase().includes(t)
@@ -351,7 +487,7 @@ async function handleBrowse(interaction) {
   fixtures.sort((a, b) => new Date(a.match_time) - new Date(b.match_time));
 
   if (!fixtures.length) {
-    const followBadge = hasFollowList ? ` • following:${FOLLOW.length} team(s)` : '';
+    const followBadge = FOLLOW.length ? ` • following:${FOLLOW.length} team(s)` : '';
     return interaction.editReply(
       `No fixtures found from **${startISO}** for **${days}** day(s)` +
       `${leagueForTitle ? ` • league:${leagueForTitle}` : ''}${followBadge}` +
@@ -375,7 +511,7 @@ async function handleBrowse(interaction) {
       lines.push(`• ${cleanTeamName(m.home)} vs ${cleanTeamName(m.away)} -- <t:${toTs(m.match_time)}:t>`);
     }
 
-    const followBadge = hasFollowList ? ` • following:${FOLLOW.length}` : '';
+    const followBadge = FOLLOW.length ? ` • following:${FOLLOW.length}` : '';
     const title =
       `Fixtures ${startISO} → ${addDaysISO(startISO, days - 1)}` +
       `${leagueForTitle ? ` • ${leagueForTitle}` : ''}` +
@@ -392,7 +528,7 @@ async function handleBrowse(interaction) {
       .setMinValues(1)
       .setMaxValues(Math.min(25, page.length))
       .addOptions(page.map(m => ({
-        label: `${cleanTeamName(m.home)} vs ${cleanTeamName(m.away)}`,  // cleaned label
+        label: `${cleanTeamName(m.home)} vs ${cleanTeamName(m.away)}`,
         value: m.match_id,
         description: new Date(m.match_time).toLocaleString('en-US', {
           month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
