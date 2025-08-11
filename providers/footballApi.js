@@ -13,7 +13,7 @@ const AUTH_HEADER = 'x-apisports-key';
 if (!API_KEY) {
   console.warn('[api-football] Missing API key. Set FOOTBALL_DATA_TOKEN to your API-Football key.');
 }
-
+ 
 // Minimal, commonly-used league code → API-Football league id
 // (PL=39 verified by API-FOOTBALL docs)
 const CODE_TO_LEAGUE_ID = {
