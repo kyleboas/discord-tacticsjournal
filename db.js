@@ -339,6 +339,17 @@ export async function ensureStrikeSchema() {
   `);
 }
 
+export async function ensureMajorStrikeSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS major_strikes (
+      user_id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      count INTEGER DEFAULT 1,
+      last_strike_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
 export async function getStrikeCount(userId) {
   const res = await pool.query('SELECT count FROM strikes WHERE user_id = $1', [userId]);
   return res.rows.length ? res.rows[0].count : 0;
