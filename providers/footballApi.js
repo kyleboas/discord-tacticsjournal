@@ -8,7 +8,7 @@ const API_BASE = process.env.API_FOOTBALL_BASE || 'https://v3.football.api-sport
 const API_KEY = process.env.FOOTBALL_DATA_TOKEN;
 
 // Lock the season to a single start-year (e.g., 2025 for 2025/26).
-// You can override this via env: FOOTBALL_SEASON=2025
+// You can override via env: FOOTBALL_SEASON=2025
 const SEASON = Number(process.env.FOOTBALL_SEASON) || 2025;
 
 // Header key for direct API-Football (not RapidAPI)
@@ -21,7 +21,7 @@ if (!process.env.FOOTBALL_SEASON) {
   console.warn(`[api-football] Using hard-coded SEASON=${SEASON}. Set FOOTBALL_SEASON env to override.`);
 }
 
-// Common codes -> league ids (quick path)
+// Common codes -> league ids
 const CODE_TO_LEAGUE_ID = {
   PL: 39,   // Premier League
   CL: 2,    // UEFA Champions League
@@ -68,43 +68,33 @@ async function resolveLeagueId(token) {
   // Fallback: ask API-Football to resolve code → id
   const url = `${API_BASE}/leagues?code=${encodeURIComponent(code)}`;
   const headers = { [AUTH_HEADER]: API_KEY };
-  try {
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`api-football ${res.status}: ${text || res.statusText}`);
-    }
-    const json = await res.json();
-    const list = Array.isArray(json?.response) ? json.response : [];
-    const first = list.find(x => x.league?.id);
-    if (first?.league?.id) return Number(first.league.id);
-  } catch (e) {
-    console.warn(`[api-football] resolveLeagueId(${code}) failed:`, e?.message || e);
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`api-football ${res.status}: ${text || res.statusText}`);
   }
-  return null;
+  const json = await res.json();
+  const list = Array.isArray(json?.response) ? json.response : [];
+  const first = list.find(x => x.league?.id);
+  return first?.league?.id ? Number(first.league.id) : null;
 }
 
 /** Convert a comma list of codes/ids to an array of numeric league ids (with API fallback) */
 async function toLeagueIds(list) {
   if (!list) return [];
-  const tokens = String(list)
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
+  const tokens = String(list).split(',').map(s => s.trim()).filter(Boolean);
 
   const out = [];
   for (const tok of tokens) {
-    if (isNumeric(tok)) {
-      out.push(Number(tok));
-      continue;
+    if (isNumeric(tok)) out.push(Number(tok));
+    else {
+      const code = tok.toUpperCase();
+      if (CODE_TO_LEAGUE_ID[code]) out.push(CODE_TO_LEAGUE_ID[code]);
+      else {
+        const resolved = await resolveLeagueId(code);
+        if (resolved) out.push(resolved);
+      }
     }
-    const code = tok.toUpperCase();
-    if (CODE_TO_LEAGUE_ID[code]) {
-      out.push(CODE_TO_LEAGUE_ID[code]);
-      continue;
-    }
-    const resolved = await resolveLeagueId(code);
-    if (resolved) out.push(resolved);
   }
   return Array.from(new Set(out));
 }
@@ -136,7 +126,6 @@ export async function fetchFixtures({ dateISO, leagueId }) {
   const headers = { [AUTH_HEADER]: API_KEY };
   const leagueIds = await toLeagueIds(leagueId);
 
-  // No league filter → one request across all leagues for that date
   if (!leagueIds.length) {
     const url = `${API_BASE}/fixtures?date=${encodeURIComponent(dateISO)}`;
     const res = await fetch(url, { headers });
@@ -148,7 +137,6 @@ export async function fetchFixtures({ dateISO, leagueId }) {
     return (json?.response || []).map(mapFixture);
   }
 
-  // With league filters → one request per league id using SEASON
   const out = [];
   for (const lid of leagueIds) {
     const url = `${API_BASE}/fixtures?date=${encodeURIComponent(dateISO)}&league=${lid}&season=${SEASON}`;
@@ -161,7 +149,6 @@ export async function fetchFixtures({ dateISO, leagueId }) {
     out.push(...(json?.response || []).map(mapFixture));
   }
 
-  // Deduplicate by match_id
   const seen = new Set();
   const dedup = [];
   for (const r of out) {
@@ -174,8 +161,7 @@ export async function fetchFixtures({ dateISO, leagueId }) {
 
 /**
  * Fetch teams in a league (for /fixtures follow), pinned to SEASON.
- * If the season returns 0 teams, we try small fallbacks: SEASON, then SEASON-1, then SEASON-2.
- * We also attach a non-enumerable __seasonUsed marker for UI debugging (optional).
+ * STRICT: no fallback to older seasons. If empty, throw with a helpful message.
  */
 export async function fetchTeamsForLeague({ league, season = SEASON }) {
   if (!API_KEY) throw new Error('FOOTBALL_DATA_TOKEN not set');
@@ -184,39 +170,26 @@ export async function fetchTeamsForLeague({ league, season = SEASON }) {
   if (!lid) throw new Error(`Unknown league code/id: ${league}`);
 
   const headers = { [AUTH_HEADER]: API_KEY };
-
-  const seasonsToTry = [season, season - 1, season - 2];
-  for (const yr of seasonsToTry) {
-    const url = `${API_BASE}/teams?league=${lid}&season=${yr}`;
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`api-football ${res.status} (league ${lid}, season ${yr}): ${text || res.statusText}`);
-    }
-    const json = await res.json();
-    const list = Array.isArray(json?.response) ? json.response : [];
-    const teams = list
-      .map(t => ({ id: t.team?.id, name: t.team?.name }))
-      .filter(x => x.id && x.name);
-
-    if (teams.length) {
-      // Attach the season used (not enumerable so it won't be serialized accidentally)
-      Object.defineProperty(teams, '__seasonUsed', { value: yr, enumerable: false });
-      return teams;
-    }
+  const url = `${API_BASE}/teams?league=${lid}&season=${season}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`api-football ${res.status} (league ${lid}, season ${season}): ${text || res.statusText}`);
   }
+  const json = await res.json();
+  const list = Array.isArray(json?.response) ? json.response : [];
+  const teams = list.map(t => ({ id: t.team?.id, name: t.team?.name })).filter(x => x.id && x.name);
 
-  const testUrl = `${API_BASE}/teams?league=${lid}&season=${season}`;
+  if (teams.length) return teams;
+
+  // Nothing in this exact season
   throw new Error(
-    `No teams returned for league ${lid} in seasons ${seasonsToTry.join(', ')}. ` +
-    `If you know season ${season} is active, retry shortly. Test: ${testUrl}`
+    `No teams returned for league ${lid} in season ${season}. ` +
+    `Verify season is open for teams. Debug URL: ${url}`
   );
 }
 
-/**
- * Fetch fixtures for a team over a date range (inclusive).
- * Pin to SEASON as well for consistency (helps when ranges cross season boundary).
- */
+/** Fetch fixtures for a team over a date range (inclusive), pinned to SEASON */
 export async function fetchTeamFixtures({ teamId, fromISO, toISO }) {
   if (!API_KEY) throw new Error('FOOTBALL_DATA_TOKEN not set');
   const headers = { [AUTH_HEADER]: API_KEY };
