@@ -246,7 +246,7 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
   const isoWeek = `${now.getUTCFullYear()}-W${getISOWeek(now).toString().padStart(2, '0')}`;
 
   await pool.query(`
-    ALTER TABLE IF NOT EXISTS qotd_attempts ADD COLUMN IF NOT EXISTS week TEXT;
+    ALTER TABLE qotd_attempts ADD COLUMN IF NOT EXISTS week TEXT;
   `);
 
   await pool.query(`
