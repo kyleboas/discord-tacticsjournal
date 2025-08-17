@@ -38,22 +38,26 @@ export async function updateWatchlistMessageMeta(name, userId, fields) {
 }
 
 export async function pruneUpcomingForUnfollowed(guildId, keepTeamIds = []) {
-  // If nothing is followed, delete *all* upcoming reminders for this guild.
+  // If nothing is followed, delete all upcoming guild reminders
   if (!Array.isArray(keepTeamIds) || keepTeamIds.length === 0) {
     const res = await pool.query(
-      `DELETE FROM match_reminders
-       WHERE guild_id = $1
-         AND match_time >= NOW()`,
+      `DELETE FROM guild_match_reminders g
+       WHERE g.guild_id = $1
+         AND g.match_time >= NOW()`,
       [guildId]
     );
     return res.rowCount || 0;
   }
 
+  // Otherwise, remove upcoming reminders where neither side is a followed team
+  // (we determine team IDs via fixtures_cache)
   const res = await pool.query(
-    `DELETE FROM match_reminders
-     WHERE guild_id = $1
-       AND match_time >= NOW()
-       AND NOT (home_id = ANY($2) OR away_id = ANY($2))`,
+    `DELETE FROM guild_match_reminders g
+     USING fixtures_cache f
+     WHERE g.guild_id = $1
+       AND g.match_time >= NOW()
+       AND g.match_id = f.match_id
+       AND NOT (f.home_id = ANY($2) OR f.away_id = ANY($2))`,
     [guildId, keepTeamIds]
   );
   return res.rowCount || 0;
