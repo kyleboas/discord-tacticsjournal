@@ -23,7 +23,8 @@ import {
   starMatch,
   subscribeGuildTeams,
   listGuildSubscribedTeams,
-  unsubscribeGuildTeams
+  unsubscribeGuildTeams,
+  pruneUpcomingForUnfollowed
 } from '../db.js';
 
 import { refreshRemindersForGuild } from '../matchScheduler.js';
@@ -83,6 +84,12 @@ export const data = new SlashCommandBuilder()
       .setName('followed')
       .setDescription('Show teams followed in this server')
   )
+  
+    .addSubcommand(sub =>
+    sub
+      .setName('refresh')
+      .setDescription('Remove upcoming match reminders for teams that are not followed')
+  );
 
   .addSubcommand(sub =>
     sub
@@ -109,6 +116,7 @@ export async function execute(interaction) {
   if (sub === 'follow')   return handleFollow(interaction);
   if (sub === 'followed') return handleFollowed(interaction);
   if (sub === 'unfollow') return handleUnfollow(interaction);
+  if (sub === 'refresh')  return handleRefresh(interaction);
   if (sub === 'edit')     return handleEdit(interaction);   // NEW
   return handleBrowse(interaction);
 }
@@ -211,6 +219,30 @@ async function handleFollow(interaction) {
       await interaction.editReply({ components: [disabledRow] }).catch(() => {});
     } catch {}
   });
+}
+
+// ---------- /fixturesadmin refresh ----------
+async function handleRefresh(interaction) {
+  const guildId = interaction.guildId;
+
+  // Get followed team IDs (empty = remove everything upcoming)
+  const followed = await listGuildSubscribedTeams(guildId);
+  const keepIds = followed.map(t => Number(t.team_id)).filter(Number.isFinite);
+
+  let removed = 0;
+  try {
+    // deletes all upcoming reminders where neither side is in keepIds
+    removed = await pruneUpcomingForUnfollowed(guildId, keepIds);
+  } catch (e) {
+    return interaction.editReply(`❌ Failed to refresh upcoming: ${e.message || e}`);
+  }
+
+  const followedCount = keepIds.length;
+  await interaction.editReply(
+    `🔄 Refreshed upcoming for this server.\n` +
+    `• Currently followed teams: **${followedCount}**\n` +
+    `• Removed reminders: **${removed}**`
+  );
 }
 
 // ---------- /fixturesadmin followed ----------
