@@ -84,12 +84,6 @@ export const data = new SlashCommandBuilder()
       .setName('followed')
       .setDescription('Show teams followed in this server')
   )
-  
-    .addSubcommand(sub =>
-    sub
-      .setName('refresh')
-      .setDescription('Remove upcoming match reminders for teams that are not followed')
-  );
 
   .addSubcommand(sub =>
     sub
@@ -97,7 +91,6 @@ export const data = new SlashCommandBuilder()
       .setDescription('Unfollow one or more teams in this server')
   )
 
-  // NEW: /fixturesadmin edit
   .addSubcommand(sub =>
     sub
       .setName('edit')
@@ -106,6 +99,12 @@ export const data = new SlashCommandBuilder()
         .setName('league')
         .setDescription('League code or id, e.g., PL or 39')
         .setRequired(true))
+  )
+
+  .addSubcommand(sub =>
+    sub
+      .setName('refresh')
+      .setDescription('Remove upcoming match reminders for teams that are not followed')
   );
 
 // ---------- command executor ----------
