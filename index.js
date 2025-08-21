@@ -134,10 +134,11 @@ client.on('messageCreate', async (message) => {
   // Give Discord time to load embeds
   await new Promise(res => setTimeout(res, 1500));
 
-  const hasMedia = message.embeds.some(embed =>
-    embed.image || embed.video || embed.thumbnail
-  );
+  // Count how many image-like embeds exist
+  const imageCount = message.embeds.filter(embed => embed.image || embed.thumbnail).length;
+  const hasVideo = message.embeds.some(embed => embed.video);
 
+  const hasMedia = hasVideo || imageCount >= 2;
   if (!hasMedia) return;
 
   const fixedContent = message.content.replace(xLinkRegex, 'https://fixupx.com/');
