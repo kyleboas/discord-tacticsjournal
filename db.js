@@ -10,6 +10,63 @@ const pool = new Pool({
 
 // ---------------- existing watchlist & misc ----------------
 
+// --- NEW util, near other small utils in db.js or a shared util file ---
+function slug(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function makeManualMatchId({ guild_id, match_time, home, away }) {
+  // deterministic per (guild, time, teams)
+  const t = new Date(match_time).toISOString().replace(/[:.]/g, '');
+  return `manual:${guild_id}:${t}:${slug(home)}-vs-${slug(away)}`;
+}
+
+// --- NEW in db.js ---
+export async function addManualGuildMatch({
+  guild_id,
+  channel_id,
+  match_time,      // Date or ISO
+  home,
+  away,
+  league = 'Manual',
+  source = 'manual'
+}) {
+  const match_id = makeManualMatchId({ guild_id, match_time, home, away });
+
+  // 1) ensure it’s in fixtures_cache so /fixtures upcoming can display it
+  await upsertFixturesCache([{
+    match_id,
+    match_time: new Date(match_time),
+    home,
+    away,
+    league,
+    source,
+    home_id: null,
+    away_id: null
+  }]);
+
+  // 2) store in guild_match_reminders so the dispatcher will alert
+  await pool.query(
+    `INSERT INTO guild_match_reminders (guild_id, channel_id, match_id, match_time, home, away, league, source, is_manual)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8, TRUE)
+     ON CONFLICT (guild_id, match_id)
+     DO UPDATE SET channel_id = EXCLUDED.channel_id,
+                   match_time = EXCLUDED.match_time,
+                   home       = EXCLUDED.home,
+                   away       = EXCLUDED.away,
+                   league     = EXCLUDED.league,
+                   source     = EXCLUDED.source,
+                   is_manual  = TRUE`,
+    [guild_id, channel_id, match_id, match_time, home, away, league, source]
+  );
+
+  return { match_id };
+}
+
 export async function getWatchlist() {
   const res = await pool.query('SELECT * FROM watchlist');
   return res.rows;
@@ -209,12 +266,21 @@ export async function ensureSchema() {
       PRIMARY KEY (guild_id, match_id)
     );
   `);
+  
+  // in ensureSchema() after creating guild_match_reminders
+  await pool.query(`
+    ALTER TABLE guild_match_reminders
+    ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS league TEXT,
+    ADD COLUMN IF NOT EXISTS source TEXT
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_gmr_is_manual ON guild_match_reminders(is_manual);`);
 
-  /* Helpful indexes */
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_fixtures_cache_time ON fixtures_cache(match_time);`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_team_follows_guild ON guild_team_follows(guild_id);`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_match_reminders_time ON guild_match_reminders(match_time);`);
-}
+    /* Helpful indexes */
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_fixtures_cache_time ON fixtures_cache(match_time);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_team_follows_guild ON guild_team_follows(guild_id);`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_match_reminders_time ON guild_match_reminders(match_time);`);
+  }
 
 export async function ensureQuizSchema() {
   await pool.query(`
@@ -250,6 +316,18 @@ export async function ensureQuizSchema() {
 
 export async function clearActiveQuizInDB() {
   await pool.query(`DELETE FROM active_quiz`);
+}
+
+export async function listGuildUpcomingRemindersForGuild(guild_id, limit = 50) {
+  const { rows } = await pool.query(
+    `SELECT match_id, match_time, home, away, league, is_manual
+     FROM guild_match_reminders
+     WHERE guild_id = $1 AND match_time > NOW() - INTERVAL '1 minute'
+     ORDER BY match_time ASC
+     LIMIT $2`,
+    [guild_id, limit]
+  );
+  return rows;
 }
 
 export async function setActiveQuizInDB({ messageId, questionIndex, correctIndex, points, channelId }) {

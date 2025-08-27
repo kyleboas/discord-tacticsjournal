@@ -1,9 +1,11 @@
 import { SlashCommandBuilder, ChannelType, PermissionsBitField } from 'discord.js';
 import {
+  addManualGuildMatch,
   addMatchReminder,
   getMatchReminders,
   setReminderChannel,
-  getReminderChannel
+  getReminderChannel,
+  listGuildUpcomingRemindersForGuild
 } from '../db.js';
 
 export default {
@@ -52,25 +54,43 @@ export default {
 
     if (sub === 'set') {
       const day = interaction.options.getString('day');
-      const time = interaction.options.getString('time');
+      const time = interaction.options.getString('time'); // UTC HH:mm
       const home = interaction.options.getString('home');
       const away = interaction.options.getString('away');
 
-      const targetDate = getNextWeekdayDate(day, time);
+      const targetDate = getNextWeekdayDate(day, time); // returns a Date (UTC)
       const channelId = await getReminderChannel(interaction.guildId);
-      if (!channelId) return interaction.reply('Please set the reminder channel first using `/match channel`.');
+      if (!channelId) {
+        return interaction.reply({ content: 'Please set the reminder channel first using `/match channel`.', ephemeral: true });
+      }
 
-      await addMatchReminder(home, away, targetDate, channelId);
+      // Write to fixtures_cache (+) guild_match_reminders (is_manual)
+      const { match_id } = await addManualGuildMatch({
+        guild_id: interaction.guildId,
+        channel_id: channelId,
+        match_time: targetDate,
+        home,
+        away,
+        league: 'Manual',
+        source: 'manual'
+      });
+
       return interaction.reply({
-      content: `Match reminder set: **${home} vs ${away}** on ${targetDate.toUTCString()}`,
-      ephemeral: true
-    });
+        content: `Manual match added: **${home} vs ${away}** on <t:${Math.floor(targetDate.getTime()/1000)}:F>\n(id: \`${match_id}\`)`,
+        ephemeral: true
+      });
     }
 
     if (sub === 'list') {
-      const reminders = await getMatchReminders();
-      if (!reminders.length) return interaction.reply('No upcoming reminders.');
-      const lines = reminders.map(m => `${m.home} vs ${m.away} - <t:${Math.floor(new Date(m.match_time).getTime() / 1000)}:F>`);
+      const rows = await listGuildUpcomingRemindersForGuild(interaction.guildId, 100);
+      if (!rows.length) return interaction.reply('No upcoming reminders.');
+
+      const lines = rows.map(r => {
+        const ts = Math.floor(new Date(r.match_time).getTime() / 1000);
+        const tag = r.is_manual ? 'manual' : 'followed';
+        return `• [${tag}] ${r.home} vs ${r.away} -- <t:${ts}:F>`;
+      });
+
       return interaction.reply(lines.join('\n'));
     }
 
