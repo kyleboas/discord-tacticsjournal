@@ -103,24 +103,6 @@ client.once('ready', async () => {
   console.log('Slash commands synced');
 });
 
-// near your command loader / switch
-import * as fixtures from './commands/fixtures.js';
-
-client.on('interactionCreate', async (interaction) => {
-  try {
-    if (!interaction.isChatInputCommand()) return;
-
-    switch (interaction.commandName) {
-      // ...existing
-      case 'fixtures': return fixtures.execute(interaction);
-    }
-  } catch (err) {
-    console.error(err);
-    if (!interaction.replied) {
-      await interaction.reply({ content: 'Something went wrong.', ephemeral: true });
-    }
-  }
-});
 
 // Cache for lazy loading commands
 const commandCache = new Collection();
