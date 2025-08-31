@@ -1,277 +1,332 @@
 [
   {
-    "question": "Which player is the all-time leading scorer in the FIFA World Cup?",
-    "options": [
-      "Pelé",
-      "Miroslav Klose",
-      "Ronaldo (Brazil)",
-      "Gerd Müller"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "Which team was famously known as 'The Invincibles' for completing a Premier League season without a single loss?",
-    "options": [
-      "Manchester United",
-      "Chelsea",
-      "Arsenal",
-      "Liverpool"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "The 'Golden Goal' rule, which ended a match as soon as a goal was scored in extra time, was famously used in the final of which major tournament?",
-    "options": [
-      "1998 World Cup",
-      "Euro 2000",
-      "1994 World Cup",
-      "Euro 1996"
-    ],
-    "answerIndex": 1,
-    "points": 15
-  },
-  {
-    "question": "Which Italian defender was nicknamed 'The Wall' for his strong defensive play?",
-    "options": [
-      "Fabio Cannavaro",
-      "Paolo Maldini",
-      "Franco Baresi",
-      "Alessandro Nesta"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What was the name of the football stadium that hosted the 'Maracanazo,' the decisive match of the 1950 World Cup?",
-    "options": [
-      "Estádio do Pacaembu",
-      "Estádio do Morumbi",
-      "Estádio do Maracanã",
-      "Estádio Nacional"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "Which country won the first ever European Championship in 1960?",
-    "options": [
-      "Spain",
-      "Soviet Union",
-      "West Germany",
-      "France"
-    ],
-    "answerIndex": 1,
-    "points": 15
-  },
-  {
-    "question": "Which player holds the record for the most goals scored in a single calendar year?",
+    "question": "Which player holds the record for the most goals in the history of the UEFA Champions League?",
     "options": [
       "Lionel Messi",
-      "Pelé",
       "Cristiano Ronaldo",
-      "Gerd Müller"
-    ],
-    "answerIndex": 0,
-    "points": 5
-  },
-  {
-    "question": "Who was the first player to win the Ballon d'Or five times?",
-    "options": [
-      "Johan Cruyff",
-      "Michel Platini",
-      "Alfredo Di Stéfano",
-      "Lionel Messi"
-    ],
-    "answerIndex": 3,
-    "points": 10
-  },
-  {
-    "question": "Which club did George Best, Denis Law, and Bobby Charlton play for together in the 1960s?",
-    "options": [
-      "Liverpool",
-      "Celtic",
-      "Manchester United",
-      "Leeds United"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What was the nickname of the Brazilian national team that won the 1970 World Cup, often considered one of the greatest teams of all time?",
-    "options": [
-      "The 'Seleção'",
-      "The 'Auriverde'",
-      "The 'Canarinho'",
-      "The 'Joga Bonito'"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Which German player was the first to score a goal in three different World Cup finals?",
-    "options": [
-      "Gerd Müller",
-      "Franz Beckenbauer",
-      "Uwe Seeler",
-      "Lothar Matthäus"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "The 'Dream Team' managed by Johan Cruyff, which won four consecutive La Liga titles and the European Cup, played for which club?",
-    "options": [
-      "Ajax",
-      "Barcelona",
-      "AC Milan",
-      "Bayern Munich"
+      "Robert Lewandowski",
+      "Raúl González"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "In what year was the first UEFA Champions League final held under its current name, replacing the European Cup?",
+    "question": "Which club has won the most UEFA Europa League titles?",
     "options": [
-      "1992",
-      "1990",
-      "1994",
-      "1989"
+      "Liverpool",
+      "Inter Milan",
+      "Sevilla FC",
+      "Juventus"
     ],
-    "answerIndex": 0,
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "The 'Miracle of Istanbul' refers to which club's comeback victory in the 2005 Champions League Final?",
+    "options": [
+      "AC Milan",
+      "Manchester United",
+      "Liverpool",
+      "Real Madrid"
+    ],
+    "answerIndex": 2,
     "points": 10
   },
   {
     "question": "Which player is the only one to have won the UEFA Champions League with three different clubs?",
     "options": [
-      "Clarence Seedorf",
       "Zlatan Ibrahimović",
       "Samuel Eto'o",
+      "Clarence Seedorf",
       "Cristiano Ronaldo"
     ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Which country won the 1974 World Cup, hosted in their own country?",
-    "options": [
-      "Brazil",
-      "Italy",
-      "West Germany",
-      "Netherlands"
-    ],
     "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "What famous football match is known as the 'Game of the Century,' a semi-final between Italy and West Germany?",
-    "options": [
-      "1970 World Cup Semi-Final",
-      "1982 World Cup Semi-Final",
-      "1990 World Cup Final",
-      "1966 World Cup Final"
-    ],
-    "answerIndex": 0,
     "points": 15
   },
   {
-    "question": "Which goalkeeper was the captain of the West German team that won the 1990 World Cup?",
+    "question": "In what year was the first UEFA Champions League final held under its current name?",
     "options": [
-      "Harald Schumacher",
-      "Bodo Illgner",
-      "Oliver Kahn",
-      "Sepp Maier"
+      "1990",
+      "1992",
+      "1994",
+      "1989"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Who scored the winning goal for France in the 1998 World Cup final?",
+    "question": "Who is the all-time leading appearance maker in the UEFA Champions League?",
     "options": [
-      "Zinedine Zidane",
-      "Thierry Henry",
-      "Emmanuel Petit",
-      "Lilian Thuram"
+      "Iker Casillas",
+      "Xavi Hernández",
+      "Cristiano Ronaldo",
+      "Paolo Maldini"
     ],
-    "answerIndex": 2,
-    "points": 10
+    "answerIndex": 0,
+    "points": 15
   },
   {
     "question": "Which English club was the first to win the European Cup?",
     "options": [
-      "Manchester United",
       "Liverpool",
+      "Manchester United",
       "Nottingham Forest",
       "Aston Villa"
     ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "What was the previous name of the UEFA Europa League?",
+    "options": [
+      "UEFA Cup Winners' Cup",
+      "Inter-Cities Fairs Cup",
+      "UEFA Cup",
+      "European Cup"
+    ],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Who was the first manager to win the Champions League with three different clubs?",
+    "options": [
+      "Carlo Ancelotti",
+      "José Mourinho",
+      "Pep Guardiola",
+      "Sir Alex Ferguson"
+    ],
     "answerIndex": 0,
     "points": 15
   },
   {
-    "question": "Which country's national team is nicknamed 'La Celeste'?",
+    "question": "Which club famously won the treble (League, domestic cup, and Champions League) in 1999?",
     "options": [
-      "Argentina",
-      "Uruguay",
-      "Chile",
-      "Colombia"
-    ],
-    "answerIndex": 1,
-    "points": 5
-  },
-  {
-    "question": "Who was the manager of the Netherlands national team that popularized 'Total Football'?",
-    "options": [
-      "Johan Cruyff",
-      "Guus Hiddink",
-      "Rinus Michels",
-      "Louis van Gaal"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "Which club won the first ever FIFA Club World Cup in 2000?",
-    "options": [
+      "Bayern Munich",
       "Real Madrid",
-      "Corinthians",
       "Manchester United",
-      "Vasco da Gama"
+      "Barcelona"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which team won the inaugural UEFA Europa League title in the 2009-2010 season?",
+    "options": [
+      "Atlético Madrid",
+      "Fulham",
+      "Porto",
+      "Shakhtar Donetsk"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which city hosted the 2022 Champions League Final?",
+    "options": [
+      "Paris",
+      "London",
+      "Madrid",
+      "Saint Petersburg"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which player holds the record for the most assists in Champions League history?",
+    "options": [
+      "Ángel Di María",
+      "Lionel Messi",
+      "Cristiano Ronaldo",
+      "Ryan Giggs"
     ],
     "answerIndex": 1,
     "points": 15
   },
   {
-    "question": "Which player is known for scoring the 'Goal of the Century' against England in the 1986 World Cup?",
+    "question": "Which club holds the record for the longest unbeaten run in Champions League history?",
     "options": [
-      "Gary Lineker",
-      "Pelé",
-      "Diego Maradona",
-      "Michel Platini"
+      "AC Milan",
+      "Manchester United",
+      "Bayern Munich",
+      "Barcelona"
     ],
-    "answerIndex": 2,
-    "points": 5
+    "answerIndex": 0,
+    "points": 15
   },
   {
-    "question": "The 'Busby Babes' was the nickname given to the young Manchester United team of the 1950s managed by whom?",
+    "question": "The 'Goal of the Century' by Zinedine Zidane in the 2002 Champions League final was against which team?",
     "options": [
-      "Alex Ferguson",
-      "Matt Busby",
-      "Ron Atkinson",
-      "Tommy Docherty"
+      "Bayer Leverkusen",
+      "Arsenal",
+      "Juventus",
+      "Valencia"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which two clubs have met in the most Champions League finals?",
+    "options": [
+      "Real Madrid and Liverpool",
+      "Real Madrid and Atlético Madrid",
+      "Liverpool and AC Milan",
+      "Real Madrid and Juventus"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which team was the first to win the Champions League after coming from the qualifying rounds?",
+    "options": [
+      "Borussia Dortmund",
+      "Manchester United",
+      "PSV Eindhoven",
+      "Steaua București"
+    ],
+    "answerIndex": 3,
+    "points": 15
+  },
+  {
+    "question": "Which club holds the record for the most consecutive Champions League titles?",
+    "options": [
+      "Bayern Munich",
+      "Real Madrid",
+      "Ajax",
+      "Benfica"
     ],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Which city hosted the 1986 World Cup final?",
+    "question": "Which English club has reached the most Champions League finals?",
     "options": [
-      "Mexico City",
-      "Madrid",
-      "Rome",
-      "London"
+      "Liverpool",
+      "Manchester United",
+      "Chelsea",
+      "Arsenal"
     ],
     "answerIndex": 0,
     "points": 10
+  },
+  {
+    "question": "Who scored the winning goal in the 2012 Champions League Final for Chelsea?",
+    "options": [
+      "Frank Lampard",
+      "Didier Drogba",
+      "Petr Čech",
+      "John Terry"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which club was the first to win the Europa League while remaining unbeaten throughout the entire campaign?",
+    "options": [
+      "Villarreal",
+      "Chelsea",
+      "Galatasaray",
+      "Porto"
+    ],
+    "answerIndex": 3,
+    "points": 15
+  },
+  {
+    "question": "Which city hosted the first-ever UEFA Champions League final?",
+    "options": [
+      "London",
+      "Munich",
+      "Athens",
+      "Rome"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Who is the only player to have won the Champions League with two different Premier League clubs?",
+    "options": [
+      "Peter Crouch",
+      "Ashley Cole",
+      "Daniel Sturridge",
+      "N'Golo Kanté"
+    ],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Which team famously defeated AC Milan 3-1 in the 1994-1995 Champions League Final?",
+    "options": [
+      "Ajax",
+      "Juventus",
+      "Porto",
+      "Borussia Dortmund"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which club has reached the most Champions League semi-finals?",
+    "options": [
+      "Barcelona",
+      "Bayern Munich",
+      "AC Milan",
+      "Real Madrid"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "In what year did the Champions League introduce the group stage format?",
+    "options": [
+      "1990",
+      "1992",
+      "1991",
+      "1993"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which manager has won the most UEFA Cup/Europa League titles?",
+    "options": [
+      "Rafael Benítez",
+      "José Mourinho",
+      "Unai Emery",
+      "Diego Simeone"
+    ],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Which club won the last UEFA Cup before it was rebranded as the Europa League?",
+    "options": [
+      "Zenit Saint Petersburg",
+      "CSKA Moscow",
+      "Shakhtar Donetsk",
+      "FC Porto"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Who scored the winning goal for Inter Milan in the 2010 Champions League Final?",
+    "options": [
+      "Diego Milito",
+      "Samuel Eto'o",
+      "Wesley Sneijder",
+      "Javier Zanetti"
+    ],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which two clubs have faced each other in the most Champions League knockout ties?",
+    "options": [
+      "Real Madrid and Bayern Munich",
+      "Barcelona and Chelsea",
+      "Liverpool and Real Madrid",
+      "Bayern Munich and Arsenal"
+    ],
+    "answerIndex": 0,
+    "points": 15
   }
 ]
