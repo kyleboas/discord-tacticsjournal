@@ -114,7 +114,7 @@ client.on('messageCreate', async (message) => {
   if (!xLinkRegex.test(message.content)) return;
 
   // Give Discord time to load embeds
-  await new Promise(res => setTimeout(res, 1500));
+  await new Promise(res => setTimeout(res, 1500)); 
 
   const hasMedia = message.embeds.some(embed =>
     embed.image || embed.video || embed.thumbnail
