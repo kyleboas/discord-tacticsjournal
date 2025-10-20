@@ -1,332 +1,122 @@
 [
   {
-    "question": "Which player holds the record for the most goals in the history of the UEFA Champions League?",
-    "options": [
-      "Lionel Messi",
-      "Cristiano Ronaldo",
-      "Robert Lewandowski",
-      "Raúl González"
-    ],
+    "question": "Which club won the first UEFA Champions League final under its current name (1993)?",
+    "options": ["AC Milan", "Olympique de Marseille", "Barcelona", "Ajax"],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Which club has won the most UEFA Europa League titles?",
-    "options": [
-      "Liverpool",
-      "Inter Milan",
-      "Sevilla FC",
-      "Juventus"
-    ],
+    "question": "Who holds the all-time record for most UEFA Champions League appearances?",
+    "options": ["Iker Casillas", "Lionel Messi", "Cristiano Ronaldo", "Xavi Hernández"],
     "answerIndex": 2,
     "points": 15
   },
   {
-    "question": "The 'Miracle of Istanbul' refers to which club's comeback victory in the 2005 Champions League Final?",
-    "options": [
-      "AC Milan",
-      "Manchester United",
-      "Liverpool",
-      "Real Madrid"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "Which player is the only one to have won the UEFA Champions League with three different clubs?",
-    "options": [
-      "Zlatan Ibrahimović",
-      "Samuel Eto'o",
-      "Clarence Seedorf",
-      "Cristiano Ronaldo"
-    ],
-    "answerIndex": 2,
-    "points": 15
-  },
-  {
-    "question": "In what year was the first UEFA Champions League final held under its current name?",
-    "options": [
-      "1990",
-      "1992",
-      "1994",
-      "1989"
-    ],
+    "question": "Which stadium hosted the dramatic 1999 Champions League Final won by Manchester United?",
+    "options": ["San Siro", "Camp Nou", "Allianz Arena", "Stadio Olimpico"],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Who is the all-time leading appearance maker in the UEFA Champions League?",
-    "options": [
-      "Iker Casillas",
-      "Xavi Hernández",
-      "Cristiano Ronaldo",
-      "Paolo Maldini"
-    ],
+    "question": "FC Porto defeated which club in the 2004 Champions League Final?",
+    "options": ["AS Monaco", "Valencia", "AC Milan", "Leverkusen"],
     "answerIndex": 0,
-    "points": 15
+    "points": 10
   },
   {
-    "question": "Which English club was the first to win the European Cup?",
-    "options": [
-      "Liverpool",
-      "Manchester United",
-      "Nottingham Forest",
-      "Aston Villa"
-    ],
+    "question": "Who scored the overhead-kick winner for Real Madrid in the 2018 Champions League Final?",
+    "options": ["Karim Benzema", "Cristiano Ronaldo", "Gareth Bale", "Marco Asensio"],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which club won the 2020–21 UEFA Europa League?",
+    "options": ["Manchester United", "Villarreal", "Sevilla", "Inter Milan"],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "What was the previous name of the UEFA Europa League?",
-    "options": [
-      "UEFA Cup Winners' Cup",
-      "Inter-Cities Fairs Cup",
-      "UEFA Cup",
-      "European Cup"
-    ],
+    "question": "Which manager holds the record for the most UEFA Cup/Europa League titles?",
+    "options": ["José Mourinho", "Rafael Benítez", "Unai Emery", "Diego Simeone"],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Who won the 2010–11 UEFA Europa League?",
+    "options": ["Porto", "Braga", "Atlético Madrid", "Shakhtar Donetsk"],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Before rebranding in 2009, what was the UEFA Europa League called?",
+    "options": ["Inter-Cities Fairs Cup", "European Cup", "UEFA Cup", "Cup Winners' Cup"],
     "answerIndex": 2,
     "points": 5
   },
   {
-    "question": "Who was the first manager to win the Champions League with three different clubs?",
-    "options": [
-      "Carlo Ancelotti",
-      "José Mourinho",
-      "Pep Guardiola",
-      "Sir Alex Ferguson"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Which club famously won the treble (League, domestic cup, and Champions League) in 1999?",
-    "options": [
-      "Bayern Munich",
-      "Real Madrid",
-      "Manchester United",
-      "Barcelona"
-    ],
+    "question": "The 2023 UEFA Europa League Final was played in which city?",
+    "options": ["Seville", "Dublin", "Budapest", "Gdańsk"],
     "answerIndex": 2,
     "points": 10
   },
   {
-    "question": "Which team won the inaugural UEFA Europa League title in the 2009-2010 season?",
-    "options": [
-      "Atlético Madrid",
-      "Fulham",
-      "Porto",
-      "Shakhtar Donetsk"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which city hosted the 2022 Champions League Final?",
-    "options": [
-      "Paris",
-      "London",
-      "Madrid",
-      "Saint Petersburg"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which player holds the record for the most assists in Champions League history?",
-    "options": [
-      "Ángel Di María",
-      "Lionel Messi",
-      "Cristiano Ronaldo",
-      "Ryan Giggs"
-    ],
-    "answerIndex": 1,
-    "points": 15
-  },
-  {
-    "question": "Which club holds the record for the longest unbeaten run in Champions League history?",
-    "options": [
-      "AC Milan",
-      "Manchester United",
-      "Bayern Munich",
-      "Barcelona"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "The 'Goal of the Century' by Zinedine Zidane in the 2002 Champions League final was against which team?",
-    "options": [
-      "Bayer Leverkusen",
-      "Arsenal",
-      "Juventus",
-      "Valencia"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which two clubs have met in the most Champions League finals?",
-    "options": [
-      "Real Madrid and Liverpool",
-      "Real Madrid and Atlético Madrid",
-      "Liverpool and AC Milan",
-      "Real Madrid and Juventus"
-    ],
-    "answerIndex": 2,
-    "points": 10
-  },
-  {
-    "question": "Which team was the first to win the Champions League after coming from the qualifying rounds?",
-    "options": [
-      "Borussia Dortmund",
-      "Manchester United",
-      "PSV Eindhoven",
-      "Steaua București"
-    ],
-    "answerIndex": 3,
-    "points": 15
-  },
-  {
-    "question": "Which club holds the record for the most consecutive Champions League titles?",
-    "options": [
-      "Bayern Munich",
-      "Real Madrid",
-      "Ajax",
-      "Benfica"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "Which English club has reached the most Champions League finals?",
-    "options": [
-      "Liverpool",
-      "Manchester United",
-      "Chelsea",
-      "Arsenal"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Who scored the winning goal in the 2012 Champions League Final for Chelsea?",
-    "options": [
-      "Frank Lampard",
-      "Didier Drogba",
-      "Petr Čech",
-      "John Terry"
-    ],
-    "answerIndex": 1,
-    "points": 10
-  },
-  {
-    "question": "Which club was the first to win the Europa League while remaining unbeaten throughout the entire campaign?",
-    "options": [
-      "Villarreal",
-      "Chelsea",
-      "Galatasaray",
-      "Porto"
-    ],
-    "answerIndex": 3,
-    "points": 15
-  },
-  {
-    "question": "Which city hosted the first-ever UEFA Champions League final?",
-    "options": [
-      "London",
-      "Munich",
-      "Athens",
-      "Rome"
-    ],
-    "answerIndex": 0,
-    "points": 15
-  },
-  {
-    "question": "Who is the only player to have won the Champions League with two different Premier League clubs?",
-    "options": [
-      "Peter Crouch",
-      "Ashley Cole",
-      "Daniel Sturridge",
-      "N'Golo Kanté"
-    ],
-    "answerIndex": 1,
-    "points": 15
-  },
-  {
-    "question": "Which team famously defeated AC Milan 3-1 in the 1994-1995 Champions League Final?",
-    "options": [
-      "Ajax",
-      "Juventus",
-      "Porto",
-      "Borussia Dortmund"
-    ],
-    "answerIndex": 0,
-    "points": 10
-  },
-  {
-    "question": "Which club has reached the most Champions League semi-finals?",
-    "options": [
-      "Barcelona",
-      "Bayern Munich",
-      "AC Milan",
-      "Real Madrid"
-    ],
+    "question": "Which nation has won the most FIFA World Cups?",
+    "options": ["Germany", "Argentina", "Italy", "Brazil"],
     "answerIndex": 3,
     "points": 10
   },
   {
-    "question": "In what year did the Champions League introduce the group stage format?",
-    "options": [
-      "1990",
-      "1992",
-      "1991",
-      "1993"
-    ],
+    "question": "Who is the only player to have won three FIFA World Cups?",
+    "options": ["Pelé", "Cafú", "Diego Maradona", "Franz Beckenbauer"],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "The 2010 FIFA World Cup Final was held in which city?",
+    "options": ["Cape Town", "Johannesburg", "Durban", "Pretoria"],
     "answerIndex": 1,
     "points": 10
   },
   {
-    "question": "Which manager has won the most UEFA Cup/Europa League titles?",
-    "options": [
-      "Rafael Benítez",
-      "José Mourinho",
-      "Unai Emery",
-      "Diego Simeone"
-    ],
-    "answerIndex": 2,
+    "question": "Which tournament was the first World Cup to feature 32 teams?",
+    "options": ["1994 (USA)", "1998 (France)", "2002 (Korea/Japan)", "2006 (Germany)"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Who won the Golden Boot at the 2022 FIFA World Cup?",
+    "options": ["Lionel Messi", "Kylian Mbappé", "Julián Álvarez", "Olivier Giroud"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "On October 8, 2015, which club appointed Jürgen Klopp as manager?",
+    "options": ["Borussia Dortmund", "Liverpool", "Bayern Munich", "Mainz 05"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "On October 1, 1996, which club did Arsène Wenger officially take charge of?",
+    "options": ["AS Monaco", "Arsenal", "Nagoya Grampus", "Paris Saint-Germain"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Wayne Rooney scored his first Premier League goal on October 19, 2002 against which team?",
+    "options": ["Manchester United", "Arsenal", "Leeds United", "Newcastle United"],
+    "answerIndex": 1,
     "points": 15
   },
   {
-    "question": "Which club won the last UEFA Cup before it was rebranded as the Europa League?",
-    "options": [
-      "Zenit Saint Petersburg",
-      "CSKA Moscow",
-      "Shakhtar Donetsk",
-      "FC Porto"
-    ],
+    "question": "Pelé’s birthday falls on which date in October?",
+    "options": ["October 3", "October 17", "October 23", "October 30"],
     "answerIndex": 2,
     "points": 10
   },
   {
-    "question": "Who scored the winning goal for Inter Milan in the 2010 Champions League Final?",
-    "options": [
-      "Diego Milito",
-      "Samuel Eto'o",
-      "Wesley Sneijder",
-      "Javier Zanetti"
-    ],
-    "answerIndex": 0,
+    "question": "Which legendary footballer was born on October 30, 1960?",
+    "options": ["Johan Cruyff", "Diego Maradona", "Michel Platini", "George Best"],
+    "answerIndex": 1,
     "points": 10
-  },
-  {
-    "question": "Which two clubs have faced each other in the most Champions League knockout ties?",
-    "options": [
-      "Real Madrid and Bayern Munich",
-      "Barcelona and Chelsea",
-      "Liverpool and Real Madrid",
-      "Bayern Munich and Arsenal"
-    ],
-    "answerIndex": 0,
-    "points": 15
   }
 ]
