@@ -213,7 +213,7 @@ async function dispatchImminentReminders(client) {
       if (!channel) continue;
       await channel.send({
         embeds: [{
-          title: '⚽️ Match Reminder',
+          title: '⚽️ Interesting Match',
           description: [
             ...group.lines,
             '',
