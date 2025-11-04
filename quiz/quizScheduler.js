@@ -17,7 +17,7 @@ import {
   getWeeklyLeaderboard
 } from '../db.js';
 
-const CHANNEL_ID = '1372225536406978640';
+const CHANNEL_ID = '1098771891898023947';
 const ROLE_ID = '1372372259812933642';
 const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
 let todayMessageId = null;
