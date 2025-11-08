@@ -99,6 +99,7 @@ export async function updateWatchlistMessageMeta(name, userId, fields) {
  * If keepTeamIds is empty, it removes ALL upcoming reminders for that guild.
  * NOTE: This version does NOT preserve manual reminders.
  */
+// db.js
 export async function pruneUpcomingForUnfollowed(guildId, keepTeamIds = []) {
   // If nothing is followed, delete all upcoming guild reminders
   if (!Array.isArray(keepTeamIds) || keepTeamIds.length === 0) {
@@ -111,18 +112,31 @@ export async function pruneUpcomingForUnfollowed(guildId, keepTeamIds = []) {
     return res.rowCount || 0;
   }
 
-  // Otherwise, remove upcoming reminders where neither side is a followed team
-  // (we determine team IDs via fixtures_cache)
-  const res = await pool.query(
+  // 1) Remove upcoming reminders with a fixtures_cache row where neither side is followed.
+  //    Use COALESCE so NULL team IDs are treated as "not followed".
+  const res1 = await pool.query(
     `DELETE FROM guild_match_reminders g
      USING fixtures_cache f
      WHERE g.guild_id = $1
        AND g.match_time >= NOW()
        AND g.match_id = f.match_id
-       AND NOT (f.home_id = ANY($2) OR f.away_id = ANY($2))`,
+       AND NOT (
+         COALESCE(f.home_id, -1) = ANY($2::int[])
+         OR COALESCE(f.away_id, -1) = ANY($2::int[])
+       )`,
     [guildId, keepTeamIds]
   );
-  return res.rowCount || 0;
+
+  // 2) Also remove upcoming reminders that have no fixtures_cache row (orphans).
+  const res2 = await pool.query(
+    `DELETE FROM guild_match_reminders g
+     WHERE g.guild_id = $1
+       AND g.match_time >= NOW()
+       AND NOT EXISTS (SELECT 1 FROM fixtures_cache f WHERE f.match_id = g.match_id)`,
+    [guildId]
+  );
+
+  return (res1.rowCount || 0) + (res2.rowCount || 0);
 }
 
 /**
