@@ -99,7 +99,6 @@ export async function updateWatchlistMessageMeta(name, userId, fields) {
  * If keepTeamIds is empty, it removes ALL upcoming reminders for that guild.
  * NOTE: This version does NOT preserve manual reminders.
  */
-// db.js
 export async function pruneUpcomingForUnfollowed(guildId, keepTeamIds = []) {
   // If nothing is followed, delete all upcoming guild reminders
   if (!Array.isArray(keepTeamIds) || keepTeamIds.length === 0) {
@@ -312,7 +311,7 @@ export async function ensureSchema() {
     );
   `);
 
-  /* guild-scoped match reminders (followed vs followed) */
+  /* guild-scoped match reminders (followed vs followed or followed vs anyone) */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS guild_match_reminders (
       guild_id   TEXT NOT NULL,
@@ -718,7 +717,7 @@ export async function unsubscribeGuildTeams(guild_id, team_ids /* number[] */) {
 // ---------------- guild match reminders API ----------------
 
 /**
- * Upsert a followed-vs-followed match reminder for a guild.
+ * Upsert a followed-vs-followed (or followed-vs-anyone) match reminder for a guild.
  * Unique per (guild_id, match_id). Channel can be updated if needed.
  */
 export async function upsertGuildMatchReminder({ guild_id, channel_id, match_id, match_time, home, away }) {
@@ -732,6 +731,43 @@ export async function upsertGuildMatchReminder({ guild_id, channel_id, match_id,
                    away = EXCLUDED.away`,
     [guild_id, channel_id, match_id, match_time, home, away]
   );
+}
+
+/**
+ * Bulk-upsert upcoming reminders for a guild by selecting from fixtures_cache
+ * for any matches involving the provided team_ids within [fromISO, toISO].
+ * Returns the number of rows inserted/updated for this guild.
+ */
+export async function bulkUpsertGuildRemindersFromCache({ guild_id, channel_id, team_ids, fromISO, toISO }) {
+  if (!Array.isArray(team_ids) || team_ids.length === 0) return 0;
+
+  const res = await pool.query(
+    `INSERT INTO guild_match_reminders (guild_id, channel_id, match_id, match_time, home, away, league, source)
+     SELECT $1 AS guild_id,
+            $2 AS channel_id,
+            f.match_id,
+            f.match_time,
+            f.home,
+            f.away,
+            f.league,
+            f.source
+     FROM fixtures_cache f
+     WHERE f.match_time >= $3
+       AND f.match_time <  $4
+       AND (
+         COALESCE(f.home_id, -1) = ANY($5::int[])
+         OR COALESCE(f.away_id, -1) = ANY($5::int[])
+       )
+     ON CONFLICT (guild_id, match_id)
+     DO UPDATE SET channel_id = EXCLUDED.channel_id,
+                   match_time = EXCLUDED.match_time,
+                   home       = EXCLUDED.home,
+                   away       = EXCLUDED.away,
+                   league     = EXCLUDED.league,
+                   source     = EXCLUDED.source`,
+    [guild_id, channel_id, fromISO, toISO, team_ids]
+  );
+  return res.rowCount || 0;
 }
 
 /**

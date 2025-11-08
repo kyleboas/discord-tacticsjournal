@@ -24,7 +24,8 @@ import {
   subscribeGuildTeams,
   listGuildSubscribedTeams,
   unsubscribeGuildTeams,
-  pruneUpcomingForUnfollowed
+  pruneUpcomingForUnfollowed,
+  bulkUpsertGuildRemindersFromCache
 } from '../db.js';
 
 import { refreshRemindersForGuild } from '../matchScheduler.js';
@@ -57,7 +58,12 @@ function splitLeagueTokens(tokens) {
   return { ids, alphas };
 }
 
-
+function isoStart(dateISO) {
+  return `${dateISO}T00:00:00.000Z`;
+}
+function isoNextDay(dateISO, days = 1) {
+  return `${addDaysISO(dateISO, days)}T00:00:00.000Z`;
+}
 
 // ---------- slash command ----------
 export const data = new SlashCommandBuilder()
@@ -118,8 +124,26 @@ export async function execute(interaction) {
   if (sub === 'followed') return handleFollowed(interaction);
   if (sub === 'unfollow') return handleUnfollow(interaction);
   if (sub === 'refresh')  return handleRefresh(interaction);
-  if (sub === 'edit')     return handleEdit(interaction);   // NEW
+  if (sub === 'edit')     return handleEdit(interaction);
   return handleBrowse(interaction);
+}
+
+// Helper: backfill cache for team IDs over a window
+async function backfillCacheForTeams(teamIds, fromISO, toISO) {
+  if (!teamIds?.length) return 0;
+  let total = 0;
+  for (const teamId of teamIds) {
+    try {
+      const rows = await fetchTeamFixtures({ teamId, fromISO, toISO });
+      if (rows?.length) {
+        await upsertFixturesCache(rows);
+        total += rows.length;
+      }
+    } catch (e) {
+      console.warn(`[fixturesadmin] fetchTeamFixtures failed for team ${teamId}:`, e?.message || e);
+    }
+  }
+  return total;
 }
 
 // ---------- /fixturesadmin follow ----------
@@ -189,6 +213,25 @@ async function handleFollow(interaction) {
       return;
     }
 
+    // Build window: today → +14 days
+    const startISO = new Date().toISOString().slice(0, 10);
+    const fromISO = isoStart(startISO);
+    const toISO   = isoNextDay(addDaysISO(startISO, 14 - 1)); // exclusive upper bound
+
+    // 1) backfill cache for these teams
+    const cached = await backfillCacheForTeams(chosenIds, fromISO, toISO);
+
+    // 2) upsert reminders from cache for these teams (into current channel)
+    const channel_id = interaction.channelId;
+    const insertedFromCache = await bulkUpsertGuildRemindersFromCache({
+      guild_id: guildId,
+      channel_id,
+      team_ids: chosenIds,
+      fromISO,
+      toISO
+    });
+
+    // 3) still invoke your existing refresh flow (in case it fetches more)
     let upserts = 0;
     try {
       upserts = await refreshRemindersForGuild(guildId, 14, chosenIds);
@@ -200,7 +243,9 @@ async function handleFollow(interaction) {
 
     await i.editReply(
       `✅ Added **${added}** team(s). Now following **${nowList.length}** total.\n` +
-      (upserts ? `🔄 Refreshed reminders for **${upserts}** upcoming match(es).` : `⏳ Reminders will catch up shortly.`)
+      `🗃️ Cached **${cached}** fixture rows.\n` +
+      `➕ Upserted **${insertedFromCache}** upcoming reminder(s) from cache.\n` +
+      (upserts ? `🔄 Refresh job added **${upserts}** reminder(s) too.` : `⏳ Background refresh will catch up shortly.`)
     );
 
     const updated = EmbedBuilder.from(embed)
@@ -232,7 +277,6 @@ async function handleRefresh(interaction) {
 
   let removed = 0;
   try {
-    // deletes all upcoming reminders where neither side is in keepIds
     removed = await pruneUpcomingForUnfollowed(guildId, keepIds);
   } catch (e) {
     return interaction.editReply(`❌ Failed to refresh upcoming: ${e.message || e}`);
@@ -324,7 +368,7 @@ async function handleUnfollow(interaction) {
   });
 }
 
-// ---------- NEW: /fixturesadmin edit ----------
+// ---------- /fixturesadmin edit ----------
 async function handleEdit(interaction) {
   const guildId = interaction.guildId;
   const leagueInput = interaction.options.getString('league', true);
@@ -422,7 +466,26 @@ async function handleEdit(interaction) {
       }
     }
 
-    // Refresh reminders for newly added teams (removals are pruned below)
+    // Build window: today → +14 days
+    const startISO = new Date().toISOString().slice(0, 10);
+    const fromISO = isoStart(startISO);
+    const toISO   = isoNextDay(addDaysISO(startISO, 14 - 1)); // exclusive
+
+    // For newly followed teams, backfill cache and upsert reminders into this channel
+    let cached = 0;
+    let insertedFromCache = 0;
+    if (toAdd.length) {
+      cached = await backfillCacheForTeams(toAdd, fromISO, toISO);
+      insertedFromCache = await bulkUpsertGuildRemindersFromCache({
+        guild_id: guildId,
+        channel_id: interaction.channelId,
+        team_ids: toAdd,
+        fromISO,
+        toISO
+      });
+    }
+
+    // Refresh reminders for newly added teams (scheduler path, if any)
     let upserts = 0;
     if (toAdd.length) {
       try {
@@ -441,7 +504,8 @@ async function handleEdit(interaction) {
       `✅ Saved.\n` +
       `• Added teams: **${added}**\n` +
       `• Removed teams: **${removedTeams}**\n` +
-      (upserts ? `• Refreshed reminders for **${upserts}** upcoming match(es).\n` : ``) +
+      (toAdd.length ? `• Cached **${cached}** fixtures and upserted **${insertedFromCache}** reminders from cache.\n` : ``) +
+      (upserts ? `• Scheduler refresh added **${upserts}** reminder(s).\n` : ``) +
       `• Pruned **${removedReminders}** upcoming reminder(s).\n` +
       `Now following **${nowList.length}** team(s) across all leagues.`
     );
@@ -510,7 +574,7 @@ async function handleBrowse(interaction) {
   if (hasFollowList && followIds.size) {
     for (const teamId of followIds) {
       try {
-        let rows = await fetchTeamFixtures({ teamId, fromISO: startISO, toISO: endISO });
+        let rows = await fetchTeamFixtures({ teamId, fromISO: isoStart(startISO), toISO: isoNextDay(endISO) });
 
         if (leagueIdTokens.size) {
           rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
