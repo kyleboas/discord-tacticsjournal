@@ -296,9 +296,17 @@ async function handleUnfollow(interaction) {
       return i.reply({ content: 'This menu isn’t for you.', flags: MessageFlags.Ephemeral });
     }
 
+    await i.deferReply({ ephemeral: true });
+
     const ids = i.values.map(v => Number(v));
-    const removed = await unsubscribeGuildTeams(guildId, ids);
-    await i.reply({ content: `🗑️ Removed **${removed}** team(s) from this server’s follow list.`, flags: MessageFlags.Ephemeral });
+    const removedTeams = await unsubscribeGuildTeams(guildId, ids);
+
+    // After updating follows, prune upcoming reminders immediately
+    const nowFollowed = await listGuildSubscribedTeams(guildId);
+    const keepIds = nowFollowed.map(t => Number(t.team_id)).filter(Number.isFinite);
+    const removedReminders = await pruneUpcomingForUnfollowed(guildId, keepIds);
+
+    await i.editReply(`🗑️ Removed **${removedTeams}** team(s) from this server’s follow list.\n🔄 Pruned **${removedReminders}** upcoming reminder(s).`);
 
     const disabledRow = new ActionRowBuilder().addComponents(
       StringSelectMenuBuilder.from(select).setDisabled(true)
@@ -404,17 +412,17 @@ async function handleEdit(interaction) {
       }
     }
 
-    let removed = 0;
+    let removedTeams = 0;
     if (toRemove.length) {
       try {
-        removed = await unsubscribeGuildTeams(guildId, toRemove);
+        removedTeams = await unsubscribeGuildTeams(guildId, toRemove);
       } catch (e) {
         await i.editReply(`❌ Failed to remove: ${e.message || e}`);
         return;
       }
     }
 
-    // Refresh reminders for newly added teams (removals are left to natural expiry)
+    // Refresh reminders for newly added teams (removals are pruned below)
     let upserts = 0;
     if (toAdd.length) {
       try {
@@ -424,14 +432,18 @@ async function handleEdit(interaction) {
       }
     }
 
+    // PRUNE after any change to follows
     const nowList = await listGuildSubscribedTeams(guildId);
+    const keepIds = nowList.map(t => Number(t.team_id)).filter(Number.isFinite);
+    const removedReminders = await pruneUpcomingForUnfollowed(guildId, keepIds);
 
     await i.editReply(
       `✅ Saved.\n` +
-      `• Added: **${added}**\n` +
-      `• Removed: **${removed}**\n` +
-      (upserts ? `• Refreshed reminders for **${upserts}** upcoming match(es).` : `• Reminders will catch up shortly.`) +
-      `\nNow following **${nowList.length}** team(s) across all leagues.`
+      `• Added teams: **${added}**\n` +
+      `• Removed teams: **${removedTeams}**\n` +
+      (upserts ? `• Refreshed reminders for **${upserts}** upcoming match(es).\n` : ``) +
+      `• Pruned **${removedReminders}** upcoming reminder(s).\n` +
+      `Now following **${nowList.length}** team(s) across all leagues.`
     );
 
     // Update header with new count
