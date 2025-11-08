@@ -10,7 +10,7 @@ const pool = new Pool({
 
 // ---------------- existing watchlist & misc ----------------
 
-// --- NEW util, near other small utils in db.js or a shared util file ---
+// --- util ---
 function slug(s) {
   return String(s || '')
     .trim()
@@ -25,7 +25,7 @@ function makeManualMatchId({ guild_id, match_time, home, away }) {
   return `manual:${guild_id}:${t}:${slug(home)}-vs-${slug(away)}`;
 }
 
-// --- NEW in db.js ---
+// --- NEW: add manual match (persists in fixtures_cache + guild_match_reminders) ---
 export async function addManualGuildMatch({
   guild_id,
   channel_id,
@@ -94,6 +94,11 @@ export async function updateWatchlistMessageMeta(name, userId, fields) {
   return res.rowCount > 0;
 }
 
+/**
+ * Per-guild cleanup: remove upcoming reminders that aren't for followed teams.
+ * If keepTeamIds is empty, it removes ALL upcoming reminders for that guild.
+ * NOTE: This version does NOT preserve manual reminders.
+ */
 export async function pruneUpcomingForUnfollowed(guildId, keepTeamIds = []) {
   // If nothing is followed, delete all upcoming guild reminders
   if (!Array.isArray(keepTeamIds) || keepTeamIds.length === 0) {
@@ -117,6 +122,46 @@ export async function pruneUpcomingForUnfollowed(guildId, keepTeamIds = []) {
        AND NOT (f.home_id = ANY($2) OR f.away_id = ANY($2))`,
     [guildId, keepTeamIds]
   );
+  return res.rowCount || 0;
+}
+
+/**
+ * GLOBAL cleanup: remove all upcoming reminders across all guilds where
+ * neither side is followed by that guild. By default preserves manual entries.
+ * Returns number of rows deleted.
+ */
+export async function pruneAllUpcomingForUnfollowedGlobal({ keepManual = true } = {}) {
+  const sql = `
+    DELETE FROM guild_match_reminders g
+    USING fixtures_cache f
+    WHERE g.match_id = f.match_id
+      AND g.match_time >= NOW()
+      ${keepManual ? `AND COALESCE(g.is_manual, FALSE) = FALSE` : ``}
+      AND NOT EXISTS (
+        SELECT 1
+        FROM guild_team_follows t
+        WHERE t.guild_id = g.guild_id
+          AND (t.team_id = f.home_id OR t.team_id = f.away_id)
+      );
+  `;
+  const res = await pool.query(sql);
+  return res.rowCount || 0;
+}
+
+/**
+ * Remove upcoming reminders that have no corresponding fixtures_cache row (orphans).
+ * By default preserves manual entries.
+ */
+export async function pruneOrphanUpcomingReminders({ keepManual = true } = {}) {
+  const sql = `
+    DELETE FROM guild_match_reminders g
+    WHERE g.match_time >= NOW()
+      ${keepManual ? `AND COALESCE(g.is_manual, FALSE) = FALSE` : ``}
+      AND NOT EXISTS (
+        SELECT 1 FROM fixtures_cache f WHERE f.match_id = g.match_id
+      );
+  `;
+  const res = await pool.query(sql);
   return res.rowCount || 0;
 }
 
@@ -241,7 +286,7 @@ export async function ensureSchema() {
     );
   `);
 
-  /* NEW: guild-scoped team follows */
+  /* guild-scoped team follows */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS guild_team_follows (
       guild_id TEXT NOT NULL,
@@ -253,7 +298,7 @@ export async function ensureSchema() {
     );
   `);
 
-  /* NEW: guild-scoped match reminders (followed vs followed) */
+  /* guild-scoped match reminders (followed vs followed) */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS guild_match_reminders (
       guild_id   TEXT NOT NULL,
@@ -266,21 +311,24 @@ export async function ensureSchema() {
       PRIMARY KEY (guild_id, match_id)
     );
   `);
-  
-  // in ensureSchema() after creating guild_match_reminders
+
+  // add new columns if missing
   await pool.query(`
     ALTER TABLE guild_match_reminders
     ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS league TEXT,
     ADD COLUMN IF NOT EXISTS source TEXT
   `);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_gmr_is_manual ON guild_match_reminders(is_manual);`);
 
-    /* Helpful indexes */
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_fixtures_cache_time ON fixtures_cache(match_time);`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_team_follows_guild ON guild_team_follows(guild_id);`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_match_reminders_time ON guild_match_reminders(match_time);`);
-  }
+  // Helpful indexes
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_gmr_is_manual ON guild_match_reminders(is_manual);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_fixtures_cache_time ON fixtures_cache(match_time);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_fixtures_cache_ids ON fixtures_cache(home_id, away_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_team_follows_guild ON guild_team_follows(guild_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_team_follows_guild_team ON guild_team_follows(guild_id, team_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_match_reminders_time ON guild_match_reminders(match_time);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_guild_match_reminders_guild_time ON guild_match_reminders(guild_id, match_time);`);
+}
 
 export async function ensureQuizSchema() {
   await pool.query(`
@@ -653,7 +701,7 @@ export async function unsubscribeGuildTeams(guild_id, team_ids /* number[] */) {
   return rowCount;
 }
 
-// ---------------- NEW: guild match reminders API ----------------
+// ---------------- guild match reminders API ----------------
 
 /**
  * Upsert a followed-vs-followed match reminder for a guild.
