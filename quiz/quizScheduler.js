@@ -32,6 +32,60 @@ let testQuizTimeout = null;
 let quizMessage = null;
 let quizChannelId = CHANNEL_ID;
 
+/**
+ * Clear all messages in the quiz channel
+ */
+async function clearQuizChannel(channel) {
+  try {
+    let deletedCount = 0;
+    let fetched;
+
+    // Fetch and delete messages in batches
+    do {
+      fetched = await channel.messages.fetch({ limit: 100 });
+
+      if (fetched.size === 0) break;
+
+      // Separate messages into bulk deletable (< 14 days) and old messages
+      const now = Date.now();
+      const twoWeeksAgo = now - (14 * 24 * 60 * 60 * 1000);
+
+      const bulkDeletable = fetched.filter(msg => msg.createdTimestamp > twoWeeksAgo);
+      const oldMessages = fetched.filter(msg => msg.createdTimestamp <= twoWeeksAgo);
+
+      // Bulk delete recent messages
+      if (bulkDeletable.size > 0) {
+        if (bulkDeletable.size === 1) {
+          await bulkDeletable.first().delete();
+          deletedCount += 1;
+        } else {
+          await channel.bulkDelete(bulkDeletable, true);
+          deletedCount += bulkDeletable.size;
+        }
+      }
+
+      // Delete old messages individually
+      for (const msg of oldMessages.values()) {
+        try {
+          await msg.delete();
+          deletedCount += 1;
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (err) {
+          console.warn(`Failed to delete old message ${msg.id}:`, err.message);
+        }
+      }
+
+    } while (fetched.size >= 100);
+
+    if (deletedCount > 0) {
+      console.log(`Cleared ${deletedCount} messages from quiz channel`);
+    }
+  } catch (err) {
+    console.error('Error clearing quiz channel:', err);
+  }
+}
+
 export async function runTestQuiz(client) {
   if (testQuizTimeout) clearTimeout(testQuizTimeout);
 
@@ -163,14 +217,8 @@ export async function runDailyQuiz(client) {
 
   const channel = await client.channels.fetch(CHANNEL_ID);
 
-  if (previousMessageId) {
-    try {
-      const prev = await channel.messages.fetch(previousMessageId);
-      await prev.delete();
-    } catch (err) {
-      console.warn('Failed to delete previous message:', err.message);
-    }
-  }
+  // Clear all messages in the channel before posting the new quiz
+  await clearQuizChannel(channel);
 
   const msg = await channel.send({
     content: `<@&${ROLE_ID}> today's question has been posted.`,
@@ -228,21 +276,12 @@ export async function runDailyQuiz(client) {
 
 export function setupQuizScheduler(client) {
   cron.schedule('0 12 * * *', async () => {
-    if (todayMessageId) {
-      try {
-        const channel = await client.channels.fetch(quizChannelId);
-        const msg = await channel.messages.fetch(todayMessageId);
-        await msg.delete();
-      } catch (err) {
-        console.warn('Could not delete quiz message:', err.message);
-      }
-
-      todayMessageId = null;
-      todayQuestionIndex = null;
-      todayCorrectIndex = null;
-      todayPoints = 0;
-      userResponses.clear();
-    }
+    // Clear state for new quiz (channel will be cleared by runDailyQuiz)
+    todayMessageId = null;
+    todayQuestionIndex = null;
+    todayCorrectIndex = null;
+    todayPoints = 0;
+    userResponses.clear();
 
     await runDailyQuiz(client);
   });
