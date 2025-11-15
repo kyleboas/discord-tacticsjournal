@@ -287,7 +287,7 @@ export async function runDailyQuiz(client) {
       });
     }
   }
-}
+} 
 
 export function setupQuizScheduler(client) {
   cron.schedule('0 12 * * *', async () => {
