@@ -1,16 +1,15 @@
 // aiModeration.js
 import fetch from 'node-fetch';
 import { Collection, EmbedBuilder } from 'discord.js';
-import { incrementStrike, incrementMajorStrike } from './db.js'; 
+import { incrementStrike, incrementMajorStrike } from './db.js';
+import { ROLES, CHANNELS, DIRECT_TARGETING_ALLOWLIST, CONFIG } from './constants.js';
 
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
-const WATCH_CHANNELS = ['1371677909902819360', '1371677909902819360', '1098742662040920074', '1325150809104842752', '1273974012774711397', '1371507335372996760'];
-const MOD_LOG_CHANNEL = '1099892476627669012';
+const WATCH_CHANNELS = CHANNELS.WATCH_CHANNELS;
+const MOD_LOG_CHANNEL = CHANNELS.MOD_LOG;
 
 const userStrikes = new Collection();
-const STRIKE_RESET_MS = 3 * 24 * 60 * 60 * 1000;
- 
-const DIRECT_TARGETING_ALLOWLIST = new Set(['the', 'this', 'that', 'all', 'with', 'was', 'it', 'game', 'thing', 'shit']);
+const STRIKE_RESET_MS = CONFIG.STRIKE_RESET_MS;
 
 export const ATTRIBUTE_THRESHOLDS = {
   TOXICITY: 0.97,
@@ -132,14 +131,14 @@ function formatDuration(ms) {
   return `${days} day`;
 }
 
-// Environment-aware configuration
-const ENABLE_AI_MOD = process.env.ENABLE_AI_MOD !== 'false'; // Enable by default in production
-const TOXICITY_THRESHOLD = parseFloat(process.env.TOXICITY_THRESHOLD || '0.85');
-const MOD_SAMPLE_RATE = parseFloat(process.env.MOD_SAMPLE_RATE || '1.0');
+// Environment-aware configuration (imported from constants)
+const ENABLE_AI_MOD = CONFIG.ENABLE_AI_MOD;
+const TOXICITY_THRESHOLD = CONFIG.TOXICITY_THRESHOLD;
+const MOD_SAMPLE_RATE = CONFIG.MOD_SAMPLE_RATE;
 
 // Rate limiting for Perspective API
 const messageCache = new Collection();
-const RATE_LIMIT = parseInt(process.env.PERSPECTIVE_RATE_LIMIT || '30'); // Max requests per minute
+const RATE_LIMIT = CONFIG.PERSPECTIVE_RATE_LIMIT;
 let requestsThisMinute = 0;
 let rateLimitReset = Date.now() + 60000;
 
@@ -154,7 +153,7 @@ function canMakeRequest() {
 
 // Cache recent moderation results to avoid duplicate API calls
 const moderationCache = new Collection();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL = CONFIG.MODERATION_CACHE_TTL;
 
 function getCachedResult(content) {
   const contentHash = Buffer.from(content).toString('base64');
@@ -169,7 +168,7 @@ function getCachedResult(content) {
 
 function setCachedResult(content, result) {
   // Don't let cache grow too large
-  if (moderationCache.size > 100) {
+  if (moderationCache.size > CONFIG.MODERATION_CACHE_MAX_SIZE) {
     // Remove oldest entries
     const oldestKeys = Array.from(moderationCache.keys())
       .sort((a, b) => moderationCache.get(a).timestamp - moderationCache.get(b).timestamp)
@@ -323,7 +322,7 @@ export function setupModeration(client) {
     if (!WATCH_CHANNELS.includes(message.channel.id)) return;
     if (message.author.bot || message.system) return;
 
-    if (message.member?.roles.cache.has('1100369095251206194')) return;
+    if (message.member?.roles.cache.has(ROLES.ADMIN)) return;
     
     const content = message.content?.trim();
     if (!content) return;
@@ -466,9 +465,12 @@ export function setupModeration(client) {
     try {
       requestsThisMinute++;
       
-      const result = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`, {
+      const result = await fetch('https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': PERSPECTIVE_API_KEY  // Use header instead of URL parameter
+        },
         body: JSON.stringify({
         comment: { text: normalizeText(content) },
         languages: ['en'],

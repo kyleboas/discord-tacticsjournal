@@ -9,6 +9,7 @@ import {
   ComponentType,
   MessageFlags
 } from 'discord.js';
+import { ROLES } from '../constants.js';
 
 import {
   listCachedFixtures,
@@ -256,7 +257,7 @@ async function handleEdit(interaction) {
   const leagueInput = interaction.options.getString('league', true);
 
   // Check if user has admin role
-  const ADMIN_ROLE_ID = '1100369095251206194';
+  const ADMIN_ROLE_ID = ROLES.ADMIN;
   const member = interaction.member;
 
   if (!member.roles.cache.has(ADMIN_ROLE_ID)) {

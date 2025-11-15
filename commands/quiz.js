@@ -24,10 +24,11 @@ import {
   announceSeasonStart
 } from '../quiz/quizScheduler.js';
 import { getCurrentSeason, getAllSeasons } from '../quiz/seasonUtils.js';
+import { ROLES, CHANNELS } from '../constants.js';
 
-const QUIZ_ROLE_ID = '1100369095251206194';
-const QUIZ_CHANNEL_ID = '1372225536406978640';
-const POST_ROLE_ID = '1372372259812933642';
+const QUIZ_ROLE_ID = ROLES.ADMIN;
+const QUIZ_CHANNEL_ID = CHANNELS.QUIZ;
+const POST_ROLE_ID = ROLES.QUIZ_POSTER;
 
 export const data = new SlashCommandBuilder()
   .setName('quiz')
