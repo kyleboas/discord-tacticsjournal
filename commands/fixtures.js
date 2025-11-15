@@ -255,6 +255,14 @@ async function handleEdit(interaction) {
   const guildId = interaction.guildId;
   const leagueInput = interaction.options.getString('league', true);
 
+  // Check if user has admin role
+  const ADMIN_ROLE_ID = '1100369095251206194';
+  const member = interaction.member;
+
+  if (!member.roles.cache.has(ADMIN_ROLE_ID)) {
+    return interaction.editReply('❌ You do not have permission to edit followed teams. This command requires admin privileges.');
+  }
+
   // Load the full league's teams
   let teams;
   try {
