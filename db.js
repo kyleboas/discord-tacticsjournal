@@ -373,6 +373,27 @@ export async function ensureQuizSchema() {
       channel_id TEXT NOT NULL
     );
   `);
+
+  // Add season column to qotd_attempts if it doesn't exist
+  await pool.query(`
+    ALTER TABLE qotd_attempts ADD COLUMN IF NOT EXISTS season TEXT;
+  `);
+
+  // Create seasonal leaderboard table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS qotd_seasonal_scores (
+      user_id TEXT NOT NULL,
+      username TEXT NOT NULL,
+      season TEXT NOT NULL,
+      total_points INTEGER DEFAULT 0,
+      PRIMARY KEY (user_id, season)
+    );
+  `);
+
+  // Create index for faster seasonal queries
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_seasonal_scores_season ON qotd_seasonal_scores(season);
+  `);
 }
 
 export async function clearActiveQuizInDB() {
@@ -405,7 +426,7 @@ export async function getActiveQuizFromDB() {
   return res.rows[0] || null;
 }
 
-export async function recordQuizAnswerDetailed({ userId, username, selectedIndex, messageId, isCorrect, points }) {
+export async function recordQuizAnswerDetailed({ userId, username, selectedIndex, messageId, isCorrect, points, season }) {
   const now = new Date();
   const date = now.toISOString().split('T')[0];
   const isoWeek = `${now.getUTCFullYear()}-W${getISOWeek(now).toString().padStart(2, '0')}`;
@@ -415,11 +436,11 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
   `);
 
   await pool.query(`
-    INSERT INTO qotd_attempts (date, time, message_id, user_id, username, selected_index, points, week)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    INSERT INTO qotd_attempts (date, time, message_id, user_id, username, selected_index, points, week, season)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     ON CONFLICT (user_id, message_id)
-    DO UPDATE SET time = $2, selected_index = $6, points = $7, username = $5, week = $8
-  `, [date, now, messageId, userId, username, selectedIndex, isCorrect ? points : 0, isoWeek]);
+    DO UPDATE SET time = $2, selected_index = $6, points = $7, username = $5, week = $8, season = $9
+  `, [date, now, messageId, userId, username, selectedIndex, isCorrect ? points : 0, isoWeek, season]);
 
   if (isCorrect) {
     await pool.query(`
@@ -428,6 +449,16 @@ export async function recordQuizAnswerDetailed({ userId, username, selectedIndex
       ON CONFLICT (user_id)
       DO UPDATE SET total_points = qotd_scores.total_points + $3, username = $2
     `, [userId, username, points]);
+
+    // Also update seasonal scores
+    if (season) {
+      await pool.query(`
+        INSERT INTO qotd_seasonal_scores (user_id, username, season, total_points)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (user_id, season)
+        DO UPDATE SET total_points = qotd_seasonal_scores.total_points + $4, username = $2
+      `, [userId, username, season, points]);
+    }
   }
 }
 
@@ -490,6 +521,39 @@ export async function getWeeklyLeaderboard(userId) {
       ) ranked
       WHERE user_id = $2
     `, [isoWeek, userId]);
+
+    if (rankRes.rows.length > 0) {
+      userRankInfo = rankRes.rows[0];
+    }
+  }
+
+  return { top10, userRankInfo };
+}
+
+export async function getSeasonalLeaderboard(userId, seasonId) {
+  const topRes = await pool.query(`
+    SELECT username, total_points, user_id
+    FROM qotd_seasonal_scores
+    WHERE season = $1
+    ORDER BY total_points DESC
+    LIMIT 10
+  `, [seasonId]);
+
+  const top10 = topRes.rows;
+
+  const isInTop10 = top10.some(row => row.user_id === userId);
+  let userRankInfo = null;
+
+  if (!isInTop10) {
+    const rankRes = await pool.query(`
+      SELECT username, total_points, rank FROM (
+        SELECT user_id, username, total_points,
+               RANK() OVER (ORDER BY total_points DESC) AS rank
+        FROM qotd_seasonal_scores
+        WHERE season = $1
+      ) ranked
+      WHERE user_id = $2
+    `, [seasonId, userId]);
 
     if (rankRes.rows.length > 0) {
       userRankInfo = rankRes.rows[0];

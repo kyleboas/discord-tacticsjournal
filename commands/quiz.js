@@ -6,6 +6,7 @@ import {
 import {
   getQuizLeaderboard,
   getWeeklyLeaderboard,
+  getSeasonalLeaderboard,
   recordQuizAnswerDetailed,
   clearActiveQuizInDB
 } from '../db.js';
@@ -20,6 +21,7 @@ import {
   userResponses,
   setActiveQuizState
 } from '../quiz/quizScheduler.js';
+import { getCurrentSeason, getAllSeasons } from '../quiz/seasonUtils.js';
 
 const QUIZ_ROLE_ID = '1100369095251206194';
 const QUIZ_CHANNEL_ID = '1372225536406978640';
@@ -57,7 +59,8 @@ export const data = new SlashCommandBuilder()
           .setDescription('Leaderboard type')
           .addChoices(
             { name: 'All-Time', value: 'all-time' },
-            { name: 'Weekly', value: 'weekly' }
+            { name: 'Weekly', value: 'weekly' },
+            { name: 'Current Season', value: 'seasonal' }
           )
       )
   );
@@ -245,11 +248,34 @@ export async function execute(interaction) {
   }
 
   if (subcommand === 'leaderboard') {
-    const type = interaction.options.getString('type') || 'all-time';
+    const type = interaction.options.getString('type') || 'seasonal';
 
-    const { top10, userRankInfo } = type === 'weekly'
-      ? await getWeeklyLeaderboard(interaction.user.id)
-      : await getQuizLeaderboard(interaction.user.id);
+    let leaderboardData;
+    let title;
+    let seasonInfo = '';
+
+    if (type === 'seasonal') {
+      const currentSeason = getCurrentSeason();
+
+      if (!currentSeason) {
+        return interaction.reply({
+          content: 'There is no active season at the moment. Use `/quiz leaderboard type:all-time` or `/quiz leaderboard type:weekly` instead.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      leaderboardData = await getSeasonalLeaderboard(interaction.user.id, currentSeason.id);
+      title = `${currentSeason.emoji} ${currentSeason.theme} Leaderboard`;
+      seasonInfo = `\n\n_${currentSeason.description}_\nSeason: ${currentSeason.startDate} to ${currentSeason.endDate}`;
+    } else if (type === 'weekly') {
+      leaderboardData = await getWeeklyLeaderboard(interaction.user.id);
+      title = '📆 Weekly Leaderboard';
+    } else {
+      leaderboardData = await getQuizLeaderboard(interaction.user.id);
+      title = '🏆 All-Time Leaderboard';
+    }
+
+    const { top10, userRankInfo } = leaderboardData;
 
     if (!top10.length) {
       return interaction.reply({
@@ -258,13 +284,11 @@ export async function execute(interaction) {
       });
     }
 
-    const title = type === 'weekly' ? '📆 Weekly Leaderboard' : '🏆 All-Time Leaderboard';
-
     const leaderboardMsg = top10
       .map((user, index) => `**${index + 1}.** ${user.username} - ${user.total_points} pts`)
       .join('\n');
 
-    let reply = `**${title}**\n${leaderboardMsg}`;
+    let reply = `**${title}**\n${leaderboardMsg}${seasonInfo}`;
 
     if (userRankInfo) {
       reply += `\n\nYou are ranked **#${userRankInfo.rank}** with **${userRankInfo.total_points}** points.`;
