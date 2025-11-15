@@ -24,6 +24,8 @@ on:
 jobs:
   generate-content:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Allow the workflow to push commits
 
     steps:
       - name: Checkout repository
