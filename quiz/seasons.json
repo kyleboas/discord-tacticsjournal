@@ -1,0 +1,56 @@
+[
+  {
+    "id": "2025-11",
+    "theme": "Legends of the Past",
+    "description": "Test your knowledge of football's greatest historic moments and legendary players",
+    "startDate": "2025-11-01",
+    "endDate": "2025-11-30",
+    "color": 16766720,
+    "emoji": "🏆"
+  },
+  {
+    "id": "2025-12",
+    "theme": "Winter Classics",
+    "description": "Celebrate iconic winter tournaments and unforgettable cold-weather matches",
+    "startDate": "2025-12-01",
+    "endDate": "2025-12-31",
+    "color": 8900331,
+    "emoji": "❄️"
+  },
+  {
+    "id": "2026-01",
+    "theme": "New Year, New Records",
+    "description": "Amazing records and incredible achievements that rewrote football history",
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-31",
+    "color": 16739947,
+    "emoji": "🎯"
+  },
+  {
+    "id": "2026-02",
+    "theme": "Tactical Masterminds",
+    "description": "Legendary managers and their revolutionary tactical innovations",
+    "startDate": "2026-02-01",
+    "endDate": "2026-02-28",
+    "color": 10181046,
+    "emoji": "🧠"
+  },
+  {
+    "id": "2026-03",
+    "theme": "Derby Days",
+    "description": "The fiercest rivalries and most intense local derbies in football",
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-31",
+    "color": 15158332,
+    "emoji": "⚔️"
+  },
+  {
+    "id": "2026-04",
+    "theme": "European Glory",
+    "description": "Champions League and Europa League historic moments and triumphs",
+    "startDate": "2026-04-01",
+    "endDate": "2026-04-30",
+    "color": 3447003,
+    "emoji": "⭐"
+  }
+]
