@@ -59,3 +59,30 @@ export function getPastSeasons() {
 
   return SEASONS.filter(season => season.endDate < todayISO);
 }
+
+/**
+ * Check if tomorrow is the last day of the current season
+ * @returns {boolean} True if tomorrow is the season end date
+ */
+export function isTomorrowSeasonEnd() {
+  const currentSeason = getCurrentSeason();
+  if (!currentSeason) return false;
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowISO = tomorrow.toISOString().split('T')[0];
+
+  return tomorrowISO === currentSeason.endDate;
+}
+
+/**
+ * Get the season that starts tomorrow
+ * @returns {Object|null} The season starting tomorrow or null
+ */
+export function getTomorrowStartingSeason() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowISO = tomorrow.toISOString().split('T')[0];
+
+  return SEASONS.find(s => s.startDate === tomorrowISO) || null;
+}

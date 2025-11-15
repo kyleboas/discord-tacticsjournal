@@ -15,12 +15,15 @@ import {
   getActiveQuizFromDB,
   setActiveQuizInDB,
   getWeeklyLeaderboard,
-  getSeasonalLeaderboard
+  getSeasonalLeaderboard,
+  getLastTrackedSeason,
+  setLastTrackedSeason
 } from '../db.js';
-import { getCurrentSeason } from './seasonUtils.js';
+import { getCurrentSeason, isTomorrowSeasonEnd, getTomorrowStartingSeason } from './seasonUtils.js';
 
 const CHANNEL_ID = '1098771891898023947';
 const ROLE_ID = '1372372259812933642';
+const WINNER_ROLE_ID = '1439360908588482830';
 
 // Load questions (can be reloaded)
 let QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
@@ -46,6 +49,132 @@ let userResponses = new Map();
 let testQuizTimeout = null;
 let quizMessage = null;
 let quizChannelId = CHANNEL_ID;
+
+/**
+ * Handle season end - congratulate winner and assign role
+ */
+async function handleSeasonEnd(client, endedSeason) {
+  try {
+    const channel = await client.channels.fetch(CHANNEL_ID);
+    const { top10 } = await getSeasonalLeaderboard('bot-seasonal', endedSeason.id);
+
+    if (!top10.length) {
+      console.log(`No participants in season ${endedSeason.id}`);
+      return;
+    }
+
+    const winner = top10[0];
+
+    // Create congratulations embed
+    const congratsEmbed = new EmbedBuilder()
+      .setTitle(`${endedSeason.emoji} Season Winner! ${endedSeason.emoji}`)
+      .setDescription(
+        `**Congratulations to ${winner.username}!**\n\n` +
+        `They won the **${endedSeason.theme}** season with **${winner.total_points} points**!\n\n` +
+        `🏆 They've earned the Season Winner role!`
+      )
+      .setColor(16766720) // Gold color
+      .setTimestamp();
+
+    // Try to assign winner role
+    try {
+      const guild = channel.guild;
+      const member = await guild.members.fetch(winner.user_id);
+      const role = await guild.roles.fetch(WINNER_ROLE_ID);
+
+      if (member && role) {
+        await member.roles.add(role);
+        console.log(`Assigned winner role to ${winner.username}`);
+      }
+    } catch (err) {
+      console.error('Failed to assign winner role:', err);
+    }
+
+    // Post congratulations message
+    await channel.send({
+      content: `<@${winner.user_id}>`,
+      embeds: [congratsEmbed]
+    });
+
+    // Post final season leaderboard
+    const leaderboardText = top10
+      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
+      .join('\n');
+
+    const finalLeaderboardEmbed = new EmbedBuilder()
+      .setTitle(`${endedSeason.emoji} ${endedSeason.theme} - Final Standings`)
+      .setDescription(leaderboardText)
+      .setColor(endedSeason.color)
+      .setFooter({ text: `Season ended: ${endedSeason.endDate}` })
+      .setTimestamp();
+
+    await channel.send({
+      embeds: [finalLeaderboardEmbed],
+      allowedMentions: { parse: [] }
+    });
+
+  } catch (err) {
+    console.error('Error handling season end:', err);
+  }
+}
+
+/**
+ * Announce new season starting
+ */
+export async function announceSeasonStart(client, newSeason) {
+  try {
+    const channel = await client.channels.fetch(CHANNEL_ID);
+
+    const announceEmbed = new EmbedBuilder()
+      .setTitle(`${newSeason.emoji} New Season Begins! ${newSeason.emoji}`)
+      .setDescription(
+        `**${newSeason.theme}** season is now live!\n\n` +
+        `${newSeason.description}\n\n` +
+        `📅 **Season Dates:** ${newSeason.startDate} to ${newSeason.endDate}\n\n` +
+        `Good luck to all participants! 🎯`
+      )
+      .setColor(newSeason.color)
+      .setTimestamp();
+
+    await channel.send({
+      content: `<@&${ROLE_ID}>`,
+      embeds: [announceEmbed]
+    });
+
+    console.log(`Announced new season: ${newSeason.theme}`);
+  } catch (err) {
+    console.error('Error announcing season start:', err);
+  }
+}
+
+/**
+ * Announce season ending tomorrow
+ */
+async function announceSeasonEnding(client, endingSeason) {
+  try {
+    const channel = await client.channels.fetch(CHANNEL_ID);
+
+    const warningEmbed = new EmbedBuilder()
+      .setTitle(`${endingSeason.emoji} Season Ending Tomorrow! ${endingSeason.emoji}`)
+      .setDescription(
+        `**${endingSeason.theme}** season ends tomorrow!\n\n` +
+        `This is your last chance to secure your position on the leaderboard!\n\n` +
+        `📅 **Season Ends:** ${endingSeason.endDate}\n\n` +
+        `Make every point count! 🎯`
+      )
+      .setColor(endingSeason.color)
+      .setTimestamp();
+
+    await channel.send({
+      content: `<@&${ROLE_ID}>`,
+      embeds: [warningEmbed]
+    });
+
+    console.log(`Announced season ending: ${endingSeason.theme}`);
+  } catch (err) {
+    console.error('Error announcing season ending:', err);
+  }
+}
 
 /**
  * Clear all messages in the quiz channel
@@ -195,6 +324,35 @@ export async function setActiveQuizState({ messageId, questionIndex, correctInde
 }
 
 export async function runDailyQuiz(client) {
+  // Check for season transitions
+  const currentSeason = getCurrentSeason();
+  const lastTrackedSeason = await getLastTrackedSeason();
+
+  // Handle season end (when we transition from a season to no season or a new season)
+  if (lastTrackedSeason && (!currentSeason || currentSeason.id !== lastTrackedSeason)) {
+    const { getSeasonById } = await import('./seasonUtils.js');
+    const endedSeason = getSeasonById(lastTrackedSeason);
+    if (endedSeason) {
+      await handleSeasonEnd(client, endedSeason);
+    }
+  }
+
+  // Announce new season start
+  if (currentSeason && currentSeason.id !== lastTrackedSeason) {
+    await announceSeasonStart(client, currentSeason);
+    await setLastTrackedSeason(currentSeason.id);
+  }
+
+  // Update tracked season if it changed
+  if (!currentSeason && lastTrackedSeason) {
+    await setLastTrackedSeason(null);
+  }
+
+  // Announce if tomorrow is the last day of the season
+  if (isTomorrowSeasonEnd() && currentSeason) {
+    await announceSeasonEnding(client, currentSeason);
+  }
+
   const questionIndex = new Date().getDate() % QUESTIONS.length;
   const { question, options, answerIndex, points } = QUESTIONS[questionIndex];
 
@@ -209,9 +367,6 @@ export async function runDailyQuiz(client) {
   const now = new Date();
   const closesAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 12, 0, 0));
   const nextUnix = Math.floor(closesAt.getTime() / 1000);
-
-  // Get current season
-  const currentSeason = getCurrentSeason();
 
   const embed = new EmbedBuilder()
     .setTitle('Question of the Day')
@@ -245,44 +400,53 @@ export async function runDailyQuiz(client) {
   previousMessageId = msg.id;
   quizMessage = msg;
 
+  // Persist active quiz to database
+  await setActiveQuizInDB({
+    messageId: msg.id,
+    questionIndex,
+    correctIndex: answerIndex,
+    points,
+    channelId: CHANNEL_ID
+  });
+
+  // Always show weekly leaderboard
+  const { top10: weeklyTop10 } = await getWeeklyLeaderboard('bot-weekly');
+
+  if (weeklyTop10.length) {
+    const weeklyLeaderboardText = weeklyTop10
+      .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
+      .join('\n');
+
+    const weeklyLeaderboardEmbed = new EmbedBuilder()
+      .setTitle('📆 Weekly Leaderboard')
+      .setDescription(weeklyLeaderboardText)
+      .setColor(0x2ecc71)
+      .setTimestamp();
+
+    await channel.send({
+      embeds: [weeklyLeaderboardEmbed],
+      allowedMentions: { parse: [] }
+    });
+  }
+
   // Show seasonal leaderboard if a season is active
   if (currentSeason) {
-    const { top10 } = await getSeasonalLeaderboard('bot-seasonal', currentSeason.id); 
+    const { top10: seasonTop10 } = await getSeasonalLeaderboard('bot-seasonal', currentSeason.id);
 
-    if (top10.length) {
-      const leaderboardText = top10
+    if (seasonTop10.length) {
+      const seasonLeaderboardText = seasonTop10
         .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
         .join('\n');
 
-      const leaderboardEmbed = new EmbedBuilder()
+      const seasonLeaderboardEmbed = new EmbedBuilder()
         .setTitle(`${currentSeason.emoji} ${currentSeason.theme} Leaderboard`)
-        .setDescription(leaderboardText)
+        .setDescription(seasonLeaderboardText)
         .setColor(currentSeason.color)
         .setFooter({ text: `Season runs from ${currentSeason.startDate} to ${currentSeason.endDate}` })
         .setTimestamp();
 
       await channel.send({
-        embeds: [leaderboardEmbed],
-        allowedMentions: { parse: [] }
-      });
-    }
-  } else {
-    // Fall back to weekly leaderboard if no season is active
-    const { top10 } = await getWeeklyLeaderboard('bot-weekly');
-
-    if (top10.length) {
-      const leaderboardText = top10
-        .map((user, index) => `**${index + 1}.** ${user.username} -- ${user.total_points} pts`)
-        .join('\n');
-
-      const leaderboardEmbed = new EmbedBuilder()
-        .setTitle('📆 Weekly Leaderboard')
-        .setDescription(leaderboardText)
-        .setColor(0x2ecc71)
-        .setTimestamp();
-
-      await channel.send({
-        embeds: [leaderboardEmbed],
+        embeds: [seasonLeaderboardEmbed],
         allowedMentions: { parse: [] }
       });
     }

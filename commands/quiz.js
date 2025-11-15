@@ -20,7 +20,8 @@ import {
   todayMessageId,
   todayPoints,
   userResponses,
-  setActiveQuizState
+  setActiveQuizState,
+  announceSeasonStart
 } from '../quiz/quizScheduler.js';
 import { getCurrentSeason, getAllSeasons } from '../quiz/seasonUtils.js';
 
@@ -67,6 +68,9 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand(sub =>
     sub.setName('reload').setDescription('Reload questions from file (admin only)')
+  )
+  .addSubcommand(sub =>
+    sub.setName('announce-season').setDescription('Manually announce the current season (admin only)')
   );
 
 export async function execute(interaction) {
@@ -270,6 +274,31 @@ export async function execute(interaction) {
 
     return interaction.reply({
       content: `✅ Successfully reloaded ${count} questions from questions.json`,
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (subcommand === 'announce-season') {
+    if (!hasQuizRole) {
+      return interaction.reply({
+        content: 'You must have the quiz role to use this command.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const currentSeason = getCurrentSeason();
+
+    if (!currentSeason) {
+      return interaction.reply({
+        content: 'There is no active season at the moment.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    await announceSeasonStart(interaction.client, currentSeason);
+
+    return interaction.reply({
+      content: `✅ Announced the start of **${currentSeason.theme}** season!`,
       flags: MessageFlags.Ephemeral
     });
   }
