@@ -400,6 +400,15 @@ export async function runDailyQuiz(client) {
   previousMessageId = msg.id;
   quizMessage = msg;
 
+  // Persist active quiz to database
+  await setActiveQuizInDB({
+    messageId: msg.id,
+    questionIndex,
+    correctIndex: answerIndex,
+    points,
+    channelId: CHANNEL_ID
+  });
+
   // Always show weekly leaderboard
   const { top10: weeklyTop10 } = await getWeeklyLeaderboard('bot-weekly');
 
