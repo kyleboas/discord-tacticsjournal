@@ -14,6 +14,7 @@ import {
   runDailyQuiz,
   runTestQuiz,
   QUESTIONS,
+  reloadQuestions,
   todayQuestionIndex,
   todayCorrectIndex,
   todayMessageId,
@@ -63,6 +64,9 @@ export const data = new SlashCommandBuilder()
             { name: 'Current Season', value: 'seasonal' }
           )
       )
+  )
+  .addSubcommand(sub =>
+    sub.setName('reload').setDescription('Reload questions from file (admin only)')
   );
 
 export async function execute(interaction) {
@@ -243,6 +247,29 @@ export async function execute(interaction) {
 
     return interaction.reply({
       content: 'Quiz closed and deleted.',
+      flags: MessageFlags.Ephemeral
+    });
+  }
+
+  if (subcommand === 'reload') {
+    if (!hasQuizRole) {
+      return interaction.reply({
+        content: 'You must have the quiz role to use this command.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    const count = reloadQuestions();
+
+    if (count === -1) {
+      return interaction.reply({
+        content: '❌ Failed to reload questions. Check console for errors.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+
+    return interaction.reply({
+      content: `✅ Successfully reloaded ${count} questions from questions.json`,
       flags: MessageFlags.Ephemeral
     });
   }

@@ -21,7 +21,22 @@ import { getCurrentSeason } from './seasonUtils.js';
 
 const CHANNEL_ID = '1098771891898023947';
 const ROLE_ID = '1372372259812933642';
-const QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
+
+// Load questions (can be reloaded)
+let QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
+
+// Reload questions from file (for hot-reloading when questions are auto-generated)
+function reloadQuestions() {
+  try {
+    QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
+    console.log(`📚 Reloaded ${QUESTIONS.length} questions from questions.json`);
+    return QUESTIONS.length;
+  } catch (err) {
+    console.error('Failed to reload questions:', err);
+    return -1;
+  }
+}
+
 let todayMessageId = null;
 let previousMessageId = null;
 let todayQuestionIndex = null;
@@ -396,6 +411,7 @@ export function setupQuizScheduler(client) {
 
 export {
   QUESTIONS,
+  reloadQuestions,
   todayMessageId,
   todayQuestionIndex,
   todayCorrectIndex,

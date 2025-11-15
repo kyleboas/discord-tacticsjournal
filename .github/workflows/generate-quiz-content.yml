@@ -1,0 +1,56 @@
+name: Generate Quiz Content
+
+on:
+  # Run on the 1st of every month at 00:00 UTC
+  schedule:
+    - cron: '0 0 1 * *'
+
+  # Allow manual triggering from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      generate_questions:
+        description: 'Generate new questions'
+        required: false
+        default: 'true'
+      generate_season:
+        description: 'Generate new season'
+        required: false
+        default: 'true'
+      question_count:
+        description: 'Number of questions to generate'
+        required: false
+        default: '20'
+
+jobs:
+  generate-content:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @google/generative-ai
+
+      - name: Generate quiz content
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GENERATE_QUESTIONS: ${{ github.event.inputs.generate_questions || 'true' }}
+          GENERATE_SEASON: ${{ github.event.inputs.generate_season || 'true' }}
+          QUESTION_COUNT: ${{ github.event.inputs.question_count || '20' }}
+        run: node scripts/generate-quiz-content.js
+
+      - name: Commit and push if changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add quiz/questions.json quiz/seasons.json
+          git diff --staged --quiet || git commit -m "🤖 Auto-generate quiz content for $(date +'%B %Y')"
+          git push
