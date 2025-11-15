@@ -121,7 +121,7 @@ async function handleSeasonEnd(client, endedSeason) {
 /**
  * Announce new season starting
  */
-async function announceSeasonStart(client, newSeason) {
+export async function announceSeasonStart(client, newSeason) {
   try {
     const channel = await client.channels.fetch(CHANNEL_ID);
 
