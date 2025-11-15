@@ -247,7 +247,7 @@ export async function runDailyQuiz(client) {
 
   // Show seasonal leaderboard if a season is active
   if (currentSeason) {
-    const { top10 } = await getSeasonalLeaderboard('bot-seasonal', currentSeason.id);
+    const { top10 } = await getSeasonalLeaderboard('bot-seasonal', currentSeason.id); 
 
     if (top10.length) {
       const leaderboardText = top10
