@@ -118,5 +118,185 @@
     "options": ["Johan Cruyff", "Diego Maradona", "Michel Platini", "George Best"],
     "answerIndex": 1,
     "points": 10
+  },
+  {
+    "question": "Which team famously came back from 3-0 down to win the 2005 Champions League Final?",
+    "options": ["Liverpool", "AC Milan", "Barcelona", "Manchester United"],
+    "answerIndex": 0,
+    "points": 5
+  },
+  {
+    "question": "Who scored the fastest hat-trick in Champions League history (11 minutes)?",
+    "options": ["Lionel Messi", "Bafétimbi Gomis", "Robert Lewandowski", "Cristiano Ronaldo"],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Which club has won the most UEFA Champions League/European Cup titles?",
+    "options": ["AC Milan", "Bayern Munich", "Real Madrid", "Liverpool"],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Who is the all-time top scorer in Champions League history?",
+    "options": ["Lionel Messi", "Cristiano Ronaldo", "Robert Lewandowski", "Karim Benzema"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which goalkeeper saved two penalties in the 2012 Champions League Final shootout?",
+    "options": ["Manuel Neuer", "Petr Čech", "Iker Casillas", "Gianluigi Buffon"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Ajax won three consecutive European Cups in which years?",
+    "options": ["1969-1971", "1971-1973", "1973-1975", "1975-1977"],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Who scored the winning goal in the 2014 World Cup Final?",
+    "options": ["Thomas Müller", "Mario Götze", "Miroslav Klose", "Mesut Özil"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which country hosted the 1986 FIFA World Cup where Maradona's 'Hand of God' occurred?",
+    "options": ["Argentina", "Spain", "Mexico", "Italy"],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Who is the youngest player to score in a World Cup Final?",
+    "options": ["Pelé", "Kylian Mbappé", "Ronaldo", "Diego Maradona"],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which nation won the first-ever FIFA World Cup in 1930?",
+    "options": ["Brazil", "Argentina", "Uruguay", "Italy"],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "How many goals did Just Fontaine score at the 1958 World Cup (a record)?",
+    "options": ["10", "11", "13", "15"],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Which player has appeared in the most World Cup tournaments?",
+    "options": ["Lionel Messi", "Lothar Matthäus", "Antonio Carbajal", "Rafael Márquez"],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Sevilla has won the Europa League/UEFA Cup how many times?",
+    "options": ["4", "5", "6", "7"],
+    "answerIndex": 3,
+    "points": 15
+  },
+  {
+    "question": "Which English club won the UEFA Cup in 1984?",
+    "options": ["Liverpool", "Tottenham Hotspur", "Ipswich Town", "Nottingham Forest"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Who won the Europa League in 2022?",
+    "options": ["Eintracht Frankfurt", "Rangers", "West Ham", "RB Leipzig"],
+    "answerIndex": 0,
+    "points": 10
+  },
+  {
+    "question": "Which club did José Mourinho lead to the UEFA Cup/Europa League title in 2003?",
+    "options": ["Chelsea", "Porto", "Inter Milan", "Real Madrid"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Leicester City won the Premier League in which season?",
+    "options": ["2014-15", "2015-16", "2016-17", "2017-18"],
+    "answerIndex": 1,
+    "points": 5
+  },
+  {
+    "question": "Who holds the record for most Premier League goals in a single season (32)?",
+    "options": ["Alan Shearer", "Mohamed Salah", "Erling Haaland", "Andy Cole"],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which manager has won the most Premier League titles?",
+    "options": ["José Mourinho", "Arsène Wenger", "Sir Alex Ferguson", "Pep Guardiola"],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Thierry Henry scored how many Premier League goals for Arsenal?",
+    "options": ["174", "175", "176", "177"],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which team went an entire Premier League season unbeaten (2003-04)?",
+    "options": ["Manchester United", "Chelsea", "Arsenal", "Liverpool"],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Who is the all-time top scorer in Premier League history?",
+    "options": ["Wayne Rooney", "Alan Shearer", "Harry Kane", "Sergio Agüero"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which club has won the most FA Cup titles?",
+    "options": ["Manchester United", "Arsenal", "Chelsea", "Liverpool"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Zinedine Zidane scored a stunning volley in which Champions League Final?",
+    "options": ["2000", "2002", "2004", "2006"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which country won the first UEFA European Championship in 1960?",
+    "options": ["France", "Soviet Union", "Spain", "Italy"],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Andrés Iniesta scored the World Cup winning goal in 2010 in which minute?",
+    "options": ["90+2", "105", "116", "120"],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Which stadium is known as 'The Theatre of Dreams'?",
+    "options": ["Old Trafford", "Anfield", "Stamford Bridge", "Emirates Stadium"],
+    "answerIndex": 0,
+    "points": 5
+  },
+  {
+    "question": "Who won the Ballon d'Or in 2018?",
+    "options": ["Cristiano Ronaldo", "Luka Modrić", "Lionel Messi", "Antoine Griezmann"],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Barcelona's famous 6-2 comeback against PSG happened in which year?",
+    "options": ["2015", "2016", "2017", "2018"],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which German club is nicknamed 'Die Roten' (The Reds)?",
+    "options": ["Bayer Leverkusen", "RB Leipzig", "Bayern Munich", "Borussia Dortmund"],
+    "answerIndex": 2,
+    "points": 10
   }
 ]
