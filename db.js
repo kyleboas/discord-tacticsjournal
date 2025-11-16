@@ -5,9 +5,9 @@ import { getISOWeek } from 'date-fns';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'development'
-    ? { rejectUnauthorized: false }  // Only for local development
-    : { rejectUnauthorized: true }    // Production requires valid certificates
+  ssl: process.env.DATABASE_URL?.includes('sslmode=require')
+    ? { rejectUnauthorized: false }  // Accept self-signed certificates for managed databases
+    : false  // No SSL for local development
 });
 
 // ---------------- existing watchlist & misc ----------------
