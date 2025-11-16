@@ -359,8 +359,8 @@ async function handleEdit(interaction) {
 
     // Build window: today → +14 days
     const startISO = new Date().toISOString().slice(0, 10);
-    const fromISO = isoStart(startISO);
-    const toISO   = isoNextDay(addDaysISO(startISO, 14 - 1)); // exclusive
+    const fromISO = startISO;
+    const toISO   = addDaysISO(startISO, 14); // exclusive
 
     // For newly followed teams, backfill cache and upsert reminders into this channel
     let cached = 0;
