@@ -155,7 +155,7 @@ async function handleBrowse(interaction) {
   if (hasFollowList && followIds.size) {
     for (const teamId of followIds) {
       try {
-        let rows = await fetchTeamFixtures({ teamId, fromISO: isoStart(startISO), toISO: isoNextDay(endISO) });
+        let rows = await fetchTeamFixtures({ teamId, fromISO: startISO, toISO: addDaysISO(endISO, 1) });
 
         if (leagueIdTokens.size) {
           rows = rows.filter(r => r.league && leagueIdTokens.has(String(r.league)));
