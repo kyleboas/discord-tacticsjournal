@@ -294,29 +294,6 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.once('ready', async () => {
-  console.log(`Bot is online as ${client.user.tag}`);
-  
-  // Load all commands for startup registration
-  const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-  for (const file of commandFiles) {
-    const commandModule = await import(`./commands/${file}`);
-    const command = commandModule.default || commandModule;
-
-    if (!command?.data?.name) {
-      console.warn(`[WARN] Skipping ${file}: missing 'data.name'`);
-      continue;
-    }
-
-    client.commands.set(command.data.name, command);
-    commandCache.set(command.data.name, command);
-  }
-  
-  const commandData = client.commands.map(cmd => cmd.data.toJSON());
-  await client.application.commands.set(commandData);
-  console.log('Slash commands synced');
-});
-
 // Graceful shutdown handler
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');

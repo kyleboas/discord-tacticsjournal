@@ -20,6 +20,7 @@ import {
 import { isValidTeam, suggestTeamName } from '../teams.js';
 import crypto from 'crypto';
 import { MessageFlags } from 'discord-api-types/v10';
+import { ROLES, CHANNELS } from '../constants.js';
 
 await ensureSchema();
 
@@ -81,7 +82,7 @@ async function chunkAndReply(content, interaction) {
 }
 
 export async function execute(interaction) {
-  const memberRoleId = '1182838456720826460';
+  const memberRoleId = ROLES.MEMBERS;
   const hasRole = interaction.member.roles.cache.has(memberRoleId);
   if (!hasRole) {
     await interaction.reply({
@@ -99,7 +100,7 @@ export async function execute(interaction) {
 
     if (sub === 'sync') {
       const list = await getWatchlist();
-      const watchlistChannel = await interaction.client.channels.fetch('1371507335372996760');
+      const watchlistChannel = await interaction.client.channels.fetch(CHANNELS.WATCHLIST);
 
       let updatedCount = 0;
 
@@ -179,7 +180,7 @@ export async function execute(interaction) {
 
       const userId = interaction.user.id;
       const username = interaction.user.username;
-      const channel = await interaction.client.channels.fetch('1371507335372996760');
+      const channel = await interaction.client.channels.fetch(CHANNELS.WATCHLIST);
 
       const scores = await getAverageScores();
       const avgScore = scores[name.toLowerCase()] 

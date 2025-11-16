@@ -6,8 +6,9 @@ import {
   TRIGGER_PATTERNS,
   EVASION_ATTRIBUTE_PATTERNS
 } from '../aiModeration.js';
+import { ROLES } from '../constants.js';
 
-const MODERATOR_ROLE_ID = '1100369095251206194';
+const MODERATOR_ROLE_ID = ROLES.ADMIN;
 
 export const data = new SlashCommandBuilder()
   .setName('modcheck')
@@ -56,9 +57,12 @@ export async function execute(interaction) {
   let moderationTriggered = false;
 
   try {
-    const res = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${process.env.PERSPECTIVE_API_KEY}`, {
+    const res = await fetch('https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': process.env.PERSPECTIVE_API_KEY  // Use header instead of URL parameter
+      },
       body: JSON.stringify({
         comment: { text: normalized },
         languages: ['en'],

@@ -20,10 +20,11 @@ import {
   setLastTrackedSeason
 } from '../db.js';
 import { getCurrentSeason, isTomorrowSeasonEnd, getTomorrowStartingSeason } from './seasonUtils.js';
+import { ROLES, CHANNELS } from '../constants.js';
 
-const CHANNEL_ID = '1372225536406978640'; 
-const ROLE_ID = '1372372259812933642';
-const WINNER_ROLE_ID = '1439360908588482830';
+const CHANNEL_ID = CHANNELS.QUIZ;
+const ROLE_ID = ROLES.QUIZ_POSTER;
+const WINNER_ROLE_ID = ROLES.QUIZ_WINNER;
 
 // Load questions (can be reloaded)
 let QUESTIONS = JSON.parse(fs.readFileSync(path.resolve('quiz/questions.json')));
