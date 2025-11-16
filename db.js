@@ -572,6 +572,15 @@ export async function ensureWeeklyLeaderboardSchema() {
   `);
 }
 
+export async function ensureLastTrackedSeasonSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS last_tracked_season (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      season_id TEXT NOT NULL
+    );
+  `);
+}
+
 export async function getLastTrackedSeason() {
   const result = await pool.query(`
     SELECT season_id FROM last_tracked_season LIMIT 1
@@ -580,13 +589,6 @@ export async function getLastTrackedSeason() {
 }
 
 export async function setLastTrackedSeason(seasonId) {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS last_tracked_season (
-      id INTEGER PRIMARY KEY DEFAULT 1,
-      season_id TEXT NOT NULL
-    );
-  `);
-
   await pool.query(`
     INSERT INTO last_tracked_season (id, season_id)
     VALUES (1, $1)

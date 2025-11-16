@@ -11,8 +11,9 @@ import {
   getQuizLeaderboard,
   ensureWeeklyLeaderboardSchema,
   ensureQuizSchema,
-  ensureStrikeSchema, 
+  ensureStrikeSchema,
   ensureMajorStrikeSchema,
+  ensureLastTrackedSeasonSchema,
   recordQuizAnswerDetailed
 } from './db.js';
 import { isValidTeam } from './teams.js';
@@ -80,6 +81,7 @@ client.once('ready', async () => {
   await ensureQuizSchema();
   await ensureStrikeSchema();
   await ensureMajorStrikeSchema();
+  await ensureLastTrackedSeasonSchema();
 
   setupQuizScheduler(client);
   setupMatchReminderScheduler(client);
