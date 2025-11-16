@@ -81,8 +81,22 @@ export const data = new SlashCommandBuilder()
       .setDescription('Edit followed teams for a specific league (toggle adds/removals)')
       .addStringOption(o => o
         .setName('league')
-        .setDescription('League code or id, e.g., PL or 39')
-        .setRequired(true))
+        .setDescription('Select a league')
+        .setRequired(true)
+        .addChoices(
+          { name: 'WC | FIFA World Cup', value: 'WC' },
+          { name: 'CL | UEFA Champions League', value: 'CL' },
+          { name: 'BL1 | Bundesliga', value: 'BL1' },
+          { name: 'DED | Eredivisie', value: 'DED' },
+          { name: 'BSA | Campeonato Brasileiro Série A', value: 'BSA' },
+          { name: 'PD | Primera Division', value: 'PD' },
+          { name: 'FL1 | Ligue 1', value: 'FL1' },
+          { name: 'ELC | Championship', value: 'ELC' },
+          { name: 'PPL | Primeira Liga', value: 'PPL' },
+          { name: 'EC | European Championship', value: 'EC' },
+          { name: 'SA | Serie A', value: 'SA' },
+          { name: 'PL | Premier League', value: 'PL' }
+        ))
   );
 
 // ---------- command executor ----------

@@ -187,7 +187,7 @@ client.on('interactionCreate', async interaction => {
       }
     }
   }
-  
+
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('score:')) {
     const [, name] = interaction.customId.split(':');
     const selected = interaction.values[0];
