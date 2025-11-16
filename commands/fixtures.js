@@ -82,7 +82,8 @@ export const data = new SlashCommandBuilder()
       .addStringOption(o => o
         .setName('league')
         .setDescription('League code or id, e.g., PL or 39')
-        .setRequired(true))
+        .setRequired(true)
+        .setAutocomplete(true))
   );
 
 // ---------- command executor ----------
@@ -421,4 +422,46 @@ async function handleEdit(interaction) {
       await interaction.editReply({ components: [disabledRow] }).catch(() => {});
     } catch {}
   });
+}
+
+// ---------- autocomplete handler ----------
+const AVAILABLE_LEAGUES = [
+  { code: 'PL', name: 'Premier League' },
+  { code: 'CL', name: 'UEFA Champions League' },
+  { code: 'SA', name: 'Serie A' },
+  { code: 'BL1', name: 'Bundesliga' },
+  { code: 'PD', name: 'Primera Division' },
+  { code: 'FL1', name: 'Ligue 1' },
+  { code: 'DED', name: 'Eredivisie' },
+  { code: 'PPL', name: 'Primeira Liga' },
+  { code: 'ELC', name: 'Championship' },
+  { code: 'BSA', name: 'Campeonato Brasileiro Série A' },
+  { code: 'EC', name: 'European Championship' },
+  { code: 'WC', name: 'FIFA World Cup' }
+];
+
+export async function autocomplete(interaction) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  // Only handle autocomplete for the 'league' option in the 'edit' subcommand
+  if (focusedOption.name !== 'league') {
+    return interaction.respond([]);
+  }
+
+  const userInput = focusedOption.value.toLowerCase();
+
+  // Filter leagues based on user input (matches code or name)
+  const filtered = AVAILABLE_LEAGUES.filter(league => {
+    const matchesCode = league.code.toLowerCase().includes(userInput);
+    const matchesName = league.name.toLowerCase().includes(userInput);
+    return matchesCode || matchesName;
+  });
+
+  // Discord limits autocomplete to 25 choices
+  const choices = filtered.slice(0, 25).map(league => ({
+    name: `${league.code} | ${league.name}`,
+    value: league.code
+  }));
+
+  await interaction.respond(choices);
 }

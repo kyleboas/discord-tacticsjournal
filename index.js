@@ -187,7 +187,44 @@ client.on('interactionCreate', async interaction => {
       }
     }
   }
-  
+
+  // Handle autocomplete interactions
+  if (interaction.isAutocomplete()) {
+    const commandName = interaction.commandName;
+    let command;
+
+    // Check cache first
+    if (commandCache.has(commandName)) {
+      command = commandCache.get(commandName);
+    } else {
+      try {
+        // Only import if not in cache
+        const commandModule = await import(`./commands/${commandName}.js`);
+        command = commandModule.default || commandModule;
+
+        if (!command?.data?.name) {
+          console.warn(`[WARN] Command module ${commandName} is missing 'data.name'`);
+          return;
+        }
+
+        // Cache for future use
+        commandCache.set(commandName, command);
+      } catch (error) {
+        console.error(`Failed to import command ${commandName} for autocomplete:`, error);
+        return;
+      }
+    }
+
+    // Execute autocomplete handler if it exists
+    if (command.autocomplete) {
+      try {
+        await command.autocomplete(interaction);
+      } catch (error) {
+        console.error(`Error executing autocomplete for ${commandName}:`, error);
+      }
+    }
+  }
+
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('score:')) {
     const [, name] = interaction.customId.split(':');
     const selected = interaction.values[0];
