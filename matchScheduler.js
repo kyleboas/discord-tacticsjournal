@@ -4,7 +4,9 @@ import {
   getReminderChannel,
   upsertGuildMatchReminder,
   purgeOldReminders,
-  getUpcomingRemindersWindow
+  getUpcomingRemindersWindow,
+  pruneAllUpcomingForUnfollowedGlobal,
+  pruneOrphanUpcomingReminders
 } from './db.js';
 
 import { fetchTeamFixtures, cleanTeamName } from './providers/footballApi.js';
@@ -150,6 +152,26 @@ async function refreshFollowedReminders(client, horizonDays = 14) {
     await purgeOldReminders();
   } catch (e) {
     console.warn('[scheduler] purgeOldReminders failed:', e?.message || e);
+  }
+
+  // Prune reminders for unfollowed teams across all guilds
+  try {
+    const removed = await pruneAllUpcomingForUnfollowedGlobal({ keepManual: true });
+    if (removed > 0) {
+      console.log(`[scheduler] Pruned ${removed} reminder(s) for unfollowed teams`);
+    }
+  } catch (e) {
+    console.warn('[scheduler] pruneAllUpcomingForUnfollowedGlobal failed:', e?.message || e);
+  }
+
+  // Prune orphan reminders (no matching fixtures_cache entry)
+  try {
+    const removed = await pruneOrphanUpcomingReminders({ keepManual: true });
+    if (removed > 0) {
+      console.log(`[scheduler] Pruned ${removed} orphan reminder(s)`);
+    }
+  } catch (e) {
+    console.warn('[scheduler] pruneOrphanUpcomingReminders failed:', e?.message || e);
   }
 }
 
