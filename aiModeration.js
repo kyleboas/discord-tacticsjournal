@@ -238,7 +238,7 @@ async function handleViolation(message, violations, content) {
           `\n**Perspective Scores:**`,
           ...Object.entries(scoreData).map(([key, val]) => {
             const percent = Math.round(val * 100);
-            const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' ⚠️' : '';
+            const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' <:Yellow:1122289797000605718>' : '';
             return `${key}: ${percent}%${warn}`;
           }),
           `\n\n**Would Trigger Moderation:** YES`,
@@ -263,12 +263,12 @@ async function handleViolation(message, violations, content) {
       const scoreData = moderationCache.get(Buffer.from(content).toString('base64'))?.result || {};
       const scoreLines = Object.entries(scoreData).map(([key, val]) => {
         const percent = Math.round(val * 100);
-        const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' ⚠️' : '';
+        const warn = ATTRIBUTE_THRESHOLDS[key] && val >= ATTRIBUTE_THRESHOLDS[key] ? ' <:Yellow:1122289797000605718>' : '';
         return `${key}: ${percent}%${warn}`;
       });
 
       const embed = new EmbedBuilder()
-        .setTitle('**AutoMod Violation** ⚠️')
+        .setTitle('**AutoMod Violation** <:Yellow:1122289797000605718>')
         .addFields(
           { name: 'Message', value: `\`${content}\``, inline: true },
           { name: 'User', value: `<@${message.author.id}>`, inline: true },
