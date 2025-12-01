@@ -768,5 +768,225 @@
     ],
     "answerIndex": 2,
     "points": 10
+  },
+  {
+    "question": "Which player holds the record for the most expensive transfer in football history, moving to Paris Saint-Germain for €222 million in 2017?",
+    "options": [
+      "Kylian Mbappé",
+      "Neymar Jr.",
+      "Ousmane Dembélé",
+      "Philippe Coutinho"
+    ],
+    "answerIndex": 1,
+    "points": 15
+  },
+  {
+    "question": "Who became the most expensive player in Premier League history when he joined Chelsea in August 2023 for a reported £115 million?",
+    "options": [
+      "Enzo Fernández",
+      "Declan Rice",
+      "Moisés Caicedo",
+      "Jack Grealish"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which prolific striker famously joined Bayern Munich on a free transfer from Borussia Dortmund in 2014, after his contract expired?",
+    "options": [
+      "Marco Reus",
+      "Mario Götze",
+      "Robert Lewandowski",
+      "Mats Hummels"
+    ],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Following his Golden Boot-winning performance at the 2014 FIFA World Cup, which Colombian star earned a big-money move to Real Madrid from Monaco?",
+    "options": [
+      "Radamel Falcao",
+      "Juan Cuadrado",
+      "James Rodríguez",
+      "David Ospina"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Who was the first player to be signed by a Premier League club for a fee of £100 million (including add-ons) when he joined Manchester City in 2021?",
+    "options": [
+      "Romelu Lukaku",
+      "Paul Pogba",
+      "Jack Grealish",
+      "Harry Maguire"
+    ],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Which Real Madrid president is famous for his 'Galácticos' transfer policy, bringing in superstars like Zidane, Figo, Ronaldo, and Beckham during his two stints?",
+    "options": [
+      "Ramón Calderón",
+      "Lorenzo Sanz",
+      "Florentino Pérez",
+      "Santiago Bernabéu"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "In 2009, Cristiano Ronaldo made a then-world record transfer from Manchester United to which Spanish club?",
+    "options": [
+      "FC Barcelona",
+      "Atlético Madrid",
+      "Real Madrid",
+      "Valencia CF"
+    ],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Chelsea made headlines for their significant spending during the 2023 January transfer window. Which of these players did *not* join Chelsea in that specific window?",
+    "options": [
+      "Enzo Fernández",
+      "Mykhailo Mudryk",
+      "João Félix",
+      "Christopher Nkunku"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "Which player holds the record for the most expensive transfer into Serie A, when he joined Juventus from Real Madrid for €100 million in 2018?",
+    "options": [
+      "Matthijs de Ligt",
+      "Gonzalo Higuaín",
+      "Victor Osimhen",
+      "Cristiano Ronaldo"
+    ],
+    "answerIndex": 3,
+    "points": 15
+  },
+  {
+    "question": "Arsène Wenger, famed for his shrewd transfer dealings at Arsenal, signed which French midfielder for a reported £3.5 million in 1996, who went on to become a club legend?",
+    "options": [
+      "Patrick Vieira",
+      "Nicolas Anelka",
+      "Thierry Henry",
+      "Emmanuel Petit"
+    ],
+    "answerIndex": 0,
+    "points": 5
+  },
+  {
+    "question": "In 2023, Harry Kane became the most expensive signing in Bundesliga history. From which Premier League club did Bayern Munich sign him?",
+    "options": [
+      "Manchester City",
+      "Arsenal",
+      "Liverpool",
+      "Tottenham Hotspur"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "The summer 2023 transfer window saw significant spending from the Saudi Pro League. Which English midfielder moved to Al-Ettifaq, managed by Steven Gerrard?",
+    "options": [
+      "Ruben Neves",
+      "Fabinho",
+      "Jordan Henderson",
+      "Kalidou Koulibaly"
+    ],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Following his starring role for Portugal in their Euro 2016 triumph, which young midfielder secured a big move to Bayern Munich, though it didn't quite work out as expected?",
+    "options": [
+      "João Félix",
+      "Renato Sanches",
+      "André Gomes",
+      "Bernardo Silva"
+    ],
+    "answerIndex": 1,
+    "points": 5
+  },
+  {
+    "question": "The transfer of Gareth Bale from Tottenham Hotspur to Real Madrid in 2013 was a protracted saga. What was the approximate world-record fee he moved for at the time?",
+    "options": [
+      "£70 million",
+      "£85 million",
+      "£95 million",
+      "£100 million"
+    ],
+    "answerIndex": 1,
+    "points": 10
+  },
+  {
+    "question": "Which player, who arrived at Liverpool for a reported £75 million in January 2018, was instrumental in their Champions League and Premier League triumphs, widely considered a game-changing signing?",
+    "options": [
+      "Alisson Becker",
+      "Fabinho",
+      "Virgil van Dijk",
+      "Mohamed Salah"
+    ],
+    "answerIndex": 2,
+    "points": 15
+  },
+  {
+    "question": "Who became one of the most expensive players over 30 when he returned to Manchester United from Juventus for a significant fee in 2021?",
+    "options": [
+      "Edinson Cavani",
+      "Raphaël Varane",
+      "Cristiano Ronaldo",
+      "Zlatan Ibrahimović"
+    ],
+    "answerIndex": 2,
+    "points": 5
+  },
+  {
+    "question": "Often lauded for his tactical prowess and developing players, which Premier League manager, despite his long tenure and success, was less known for breaking transfer records compared to his rivals?",
+    "options": [
+      "José Mourinho",
+      "Pep Guardiola",
+      "Jürgen Klopp",
+      "Arsène Wenger"
+    ],
+    "answerIndex": 3,
+    "points": 10
+  },
+  {
+    "question": "Which Croatian international became one of the most expensive defenders of all time when he joined Manchester City for €90 million in August 2023?",
+    "options": [
+      "Joško Gvardiol",
+      "Marin Pongračić",
+      "Duje Ćaleta-Car",
+      "Domagoj Vida"
+    ],
+    "answerIndex": 0,
+    "points": 15
+  },
+  {
+    "question": "Which Belgian striker had a highly publicized transfer saga, eventually moving from Everton to Manchester United for a reported £75 million in 2017?",
+    "options": [
+      "Christian Benteke",
+      "Michy Batshuayi",
+      "Romelu Lukaku",
+      "Dries Mertens"
+    ],
+    "answerIndex": 2,
+    "points": 10
+  },
+  {
+    "question": "Which English player made history in 1979 by becoming the first British player to command a £1 million transfer fee?",
+    "options": [
+      "Kevin Keegan",
+      "Gary Lineker",
+      "Trevor Francis",
+      "Bryan Robson"
+    ],
+    "answerIndex": 2,
+    "points": 5
   }
 ]
