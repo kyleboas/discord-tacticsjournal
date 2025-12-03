@@ -55,7 +55,7 @@ export const TRIGGER_PATTERNS = {
   ],
   RACIAL_SLUR: [
     // n-word variants
-    /\b(s[a@4]nd[\W_]*)?n[i1l!|a@o0][gq]{1,2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
+    /\b(s[a@4]nd[\W_]*)?n[i1l!|][gq]{2}(l[e3]t|[e3]r|[a@4]|n[o0]g)?s?\b/i,
 
     // kike
     /\bk[il1y]k[e3](ry|rie)?s?\b/i,
